@@ -7,6 +7,7 @@ public class CameraVehicle : MonoBehaviour
     public MotionBlur mb;
     public GlowEffect glowEffect;
     public ColorCorrectionEffect colorEffect;
+    public float baseCamOffset = 4.2f;
 
     private float _rotationX;
     private float _rotationY;
@@ -16,6 +17,7 @@ public class CameraVehicle : MonoBehaviour
     private float _heightBoost;
     private string _cameraToast = "";
     private float _cameraToastUntil;
+    private bool _wasFirstPersonViewActive;
 
     private void Start()
     {
@@ -27,6 +29,11 @@ public class CameraVehicle : MonoBehaviour
         if (Game.Player == null) return;
         if (Game.Settings == null) return;
 
+        bool chatting = Game.Messaging != null && Game.Messaging.chatting;
+        bool firstPersonHold = Input.GetButton("Fire2") || (Input.GetButton("Snipe") && !chatting);
+        bool firstPersonActive = Game.Settings.camMode == 0 || firstPersonHold;
+        Cursor.lockState = firstPersonActive ? CursorLockMode.Locked : CursorLockMode.None;
+
         if (mb != null && mb.enabled)
         {
             mb.blurAmount -= Time.deltaTime * 0.13f;
@@ -34,11 +41,20 @@ public class CameraVehicle : MonoBehaviour
         }
 
         ApplyHotkeys();
-        float camDist = 12f + Game.Settings.camDist;
+        float camDist = baseCamOffset + Game.Settings.camDist;
         if (camDist < 1f) camDist = 1f;
 
-        if (Game.Settings.camMode == 0)
+        if (firstPersonActive)
         {
+            if (!_wasFirstPersonViewActive)
+            {
+                _rotationX = 0f;
+                _rotationY = 0f;
+                _gyroBaseRotation = Game.Settings.gyroCam
+                    ? Quaternion.Euler(0f, Game.Player.transform.rotation.eulerAngles.y, 0f)
+                    : Quaternion.identity;
+            }
+
             transform.position = Game.Player.transform.position + Vector3.up * 1.5f;
 
             if (Game.Settings.gyroCam)
@@ -86,6 +102,8 @@ public class CameraVehicle : MonoBehaviour
                 }
 
                 Vector3 newPos = Game.Player.transform.position + _lastDir * -camDist + Vector3.up * (camDist / 3f);
+                float chaseHeight = Mathf.Lerp(0.9f, 2.2f, Mathf.Clamp01(camDist / 30f));
+                newPos.y = Game.Player.transform.position.y + chaseHeight;
                 transform.position += Vector3.up * ((Game.Player.transform.position.y - _lastY) * Time.deltaTime);
                 transform.position = Vector3.Lerp(transform.position, newPos, Time.deltaTime * 4f);
                 _lastY = Game.Player.transform.position.y;
@@ -129,8 +147,8 @@ public class CameraVehicle : MonoBehaviour
             }
             else
             {
-                Vector3 target = Game.Player.transform.position + Vector3.up * 2.5f;
-                Vector3 desired = target - Game.Player.transform.forward * camDist;
+                Vector3 target = Game.Player.transform.position + Vector3.up * 1.2f;
+                Vector3 desired = target - Game.Player.transform.forward * (camDist + 1.2f);
                 transform.position = Vector3.Lerp(transform.position, desired, Time.deltaTime * 3.5f);
                 transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(target - transform.position, Vector3.up), Time.deltaTime * 4f);
             }
@@ -147,6 +165,8 @@ public class CameraVehicle : MonoBehaviour
             arrow.rotation = Quaternion.Lerp(arrow.rotation, Quaternion.LookRotation(quarry.position - Game.Player.transform.position), Time.deltaTime * 15f);
             arrow.localScale = Vector3.one * Mathf.Lerp(0.03f, 1f, Camera.main != null ? Camera.main.fieldOfView / 60f : 1f);
         }
+
+        _wasFirstPersonViewActive = firstPersonActive;
     }
 
     private void ApplyHotkeys()

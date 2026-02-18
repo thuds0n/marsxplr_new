@@ -1,4 +1,7 @@
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class SinglePlayerPlayableBootstrap : MonoBehaviour
 {
@@ -6,9 +9,24 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
     public Vector3 spawnOffset = new Vector3(0f, 4f, 0f);
     public GameObject playerVehiclePrefab;
     public GameObject playerVehicleModelFallbackPrefab;
+    public GameObject legacyVehicleRigPrefab;
     public bool tryLegacyBuggyPrefab = false;
 
     private float _nextAttemptTime;
+
+    private void Awake()
+    {
+#if UNITY_EDITOR
+        if (legacyVehicleRigPrefab == null)
+        {
+            legacyVehicleRigPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Martian Assets/Vehicles/Prefabs/Vehicle.prefab");
+            if (legacyVehicleRigPrefab != null)
+            {
+                EditorUtility.SetDirty(this);
+            }
+        }
+#endif
+    }
 
     private void Update()
     {
@@ -76,12 +94,14 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
         }
 
         bool usingBuggyVisual = false;
+        GameObject attachedVisual = null;
 
         // Try cleaner model-only fallback first.
         GameObject fallbackVisual = TrySpawnFallbackModel(go.transform, spawn, spawnRot);
         if (fallbackVisual != null && HasVisibleMesh(fallbackVisual))
         {
             usingBuggyVisual = true;
+            attachedVisual = fallbackVisual;
         }
         else if (fallbackVisual != null)
         {
@@ -108,6 +128,10 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
                 {
                     Destroy(visual);
                 }
+                else
+                {
+                    attachedVisual = visual;
+                }
             }
         }
 
@@ -124,15 +148,124 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
             }
         }
 
+        if (attachedVisual != null)
+        {
+            AlignVisualToPlayerCollider(go, attachedVisual);
+        }
+
+        AttachLegacyLaserSight(go);
+
         Game.Player = go;
         if (Game.Settings != null)
         {
             Game.Settings.simplified = false;
+            Game.Settings.updatePrefs();
         }
 
         if (Game.Controller != null)
         {
             Game.Controller.msg(usingBuggyVisual ? "Single-player buggy spawned." : "Single-player fallback pawn spawned.", 2);
+        }
+    }
+
+    private void AttachLegacyLaserSight(GameObject playerRoot)
+    {
+        if (playerRoot == null || legacyVehicleRigPrefab == null) return;
+        if (playerRoot.transform.Find("LaserAim") != null) return;
+
+        GameObject temp = Instantiate(legacyVehicleRigPrefab);
+        temp.name = "__LegacyVehicleRigTemp";
+        temp.SetActive(false);
+
+        GameObject aimer = CloneNamedChild(temp.transform, "LaserAim", playerRoot.transform);
+        GameObject aimerLocked = CloneNamedChild(temp.transform, "LaserAimLocked", playerRoot.transform);
+        GameObject lockMarker = CloneNamedChild(temp.transform, "LaserLock", playerRoot.transform);
+        Destroy(temp);
+
+        if (aimer == null)
+        {
+            aimer = CreateLaserAnchor(playerRoot.transform, "LaserAim", new Vector3(0f, 0.8f, 1.5f));
+        }
+        if (aimerLocked == null)
+        {
+            aimerLocked = CreateLaserAnchor(playerRoot.transform, "LaserAimLocked", new Vector3(0f, 0.8f, 1.5f));
+        }
+        if (lockMarker == null)
+        {
+            lockMarker = CreateLaserAnchor(playerRoot.transform, "LaserLock", new Vector3(0f, 0.8f, 6f));
+        }
+
+        if (aimer == null && aimerLocked == null && lockMarker == null) return;
+
+        var controller = playerRoot.GetComponent<LegacyLaserSightController>();
+        if (controller == null)
+        {
+            controller = playerRoot.AddComponent<LegacyLaserSightController>();
+        }
+
+        controller.laserAimer = aimer;
+        controller.laserAimerLocked = aimerLocked;
+        controller.laserLockMarker = lockMarker;
+        controller.vehicleId = 0;
+        controller.camOffset = 2f;
+    }
+
+    private GameObject CreateLaserAnchor(Transform parent, string name, Vector3 localPos)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        go.transform.localPosition = localPos;
+        go.transform.localRotation = Quaternion.identity;
+        go.transform.localScale = Vector3.one;
+        return go;
+    }
+
+    private GameObject CloneNamedChild(Transform sourceRoot, string childName, Transform targetRoot)
+    {
+        Transform source = FindChildRecursive(sourceRoot, childName);
+        if (source == null) return null;
+
+        GameObject clone = Instantiate(source.gameObject, targetRoot);
+        clone.name = childName;
+        clone.transform.localPosition = source.localPosition;
+        clone.transform.localRotation = source.localRotation;
+        clone.transform.localScale = source.localScale;
+        SanitizeSightObject(clone);
+        return clone;
+    }
+
+    private Transform FindChildRecursive(Transform root, string name)
+    {
+        if (root.name == name) return root;
+        for (int i = 0; i < root.childCount; i++)
+        {
+            Transform hit = FindChildRecursive(root.GetChild(i), name);
+            if (hit != null) return hit;
+        }
+        return null;
+    }
+
+    private void SanitizeSightObject(GameObject go)
+    {
+        if (go == null) return;
+
+        var rigidbodies = go.GetComponentsInChildren<Rigidbody>(true);
+        for (int i = 0; i < rigidbodies.Length; i++)
+        {
+            Destroy(rigidbodies[i]);
+        }
+
+        var colliders = go.GetComponentsInChildren<Collider>(true);
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            Destroy(colliders[i]);
+        }
+
+        var scripts = go.GetComponentsInChildren<MonoBehaviour>(true);
+        for (int i = 0; i < scripts.Length; i++)
+        {
+            if (scripts[i] is LegacyLaserSightController) continue;
+            Destroy(scripts[i]);
         }
     }
 
@@ -188,13 +321,42 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
         SetLayerRecursively(visual.transform, 0); // Default layer
 
         // Normalize old asset scale so it reads as a vehicle-sized object in modern scene units.
-        float scaleFactor = EstimateScaleToTargetLength(visual, 3.6f);
+        float scaleFactor = EstimateScaleToTargetLength(visual, 5.2f);
         if (scaleFactor > 0.001f)
         {
             visual.transform.localScale *= scaleFactor;
         }
 
-        visual.transform.localPosition = new Vector3(0f, 0.55f, 0f);
+        visual.transform.localPosition = Vector3.zero;
+    }
+
+    private void AlignVisualToPlayerCollider(GameObject playerRoot, GameObject visual)
+    {
+        if (playerRoot == null || visual == null) return;
+
+        float lowestY = float.MaxValue;
+        var renderers = visual.GetComponentsInChildren<Renderer>(true);
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            if (renderers[i] == null || !renderers[i].enabled) continue;
+            var b = renderers[i].bounds;
+            Vector3 localMin = playerRoot.transform.InverseTransformPoint(new Vector3(b.center.x, b.min.y, b.center.z));
+            if (localMin.y < lowestY) lowestY = localMin.y;
+        }
+
+        if (lowestY == float.MaxValue) return;
+
+        // Align to the player collider bottom so visual stays grounded across scale changes.
+        float desiredLowest = -0.95f;
+        var capsule = playerRoot.GetComponent<CapsuleCollider>();
+        if (capsule != null)
+        {
+            Vector3 worldBottom = new Vector3(playerRoot.transform.position.x, capsule.bounds.min.y, playerRoot.transform.position.z);
+            desiredLowest = playerRoot.transform.InverseTransformPoint(worldBottom).y + 0.04f;
+        }
+
+        float delta = Mathf.Clamp(desiredLowest - lowestY, -0.15f, 1.2f);
+        visual.transform.localPosition += new Vector3(0f, delta, 0f);
     }
 
     private void EnsureSpawnVisuals(GameObject go)

@@ -37,7 +37,9 @@ public class BlurEffectIsland : MonoBehaviour
 	protected static Material material {
 		get {
 			if (m_Material == null) {
+#pragma warning disable 0618
 				m_Material = new Material( blurMatString );
+#pragma warning restore 0618
 				m_Material.hideFlags = HideFlags.HideAndDontSave;
 				m_Material.shader.hideFlags = HideFlags.HideAndDontSave;
 			}
@@ -56,9 +58,6 @@ public class BlurEffectIsland : MonoBehaviour
 	
 	public bool IsSupported()
 	{
-		// Disable if we don't support image effects
-		if (!SystemInfo.supportsImageEffects)
-			return false;
 		// Disable if the shader can't run on the users graphics card
 		if (!material.shader.isSupported)
 			return false;
@@ -142,8 +141,6 @@ public class BlurEffectIsland : MonoBehaviour
 
 		// Direct3D needs interesting texel offsets!		
 		Vector2 off = Vector2.zero;
-		if( dest != null )
-			off = dest.GetTexelOffset() * 0.75f;
 		
 		Set4TexCoords( off.x, off.y, offsetX, offsetY );
 		GL.Vertex3( 0,0, .1f );

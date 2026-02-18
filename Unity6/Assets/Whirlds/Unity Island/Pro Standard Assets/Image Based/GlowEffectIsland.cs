@@ -52,7 +52,9 @@ public class GlowEffectIsland : MonoBehaviour
 	protected static Material compositeMaterial {
 		get {
 			if (m_CompositeMaterial == null) {
+#pragma warning disable 0618
 				m_CompositeMaterial = new Material (compositeMatString);
+#pragma warning restore 0618
 				m_CompositeMaterial.hideFlags = HideFlags.HideAndDontSave;
 				m_CompositeMaterial.shader.hideFlags = HideFlags.HideAndDontSave;
 			}
@@ -91,7 +93,9 @@ public class GlowEffectIsland : MonoBehaviour
 	protected static Material blurMaterial {
 		get {
 			if (m_BlurMaterial == null) {
+#pragma warning disable 0618
 				m_BlurMaterial = new Material( blurMatString );
+#pragma warning restore 0618
 				m_BlurMaterial.hideFlags = HideFlags.HideAndDontSave;
 				m_BlurMaterial.shader.hideFlags = HideFlags.HideAndDontSave;
 			}
@@ -136,9 +140,6 @@ public class GlowEffectIsland : MonoBehaviour
 	
 	public bool IsSupported()
 	{
-		// Disable if we don't support image effects
-		if (!SystemInfo.supportsImageEffects)
-			return false;
 		if( downsampleShader == null )
 		{
 			Debug.LogWarning ("No downsample shader assigned! Disabling glow.");
@@ -236,8 +237,6 @@ public class GlowEffectIsland : MonoBehaviour
 		
 		// Direct3D needs interesting texel offsets!		
 		Vector2 off = Vector2.zero;
-		if( dest != null )
-			off = dest.GetTexelOffset() * 0.75f;
 		
 		Set4TexCoords( off.x, off.y, offsetX, offsetY );
 		GL.Vertex3( 0,0, .1f );
