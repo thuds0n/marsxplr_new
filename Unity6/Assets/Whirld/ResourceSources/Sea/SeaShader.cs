@@ -406,7 +406,7 @@ public class SeaShader : MonoBehaviour
 	
 	public WaterMode FindHardwareWaterSupport()
 	{
-		if( !SystemInfo.supportsRenderTextures || !GetComponent<Renderer>() || !m_ShaderFull )
+		if( !GetComponent<Renderer>() || !m_ShaderFull )
 			return WaterMode.Simple;
 			
 		Material mat = GetComponent<Renderer>().sharedMaterial;

@@ -758,12 +758,7 @@ MonoBehaviour:
   mb: {fileID: 0}
   glowEffect: {fileID: 0}
   colorEffect: {fileID: 0}
-  followDistance: 9
-  followHeight: 3.2
-  followSmooth: 7
-  rotationSmooth: 10
-  lookAhead: 4.5
-  targetFov: 72
+  baseCamOffset: 2
 --- !u!1 &68
 GameObject:
   m_ObjectHideFlags: 0
@@ -799,6 +794,77 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   loadingWorld: 0
   worldLoadTime: 0
+  cursor: {fileID: 2800000, guid: 2879d93dadab7440ab058e008253a35b, type: 3}
+  cursorLook: {fileID: 2800000, guid: c3d7aed336cc14bb385b23e5be433550, type: 3}
+  cursorOffset: {x: 16, y: 16}
+  hudTextStyle:
+    m_Name: hudText
+    m_Normal:
+      m_Background: {fileID: 0}
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 1, b: 0, a: 1}
+    m_Hover:
+      m_Background: {fileID: 0}
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_Active:
+      m_Background: {fileID: 0}
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_Focused:
+      m_Background: {fileID: 0}
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_OnNormal:
+      m_Background: {fileID: 0}
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_OnHover:
+      m_Background: {fileID: 0}
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_OnActive:
+      m_Background: {fileID: 0}
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_OnFocused:
+      m_Background: {fileID: 0}
+      m_ScaledBackgrounds: []
+      m_TextColor: {r: 0, g: 0, b: 0, a: 1}
+    m_Border:
+      m_Left: 5
+      m_Right: 5
+      m_Top: 5
+      m_Bottom: 5
+    m_Margin:
+      m_Left: 0
+      m_Right: 0
+      m_Top: 0
+      m_Bottom: 0
+    m_Padding:
+      m_Left: 20
+      m_Right: 20
+      m_Top: 0
+      m_Bottom: 0
+    m_Overflow:
+      m_Left: 0
+      m_Right: 0
+      m_Top: 0
+      m_Bottom: 0
+    m_Font: {fileID: 12800000, guid: 6b8fcded44a5d407eb7a3efb85bea2ce, type: 3}
+    m_FontSize: 0
+    m_FontStyle: 0
+    m_Alignment: 4
+    m_WordWrap: 0
+    m_RichText: 1
+    m_TextClipping: 0
+    m_ImagePosition: 0
+    m_ContentOffset: {x: 0, y: 0}
+    m_FixedWidth: 0
+    m_FixedHeight: 0
+    m_StretchWidth: 1
+    m_StretchHeight: 0
+  quarryDist: 0
 --- !u!114 &70
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -837,12 +903,28 @@ MonoBehaviour:
   useHypersound: 0
   gameMusic: {fileID: 0}
   lasersAllowed: 1
+  laserLocking: 1
+  laserLock:
+  - 0.4
+  - 0.4
+  - 0.4
+  - 0.4
+  laserCooldown: 0.16
+  laserRange: 1200
+  laserImpactForce: 18
+  laserProjectileSpeed: 240
+  laserProjectileGravity: 0
+  zorbSpeed: 7
+  zorbEnabled: 0
   firepower: 02000000020000000300000002000000
+  autoSelectQuarry: 1
+  quarryScore: 0
   lavaAlt: -300
   lavaFog: 0.005
   worldFog: 0.0004
   fogColor: {r: 0, g: 0, b: 0, a: 0}
   renderLevel: 4
+  resetTime: -10
   enteredfullscreen: 0
 --- !u!114 &72
 MonoBehaviour:
@@ -856,6 +938,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06b44a45525dc4472be5d7f1b9c35934, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  autoCreateFallbackGround: 1
+  fallbackGroundSize: 2000
+  fallbackGroundThickness: 8
 --- !u!114 &73
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -872,6 +957,8 @@ MonoBehaviour:
   spawnOffset: {x: 0, y: 4, z: 0}
   playerVehiclePrefab: {fileID: 100048, guid: 570aa6399745d423c9e4e4649367f63e, type: 3}
   playerVehicleModelFallbackPrefab: {fileID: 5453216519748142819, guid: e1510aee2f0be4d26845b21393d8bf73,
+    type: 3}
+  legacyVehicleRigPrefab: {fileID: 100000, guid: 19380c6f2fba84bbc88a8e8681cbf813,
     type: 3}
   tryLegacyBuggyPrefab: 0
 --- !u!1 &76

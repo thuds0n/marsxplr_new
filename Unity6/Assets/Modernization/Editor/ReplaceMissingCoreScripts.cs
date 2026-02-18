@@ -22,6 +22,7 @@ public static class ReplaceMissingCoreScripts
         ReplaceOn("Game", typeof(Game));
         ReplaceOn("Game", typeof(SinglePlayerPlayableBootstrap));
         AssignBuggyPrefab();
+        AssignGameHudAssets();
 
         ReplaceOn("Game/Camera", typeof(CameraVehicle));
         ReplaceOn("Game/MiniMap", typeof(MiniMap));
@@ -31,6 +32,47 @@ public static class ReplaceMissingCoreScripts
             EditorSceneManager.MarkSceneDirty(scene);
         }
         Debug.Log("[ReplaceMissingCoreScripts] Applied replacement components. Save scene to persist.");
+    }
+
+    private static void AssignGameHudAssets()
+    {
+        var go = FindByPath("Game");
+        if (go == null) return;
+
+        var game = go.GetComponent<Game>();
+        if (game == null) return;
+
+        bool changed = false;
+
+        var crosshairs = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Martian Assets/GUI/Cursors/Crosshairs.png");
+        var crosshairsLook = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Martian Assets/GUI/Cursors/CrosshairsLook.png");
+        if (crosshairs != null && game.cursor != crosshairs)
+        {
+            game.cursor = crosshairs;
+            changed = true;
+        }
+        if (crosshairsLook != null && game.cursorLook != crosshairsLook)
+        {
+            game.cursorLook = crosshairsLook;
+            changed = true;
+        }
+
+        var guiSkin = AssetDatabase.LoadAssetAtPath<GUISkin>("Assets/Martian Assets/GUI/Mars GUI.guiskin");
+        if (guiSkin != null)
+        {
+            var hud = guiSkin.FindStyle("hudText");
+            if (hud != null && game.hudTextStyle != hud)
+            {
+                game.hudTextStyle = hud;
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            EditorUtility.SetDirty(game);
+            Debug.Log("[ReplaceMissingCoreScripts] Assigned HUD cursor/style assets to Game.");
+        }
     }
 
     private static void AssignBuggyPrefab()
@@ -72,6 +114,14 @@ public static class ReplaceMissingCoreScripts
             bootstrap.tryLegacyBuggyPrefab = false;
             EditorUtility.SetDirty(bootstrap);
             Debug.Log("[ReplaceMissingCoreScripts] Assigned Buggy model fallback prefab: " + AssetDatabase.GetAssetPath(modelFallback));
+        }
+
+        var legacyRig = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Martian Assets/Vehicles/Prefabs/Vehicle.prefab");
+        if (legacyRig != null && bootstrap.legacyVehicleRigPrefab != legacyRig)
+        {
+            bootstrap.legacyVehicleRigPrefab = legacyRig;
+            EditorUtility.SetDirty(bootstrap);
+            Debug.Log("[ReplaceMissingCoreScripts] Assigned legacy vehicle rig prefab for laser sight objects.");
         }
     }
 
