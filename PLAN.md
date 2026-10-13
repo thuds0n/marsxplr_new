@@ -4,7 +4,7 @@
 
 Deliver a recognisably original Mars Explorer single-player experience as a native macOS application, targeting Apple silicon (`arm64`) first and a universal binary only after the arm64 path is stable.
 
-`Unity6/` is the canonical runtime project. Despite its directory name, its current baseline editor is Unity `2022.3.62f3`. `unity/` is retained as original behavioural and asset reference material; the ignored local `Unity5/` project is an asset-conversion bridge only.
+`Unity6/` is the canonical runtime project. Its baseline editor is Unity 6.3 LTS (`6000.3.26f1`), supported until December 2027. `unity/` is retained as original behavioural and asset reference material; the ignored local `Unity5/` project is an asset-conversion bridge only.
 
 ## Current status
 
@@ -23,6 +23,8 @@ The current working tree has not been compiled or played in Unity since its newe
 ## Decisions
 
 - Keep `Unity6/` as the only active gameplay implementation.
+- Target Unity 6.3 LTS directly. The earlier plan to capture a Unity `2022.3.62f3` proof build first was dropped (2026-10-13): the project had never been verified in 2022.3, so that build would have protected no known-good state. The tag `pre-unity6-upgrade` is the pre-upgrade reference instead.
+- Remain on the Built-in Render Pipeline, IMGUI, and the legacy Input Manager for parity; any move to URP or the Input System is a separate later decision.
 - Preserve original behaviour and presentation by default.
 - Complete one single-player buggy vertical slice before restoring other vehicles or networking.
 - Keep networking, master-server services, authentication, adverts, and retired web services out of scope.
@@ -50,7 +52,10 @@ The current working tree has not been compiled or played in Unity since its newe
 
 ### Required before the baseline is locked
 
-- [ ] Open the project in Unity `2022.3.62f3` and complete a clean script compile.
+- [x] Add `tools/compile-check.sh`, an editor-free compile check against Unity 6 reference assemblies.
+- [ ] Fix the editor-free compile errors (see Known compile blockers).
+- [ ] Open the project in Unity `6000.3.26f1`, let the API updater run, and complete a clean script compile.
+- [ ] Review scene, prefab, and project-setting re-serialisation against `pre-unity6-upgrade` before committing it.
 - [ ] Run `Prepare Game Scene Baseline` with `Game.unity` open and review all changes before saving.
 - [ ] Run interactive and batch `Validate Project Baseline` checks.
 - [ ] Verify direct Play mode entry from `Game.unity`.
@@ -124,11 +129,9 @@ Do not make placeholder cylinders, debug-line lasers, or impact stubs part of th
 - Remove runtime dependencies on unsupported legacy scripts and editor-only repair paths.
 - Adopt Force Text serialisation only as a dedicated change after a verified baseline, with scene and prefab diffs reviewed separately.
 
-## Milestone 6: Engine upgrade and release path
+## Milestone 6: Release path
 
-Capture the Unity `2022.3.62f3` proof build before changing editor generations. Then evaluate a controlled upgrade branch to the current Unity 6 LTS release.
-
-The upgrade is accepted only when it preserves:
+The Unity 6.3 LTS baseline is accepted only when it provides:
 
 - clean script compilation;
 - deterministic scene flow;
@@ -137,7 +140,7 @@ The upgrade is accepted only when it preserves:
 - arm64 player launch;
 - rendering and input behaviour within documented tolerances.
 
-After the upgraded arm64 path is stable:
+After the arm64 path is stable:
 
 - produce a universal macOS player;
 - inspect the application with `file`/`lipo` to confirm both architectures;
@@ -172,13 +175,21 @@ After the upgraded arm64 path is stable:
 
 ## Immediate next actions
 
-1. Install Unity `2022.3.62f3` with macOS Build Support (as of 2026-10-12 only Unity `6000.3.26f1` is installed locally; do not open the project in it before the 2022.3 baseline is captured).
-2. Compile and run the new batch baseline validator.
+1. Fix the known compile blockers below and rerun `tools/compile-check.sh`.
+2. Open the project in Unity `6000.3.26f1` and run the batch baseline validator.
 3. Repair any importer, compiler, scene, or asset failures found by a clean import.
 4. Save and review only intentional scene changes.
 5. Build and launch the first arm64 development player.
 6. Lock that evidence-backed baseline in version control.
 7. Begin `BuggyControllerModern` with wheel contacts and suspension.
+
+## Known compile blockers
+
+From `tools/compile-check.sh` against Unity `6000.3.26f1` on 2026-10-13:
+
+- `Pro Standard Assets/Image Based/BlurEffect.cs`, `GlowEffect.cs`, and `ImageEffects.cs` create materials from shader source strings (`new Material(string)`), which modern Unity rejects. The other effects in that folder fail because they depend on `ImageEffects`.
+- `Modernization/Scripts/Replacements/CameraVehicle.cs` references `ColorCorrectionEffect`, `GlowEffect`, and `MotionBlur` from that folder.
+- With that folder excluded, the rest of firstpass compiles and the runtime assembly fails only on those `CameraVehicle` references. Editor scripts have not been checked yet because they depend on the runtime assembly. Resolve by porting the effects to shader assets or replacing them, then recheck.
 
 ## Definition of done for the single-player milestone
 
