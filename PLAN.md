@@ -45,6 +45,8 @@ The current working tree has not been compiled or played in Unity since its newe
 - [x] Add a Unity batchmode baseline-validation entry point.
 - [x] Separate buggy flight state from the legacy `inputThrottle` state flag.
 - [x] Stage every PNG source asset alongside its existing `.meta` (static check: no asset without a `.meta`; the only `.meta` files without tracked sources are empty folders).
+- [x] Stop tracking IDE-generated solution and project files in `Unity6/`.
+- [x] Anchor root-only ignore rules so `Unity6/Assets/Whirld/Docs/` is no longer ignored on case-insensitive file systems.
 
 ### Required before the baseline is locked
 
