@@ -81,8 +81,8 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
             rb = go.AddComponent<Rigidbody>();
         }
         rb.useGravity = true;
-        rb.drag = 0.5f;
-        rb.angularDrag = 0.05f;
+        rb.linearDamping = 0.5f;
+        rb.angularDamping = 0.05f;
 
         if (go.GetComponent<SimplePlayerController>() == null)
         {

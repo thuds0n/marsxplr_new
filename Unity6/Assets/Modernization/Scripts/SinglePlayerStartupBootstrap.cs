@@ -14,10 +14,20 @@ public static class SinglePlayerStartupBootstrap
     private static void ResetState()
     {
         _requestedFromSceneHandle = -1;
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void ContinueSinglePlayerFlowAfterSceneLoad()
+    {
+        // AfterSceneLoad only fires for the first scene, so later hops
+        // (InitGame -> Game) are driven by sceneLoaded.
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        ContinueFromCurrentScene();
+    }
+
+    private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         ContinueFromCurrentScene();
     }

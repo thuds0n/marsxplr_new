@@ -97,9 +97,9 @@ public class CameraVehicle : MonoBehaviour
             if (Game.Settings.camChase == 1)
             {
                 var rb = Game.Player.GetComponent<Rigidbody>();
-                if (rb != null && rb.velocity.sqrMagnitude > 0.1f && rb.velocity.normalized.y < 0.8f && rb.velocity.normalized.y > -0.8f)
+                if (rb != null && rb.linearVelocity.sqrMagnitude > 0.1f && rb.linearVelocity.normalized.y < 0.8f && rb.linearVelocity.normalized.y > -0.8f)
                 {
-                    _lastDir = Vector3.Lerp(_lastDir, rb.velocity.normalized, 0.1f);
+                    _lastDir = Vector3.Lerp(_lastDir, rb.linearVelocity.normalized, 0.1f);
                 }
                 else
                 {
@@ -116,9 +116,9 @@ public class CameraVehicle : MonoBehaviour
             else if (Game.Settings.camChase == 2)
             {
                 var rb = Game.Player.GetComponent<Rigidbody>();
-                if (rb != null && rb.velocity.sqrMagnitude > 0f)
+                if (rb != null && rb.linearVelocity.sqrMagnitude > 0f)
                 {
-                    float wantedRotationAngle = Quaternion.LookRotation(rb.velocity).eulerAngles.y;
+                    float wantedRotationAngle = Quaternion.LookRotation(rb.linearVelocity).eulerAngles.y;
                     wantedRotationAngle += Input.GetAxis("Horizontal") * Mathf.Lerp(30f, 10f, camDist / 30f);
                     float wantedHeight = rideTarget.position.y + Mathf.Lerp(0.1f, 15f, camDist / 30f) + _heightBoost;
                     float targetHeight = Mathf.Lerp(0.5f, 3f, camDist / 30f);

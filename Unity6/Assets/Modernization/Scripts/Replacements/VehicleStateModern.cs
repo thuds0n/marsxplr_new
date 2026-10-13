@@ -51,9 +51,9 @@ public class VehicleStateModern : MonoBehaviour
             return;
         }
 
-        velocity = body.velocity;
-        forwardSpeed = Vector3.Dot(body.velocity, transform.forward);
-        mph = body.velocity.magnitude * 2.23f;
+        velocity = body.linearVelocity;
+        forwardSpeed = Vector3.Dot(body.linearVelocity, transform.forward);
+        mph = body.linearVelocity.magnitude * 2.23f;
         altitude = transform.position.y;
     }
 }

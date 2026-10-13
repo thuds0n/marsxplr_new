@@ -36,8 +36,8 @@ public class SimplePlayerController : MonoBehaviour
         _rb.mass = 2f;
         _rb.interpolation = RigidbodyInterpolation.Interpolate;
         _rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
-        _rb.drag = 0.5f;
-        _rb.angularDrag = 0.05f;
+        _rb.linearDamping = 0.5f;
+        _rb.angularDamping = 0.05f;
 
         if (_state != null)
         {
@@ -93,9 +93,9 @@ public class SimplePlayerController : MonoBehaviour
             _rb.useGravity = true;
             float flightDragRef = Game.Settings != null ? Mathf.Max(50f, Game.Settings.buggyFlightDrag) : 300f;
             float agility = Game.Settings != null ? Mathf.Clamp(Game.Settings.buggyFlightAgility, 0.5f, 1.6f) : 1f;
-            float speedMag = _rb.velocity.magnitude;
-            _rb.drag = Mathf.Clamp(speedMag / flightDragRef * 0.3f, 0.04f, 0.55f);
-            _rb.angularDrag = 1.8f;
+            float speedMag = _rb.linearVelocity.magnitude;
+            _rb.linearDamping = Mathf.Clamp(speedMag / flightDragRef * 0.3f, 0.04f, 0.55f);
+            _rb.angularDamping = 1.8f;
 
             // Legacy-like wing mode: vertical axis is throttle/reverse and drives pitch.
             float throttle = input.y;
@@ -108,7 +108,7 @@ public class SimplePlayerController : MonoBehaviour
             }
 
             // Speed-based aerodynamic lift with stall behavior; no constant climb force.
-            float forwardSpeed = Vector3.Dot(_rb.velocity, transform.forward);
+            float forwardSpeed = Vector3.Dot(_rb.linearVelocity, transform.forward);
             float lift = Mathf.Clamp((forwardSpeed - flightStallSpeed) * 0.9f, 0f, flightLift * 2.4f);
             _rb.AddForce(transform.up * lift, ForceMode.Acceleration);
             if (forwardSpeed < flightStallSpeed)
@@ -118,7 +118,7 @@ public class SimplePlayerController : MonoBehaviour
             }
 
             // Parasitic drag similar to legacy flight decel.
-            _rb.AddForce(-_rb.velocity * (speedMag / flightDragRef) * 0.38f, ForceMode.Acceleration);
+            _rb.AddForce(-_rb.linearVelocity * (speedMag / flightDragRef) * 0.38f, ForceMode.Acceleration);
 
             // Ground-effect boost like original "wingOpen near surface" behavior.
             if (Physics.Raycast(transform.position + Vector3.up * 1.5f, Vector3.down, out RaycastHit groundHit, 2.2f, ~0, QueryTriggerInteraction.Ignore))
@@ -134,14 +134,14 @@ public class SimplePlayerController : MonoBehaviour
         else
         {
             _rb.useGravity = true;
-            _rb.drag = 0.5f;
-            _rb.angularDrag = 2.2f;
+            _rb.linearDamping = 0.5f;
+            _rb.angularDamping = 2.2f;
 
             float throttle = Mathf.Clamp(input.y, -1f, 1f);
             float steer = Mathf.Clamp(input.x, -1f, 1f);
             _rb.AddForce(transform.forward * throttle * acceleration, ForceMode.Acceleration);
 
-            float speed = _rb.velocity.magnitude;
+            float speed = _rb.linearVelocity.magnitude;
             if (Mathf.Abs(steer) > 0.01f && (speed > 0.25f || Mathf.Abs(throttle) > 0.01f))
             {
                 // Keep buggy-style reverse behavior: reverse input drives backward, it doesn't force a turn-around.
@@ -152,14 +152,14 @@ public class SimplePlayerController : MonoBehaviour
 
             if (Mathf.Abs(throttle) < 0.01f)
             {
-                Vector3 damped = new Vector3(_rb.velocity.x * 0.985f, _rb.velocity.y, _rb.velocity.z * 0.985f);
-                _rb.velocity = damped;
+                Vector3 damped = new Vector3(_rb.linearVelocity.x * 0.985f, _rb.linearVelocity.y, _rb.linearVelocity.z * 0.985f);
+                _rb.linearVelocity = damped;
             }
 
             // Reduce sideways drift while driving.
-            Vector3 localVel = transform.InverseTransformDirection(_rb.velocity);
+            Vector3 localVel = transform.InverseTransformDirection(_rb.linearVelocity);
             localVel.x = Mathf.Lerp(localVel.x, 0f, Time.fixedDeltaTime * sideSlipDamping);
-            _rb.velocity = transform.TransformDirection(localVel);
+            _rb.linearVelocity = transform.TransformDirection(localVel);
 
             Vector3 av = _rb.angularVelocity;
             av.y = Mathf.Clamp(av.y, -1.8f, 1.8f);
@@ -173,12 +173,12 @@ public class SimplePlayerController : MonoBehaviour
             }
 
             // Keep drive speed in original-ish buggy envelope.
-            Vector3 flat = new Vector3(_rb.velocity.x, 0f, _rb.velocity.z);
+            Vector3 flat = new Vector3(_rb.linearVelocity.x, 0f, _rb.linearVelocity.z);
             float maxSpd = Game.Settings != null ? Mathf.Max(8f, Game.Settings.buggySpeed) : groundMaxSpeed;
             if (flat.magnitude > maxSpd)
             {
                 Vector3 capped = flat.normalized * maxSpd;
-                _rb.velocity = new Vector3(capped.x, _rb.velocity.y, capped.z);
+                _rb.linearVelocity = new Vector3(capped.x, _rb.linearVelocity.y, capped.z);
             }
         }
 
@@ -274,7 +274,7 @@ public class SimplePlayerController : MonoBehaviour
             _rb.constraints = flightMode ? RigidbodyConstraints.None : (RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ);
             if (!flightMode && !IsGrounded())
             {
-                _rb.velocity = new Vector3(_rb.velocity.x, Mathf.Min(_rb.velocity.y, 0f), _rb.velocity.z);
+                _rb.linearVelocity = new Vector3(_rb.linearVelocity.x, Mathf.Min(_rb.linearVelocity.y, 0f), _rb.linearVelocity.z);
             }
 
             if (!flightMode)
@@ -285,11 +285,11 @@ public class SimplePlayerController : MonoBehaviour
             else
             {
                 // Carry momentum into takeoff so high-speed wing-open state can lift.
-                float forwardSpeed = Vector3.Dot(_rb.velocity, transform.forward);
+                float forwardSpeed = Vector3.Dot(_rb.linearVelocity, transform.forward);
                 if (forwardSpeed > flightStallSpeed * 0.6f)
                 {
                     float boost = Mathf.Clamp(forwardSpeed * 0.035f, 0f, takeoffImpulse);
-                    _rb.velocity += Vector3.up * boost;
+                    _rb.linearVelocity += Vector3.up * boost;
                 }
             }
         }

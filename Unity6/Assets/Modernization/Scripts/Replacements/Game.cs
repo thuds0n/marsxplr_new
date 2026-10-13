@@ -102,7 +102,7 @@ public class Game : MonoBehaviour
             if (rb != null)
             {
                 rb.isKinematic = false;
-                rb.velocity = Vector3.zero;
+                rb.linearVelocity = Vector3.zero;
                 rb.angularVelocity = Vector3.zero;
             }
 
@@ -349,7 +349,7 @@ public class Game : MonoBehaviour
         }
         else if (rb != null)
         {
-            mph = rb.velocity.magnitude < 0.05f ? 0 : Mathf.RoundToInt(rb.velocity.magnitude * 2.23f);
+            mph = rb.linearVelocity.magnitude < 0.05f ? 0 : Mathf.RoundToInt(rb.linearVelocity.magnitude * 2.23f);
         }
 
         string text = (mph == 0 ? "Static" : mph + " MPH") + "     " + alt + " ALT";

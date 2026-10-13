@@ -61,7 +61,7 @@ The current working tree has not been compiled or played in Unity since its newe
 - [x] Run the batch `Validate Project Baseline` check.
 - [ ] Run the interactive `Validate Project Baseline` check.
 - [ ] Verify direct Play mode entry from `Game.unity`.
-- [ ] Verify the complete `Init -> InitGame -> Game` flow.
+- [x] Verify the complete `Init -> InitGame -> Game` flow (Unity `6000.3.26f1` editor, 2026-10-13: reaches `Game`, spawns the buggy on fallback ground, no exceptions; required driving later scene hops from `SceneManager.sceneLoaded`).
 - [ ] Create and launch an arm64 development player on Apple silicon.
 - [ ] Repeat the import and smoke test from a clean checkout or clean clone.
 - [ ] Record the Unity version, macOS version, scripting backend, architecture, and known warnings.
@@ -177,7 +177,7 @@ After the arm64 path is stable:
 
 ## Immediate next actions
 
-1. Verify direct `Game` Play mode entry and the `Init -> InitGame -> Game` flow in the editor.
+1. Verify direct `Game` Play mode entry and buggy controls in the editor.
 2. Check the image effects render correctly under Metal.
 3. Save and review only intentional scene changes.
 4. Build and launch the first arm64 development player.

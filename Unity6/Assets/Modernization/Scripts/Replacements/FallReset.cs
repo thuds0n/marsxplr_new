@@ -25,7 +25,7 @@ public class FallReset : MonoBehaviour
 
         transform.position = spawn;
         transform.rotation = Quaternion.identity;
-        _rb.velocity = Vector3.zero;
+        _rb.linearVelocity = Vector3.zero;
         _rb.angularVelocity = Vector3.zero;
     }
 }
