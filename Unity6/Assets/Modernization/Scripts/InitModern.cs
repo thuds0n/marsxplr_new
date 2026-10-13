@@ -8,6 +8,12 @@ public sealed class InitModern : MonoBehaviour
 
     private void Start()
     {
+        if (!ModernizationConfig.MultiplayerEnabled)
+        {
+            SinglePlayerStartupBootstrap.ContinueFromCurrentScene();
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(GameDataModern.userName))
         {
             var savedName = PlayerPrefs.GetString("userName", "");

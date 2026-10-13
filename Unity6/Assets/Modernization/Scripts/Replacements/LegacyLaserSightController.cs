@@ -39,6 +39,13 @@ public class LegacyLaserSightController : MonoBehaviour
 
     private void Update()
     {
+        var state = GetComponent<VehicleStateModern>();
+        if (state != null)
+        {
+            vehicleId = state.vehicleId;
+            camOffset = state.camOffset;
+        }
+
         if (Game.Settings == null)
         {
             SetActive(laserAimer, false);

@@ -3,6 +3,8 @@ using UnityEngine.SceneManagement;
 
 public sealed class InitSceneLoaderModern : MonoBehaviour
 {
+    // Retained for multiplayer/reference scene compatibility. The supported
+    // single-player flow is owned by SinglePlayerStartupBootstrap.
     [SerializeField] private string nextSceneName = "Lobby";
 
     private AsyncOperation _loadOperation;
@@ -10,6 +12,13 @@ public sealed class InitSceneLoaderModern : MonoBehaviour
 
     private void Update()
     {
+        if (!ModernizationConfig.MultiplayerEnabled)
+        {
+            SinglePlayerStartupBootstrap.ContinueFromCurrentScene();
+            enabled = false;
+            return;
+        }
+
         if (!_requestedLoad)
         {
             _requestedLoad = true;
