@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 
 [RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(VehicleStateModern))]
 public class SimplePlayerController : MonoBehaviour
 {
     public float moveSpeed = 22f;
@@ -21,6 +22,8 @@ public class SimplePlayerController : MonoBehaviour
     public bool flightMode;
 
     private Rigidbody _rb;
+    private VehicleStateModern _state;
+    private Vector2 _input;
     private float _nextFireAt;
     private float _nextNoLaserMessageAt;
     private float _nextWingScanAt;
@@ -29,15 +32,32 @@ public class SimplePlayerController : MonoBehaviour
     private void Awake()
     {
         _rb = GetComponent<Rigidbody>();
+        _state = GetComponent<VehicleStateModern>();
         _rb.mass = 2f;
         _rb.interpolation = RigidbodyInterpolation.Interpolate;
         _rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
         _rb.drag = 0.5f;
         _rb.angularDrag = 0.05f;
+
+        if (_state != null)
+        {
+            _state.camOffset = 2f;
+            _state.rideTarget = transform;
+            _state.SetFlightMode(flightMode);
+            _state.SyncFromRigidbody(_rb);
+        }
     }
 
     private void Update()
     {
+        _input = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
+        if (_state != null)
+        {
+            _state.SetInput(_input.x, _input.y);
+            _state.grounded = IsGrounded();
+            _state.SyncFromRigidbody(_rb);
+        }
+
         if (Input.GetButtonDown("Jump") && (Game.Messaging == null || !Game.Messaging.chatting))
         {
             ToggleFlightMode();
@@ -63,7 +83,7 @@ public class SimplePlayerController : MonoBehaviour
             return;
         }
 
-        Vector2 input = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
+        Vector2 input = _input;
         Vector3 desiredDir = new Vector3(input.x, 0f, input.y);
         if (desiredDir.sqrMagnitude > 1f) desiredDir.Normalize();
 
@@ -161,6 +181,13 @@ public class SimplePlayerController : MonoBehaviour
                 _rb.velocity = new Vector3(capped.x, _rb.velocity.y, capped.z);
             }
         }
+
+        if (_state != null)
+        {
+            _state.SetInput(input.x, input.y);
+            _state.grounded = IsGrounded();
+            _state.SyncFromRigidbody(_rb);
+        }
     }
 
     private void TryFireLaser()
@@ -236,6 +263,11 @@ public class SimplePlayerController : MonoBehaviour
     private void ToggleFlightMode()
     {
         flightMode = !flightMode;
+        if (_state != null)
+        {
+            _state.SetFlightMode(flightMode);
+        }
+
         if (_rb != null)
         {
             _rb.useGravity = true;

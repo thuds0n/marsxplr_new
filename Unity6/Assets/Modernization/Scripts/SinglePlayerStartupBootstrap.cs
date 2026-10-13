@@ -5,25 +5,60 @@ public static class SinglePlayerStartupBootstrap
 {
     private const string InitSceneName = "Init";
     private const string GameInitSceneName = "InitGame";
+    private const string GameSceneName = "Game";
     private const string UserNamePrefKey = "userName";
     private const string DefaultUserName = "MarsRacer";
+    private static int _requestedFromSceneHandle = -1;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetState()
+    {
+        _requestedFromSceneHandle = -1;
+    }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void RedirectInitSceneToSinglePlayer()
+    private static void ContinueSinglePlayerFlowAfterSceneLoad()
+    {
+        ContinueFromCurrentScene();
+    }
+
+    public static bool ContinueFromCurrentScene()
     {
         if (ModernizationConfig.MultiplayerEnabled)
         {
-            return;
+            return false;
         }
 
         var activeScene = SceneManager.GetActiveScene();
-        if (activeScene.name != InitSceneName)
+        if (!activeScene.IsValid() || activeScene.handle == _requestedFromSceneHandle)
         {
-            return;
+            return false;
         }
 
-        InitializeSinglePlayerDefaults();
-        SceneManager.LoadScene(GameInitSceneName, LoadSceneMode.Single);
+        string nextSceneName;
+        if (activeScene.name == InitSceneName)
+        {
+            InitializeSinglePlayerDefaults();
+            nextSceneName = GameInitSceneName;
+        }
+        else if (activeScene.name == GameInitSceneName)
+        {
+            nextSceneName = GameSceneName;
+        }
+        else
+        {
+            return false;
+        }
+
+        if (!Application.CanStreamedLevelBeLoaded(nextSceneName))
+        {
+            Debug.LogError("[SinglePlayerStartupBootstrap] Required scene is not available in Build Settings: " + nextSceneName);
+            return false;
+        }
+
+        _requestedFromSceneHandle = activeScene.handle;
+        SceneManager.LoadScene(nextSceneName, LoadSceneMode.Single);
+        return true;
     }
 
     private static void InitializeSinglePlayerDefaults()

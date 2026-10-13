@@ -1,15 +1,9 @@
-using UnityEngine;
-using UnityEngine.SceneManagement;
-
+// Compatibility facade retained for older migration references. Automatic
+// single-player routing is owned solely by SinglePlayerStartupBootstrap.
 public static class InitSceneRuntimeBootstrap
 {
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void OnAfterSceneLoad()
+    public static bool ContinueSinglePlayerFlow()
     {
-        var scene = SceneManager.GetActiveScene();
-        if (scene.name == "InitGame" || scene.name == "Init")
-        {
-            SceneLoaderModern.LoadNextFromCurrent();
-        }
+        return SinglePlayerStartupBootstrap.ContinueFromCurrentScene();
     }
 }

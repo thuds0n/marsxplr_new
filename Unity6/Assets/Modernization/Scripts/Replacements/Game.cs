@@ -336,11 +336,22 @@ public class Game : MonoBehaviour
 
     private void DrawHudReadout()
     {
+        VehicleStateModern state = Player.GetComponent<VehicleStateModern>();
         Rigidbody rb = Player.GetComponent<Rigidbody>();
-        if (rb == null) return;
+        if (state == null && rb == null) return;
 
-        int mph = rb.velocity.magnitude < 0.05f ? 0 : Mathf.RoundToInt(rb.velocity.magnitude * 2.23f);
+        int mph = 0;
         int alt = Mathf.RoundToInt(Player.transform.position.y);
+        if (state != null)
+        {
+            mph = state.mph < 0.05f ? 0 : Mathf.RoundToInt(state.mph);
+            alt = Mathf.RoundToInt(state.altitude);
+        }
+        else if (rb != null)
+        {
+            mph = rb.velocity.magnitude < 0.05f ? 0 : Mathf.RoundToInt(rb.velocity.magnitude * 2.23f);
+        }
+
         string text = (mph == 0 ? "Static" : mph + " MPH") + "     " + alt + " ALT";
 
         if (QuarryVeh != null)

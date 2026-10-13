@@ -29,6 +29,11 @@ public class CameraVehicle : MonoBehaviour
         if (Game.Player == null) return;
         if (Game.Settings == null) return;
 
+        var playerState = Game.Player.GetComponent<VehicleStateModern>();
+        Transform rideTarget = playerState != null && playerState.rideTarget != null
+            ? playerState.rideTarget
+            : Game.Player.transform;
+
         bool chatting = Game.Messaging != null && Game.Messaging.chatting;
         bool firstPersonHold = Input.GetButton("Fire2") || (Input.GetButton("Snipe") && !chatting);
         bool firstPersonActive = Game.Settings.camMode == 0 || firstPersonHold;
@@ -55,7 +60,7 @@ public class CameraVehicle : MonoBehaviour
                     : Quaternion.identity;
             }
 
-            transform.position = Game.Player.transform.position + Vector3.up * 1.5f;
+            transform.position = rideTarget.position + Vector3.up * 1.5f;
 
             if (Game.Settings.gyroCam)
             {
@@ -101,12 +106,12 @@ public class CameraVehicle : MonoBehaviour
                     _lastDir = Vector3.Lerp(_lastDir, new Vector3(_lastDir.x, 0f, _lastDir.z), 0.1f);
                 }
 
-                Vector3 newPos = Game.Player.transform.position + _lastDir * -camDist + Vector3.up * (camDist / 3f);
+                Vector3 newPos = rideTarget.position + _lastDir * -camDist + Vector3.up * (camDist / 3f);
                 float chaseHeight = Mathf.Lerp(0.9f, 2.2f, Mathf.Clamp01(camDist / 30f));
-                newPos.y = Game.Player.transform.position.y + chaseHeight;
-                transform.position += Vector3.up * ((Game.Player.transform.position.y - _lastY) * Time.deltaTime);
+                newPos.y = rideTarget.position.y + chaseHeight;
+                transform.position += Vector3.up * ((rideTarget.position.y - _lastY) * Time.deltaTime);
                 transform.position = Vector3.Lerp(transform.position, newPos, Time.deltaTime * 4f);
-                _lastY = Game.Player.transform.position.y;
+                _lastY = rideTarget.position.y;
             }
             else if (Game.Settings.camChase == 2)
             {
@@ -115,7 +120,7 @@ public class CameraVehicle : MonoBehaviour
                 {
                     float wantedRotationAngle = Quaternion.LookRotation(rb.velocity).eulerAngles.y;
                     wantedRotationAngle += Input.GetAxis("Horizontal") * Mathf.Lerp(30f, 10f, camDist / 30f);
-                    float wantedHeight = Game.Player.transform.position.y + Mathf.Lerp(0.1f, 15f, camDist / 30f) + _heightBoost;
+                    float wantedHeight = rideTarget.position.y + Mathf.Lerp(0.1f, 15f, camDist / 30f) + _heightBoost;
                     float targetHeight = Mathf.Lerp(0.5f, 3f, camDist / 30f);
 
                     float currentRotationAngle = transform.eulerAngles.y;
@@ -123,7 +128,7 @@ public class CameraVehicle : MonoBehaviour
                     currentRotationAngle = Mathf.LerpAngle(currentRotationAngle, wantedRotationAngle, 3f * Time.deltaTime);
                     currentHeight = Mathf.Lerp(currentHeight, wantedHeight, 3f * Time.deltaTime);
                     Quaternion currentRotation = Quaternion.Euler(0f, currentRotationAngle, 0f);
-                    Vector3 pos = Game.Player.transform.position;
+                    Vector3 pos = rideTarget.position;
                     pos.y += targetHeight;
                     transform.position = pos;
                     transform.position -= currentRotation * Vector3.forward * camDist;
@@ -147,7 +152,7 @@ public class CameraVehicle : MonoBehaviour
             }
             else
             {
-                Vector3 target = Game.Player.transform.position + Vector3.up * 1.2f;
+                Vector3 target = rideTarget.position + Vector3.up * 1.2f;
                 Vector3 desired = target - Game.Player.transform.forward * (camDist + 1.2f);
                 transform.position = Vector3.Lerp(transform.position, desired, Time.deltaTime * 3.5f);
                 transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(target - transform.position, Vector3.up), Time.deltaTime * 4f);

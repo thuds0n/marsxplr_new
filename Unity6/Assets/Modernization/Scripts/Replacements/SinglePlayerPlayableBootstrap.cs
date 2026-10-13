@@ -88,6 +88,7 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
         {
             go.AddComponent<SimplePlayerController>();
         }
+        var vehicleState = go.GetComponent<VehicleStateModern>();
         if (go.GetComponent<FallReset>() == null)
         {
             go.AddComponent<FallReset>();
@@ -154,6 +155,15 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
         }
 
         AttachLegacyLaserSight(go);
+
+        if (vehicleState != null)
+        {
+            vehicleState.vehicleId = 0;
+            vehicleState.camOffset = 2f;
+            vehicleState.rideTarget = go.transform;
+            vehicleState.SetFlightMode(false);
+            vehicleState.SyncFromRigidbody(rb);
+        }
 
         Game.Player = go;
         if (Game.Settings != null)
