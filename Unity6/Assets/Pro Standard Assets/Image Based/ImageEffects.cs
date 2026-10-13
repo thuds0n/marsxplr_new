@@ -21,68 +21,22 @@ public class ImageEffects {
 		if (m_BlitMaterials[index] != null)
 			return m_BlitMaterials[index];
 			
-		// Blit Copy Material
-		m_BlitMaterials[0] = new Material (
-			"Shader \"BlitCopy\" {\n"	+
-			"	SubShader { Pass {\n" +
-			" 		ZTest Always Cull Off ZWrite Off Fog { Mode Off }\n" +
-			"		SetTexture [__RenderTex] { combine texture}"	+
-			"	}}\n"	 +
-			"Fallback Off }"
-		);
-		// Blit Multiply
-		m_BlitMaterials[1] = new Material (
-			"Shader \"BlitMultiply\" {\n"	+
-			"	SubShader { Pass {\n" +
-			"		Blend DstColor Zero\n" + 
-			" 		ZTest Always Cull Off ZWrite Off Fog { Mode Off }\n" +
-			"		SetTexture [__RenderTex] { combine texture }"	+
-			"	}}\n"	 +
-			"Fallback Off }"
-		);
-		// Blit Multiply 2X
-		m_BlitMaterials[2] = new Material (
-			"Shader \"BlitMultiplyDouble\" {\n"	+
-			"	SubShader { Pass {\n" +
-			"		Blend DstColor SrcColor\n" + 
-			" 		ZTest Always Cull Off ZWrite Off Fog { Mode Off }\n" +
-			"		SetTexture [__RenderTex] { combine texture }"	+
-			"	}}\n"	 +
-			"Fallback Off }"
-		);
-		// Blit Add
-		m_BlitMaterials[3] = new Material (
-			"Shader \"BlitAdd\" {\n"	+
-			"	SubShader { Pass {\n" +
-			"		Blend One One\n" + 
-			" 		ZTest Always Cull Off ZWrite Off Fog { Mode Off }\n" +
-			"		SetTexture [__RenderTex] { combine texture }"	+
-			"	}}\n"	 +
-			"Fallback Off }"
-		);
-		// Blit AddSmooth
-		m_BlitMaterials[4] = new Material (
-			"Shader \"BlitAddSmooth\" {\n"	+
-			"	SubShader { Pass {\n" +
-			"		Blend OneMinusDstColor One\n" + 
-			" 		ZTest Always Cull Off ZWrite Off Fog { Mode Off }\n" +
-			"		SetTexture [__RenderTex] { combine texture }"	+
-			"	}}\n"	 +
-			"Fallback Off }"
-		);
-		// Blit Blend
-		m_BlitMaterials[5] = new Material (
-			"Shader \"BlitBlend\" {\n"	+
-			"	SubShader { Pass {\n" +
-			"		Blend SrcAlpha OneMinusSrcAlpha\n" + 
-			" 		ZTest Always Cull Off ZWrite Off Fog { Mode Off }\n" +
-			"		SetTexture [__RenderTex] { combine texture }"	+
-			"	}}\n"	 +
-			"Fallback Off }"
-		);
+		// The blit shaders were originally compiled from source strings, one per
+		// blend mode. They now share one shader asset with per-material blend factors.
+		Shader shader = Resources.Load<Shader>("ImageEffectsBlit");
+		UnityEngine.Rendering.BlendMode[,] factors = {
+			{ UnityEngine.Rendering.BlendMode.One, UnityEngine.Rendering.BlendMode.Zero },                     // Copy
+			{ UnityEngine.Rendering.BlendMode.DstColor, UnityEngine.Rendering.BlendMode.Zero },                // Multiply
+			{ UnityEngine.Rendering.BlendMode.DstColor, UnityEngine.Rendering.BlendMode.SrcColor },            // MultiplyDouble
+			{ UnityEngine.Rendering.BlendMode.One, UnityEngine.Rendering.BlendMode.One },                      // Add
+			{ UnityEngine.Rendering.BlendMode.OneMinusDstColor, UnityEngine.Rendering.BlendMode.One },         // AddSmoooth
+			{ UnityEngine.Rendering.BlendMode.SrcAlpha, UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha },    // Blend
+		};
 		for( int i = 0; i < m_BlitMaterials.Length; ++i ) {
+			m_BlitMaterials[i] = new Material (shader);
+			m_BlitMaterials[i].SetFloat ("_SrcBlend", (float)factors[i, 0]);
+			m_BlitMaterials[i].SetFloat ("_DstBlend", (float)factors[i, 1]);
 			m_BlitMaterials[i].hideFlags = HideFlags.HideAndDontSave;
-			m_BlitMaterials[i].shader.hideFlags = HideFlags.HideAndDontSave;
 		}
 		return m_BlitMaterials[index];
 	}
@@ -103,8 +57,20 @@ public class ImageEffects {
 
 	/// Copies one render texture onto another.
 	public static void Blit (RenderTexture source, Rect sourceRect, RenderTexture dest, Rect destRect, BlendMode blendMode) {
-		// Legacy material-from-string paths are not supported in modern Unity.
-		Graphics.Blit(source, dest);
+		// Make the destination texture the target for all rendering
+		RenderTexture.active = dest;  		
+		// Assign the source texture to a property from a shader
+		Shader.SetGlobalTexture ("__RenderTex", source);
+		bool invertY = source.texelSize.y < 0.0f;
+		// Set up the simple Matrix
+		GL.PushMatrix ();
+		GL.LoadOrtho ();
+		Material blitMaterial = GetBlitMaterial(blendMode);
+		for (int i = 0; i < blitMaterial.passCount; i++) {
+			blitMaterial.SetPass (i);
+			DrawQuad(invertY);
+		}
+		GL.PopMatrix ();
 	}
 	
 	public static void BlitWithMaterial (Material material, RenderTexture source, RenderTexture destination)
