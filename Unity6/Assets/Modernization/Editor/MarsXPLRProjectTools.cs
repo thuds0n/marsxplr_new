@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 
 public static class MarsXPLRProjectTools
 {
-    private const string SupportedEditorVersion = "2022.3.62f3";
+    private const string SupportedEditorVersion = "6000.3.26f1";
     private const string InitScenePath = "Assets/_Scenes/Init.unity";
     private const string LobbyScenePath = "Assets/_Scenes/Lobby.unity";
     private const string InitGameScenePath = "Assets/_Scenes/InitGame.unity";

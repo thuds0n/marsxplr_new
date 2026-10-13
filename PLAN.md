@@ -54,10 +54,12 @@ The current working tree has not been compiled or played in Unity since its newe
 
 - [x] Add `tools/compile-check.sh`, an editor-free compile check against Unity 6 reference assemblies.
 - [x] Fix the editor-free compile errors (see Editor-free compile status).
-- [ ] Open the project in Unity `6000.3.26f1`, let the API updater run, and complete a clean script compile.
-- [ ] Review scene, prefab, and project-setting re-serialisation against `pre-unity6-upgrade` before committing it.
+- [x] Open the project in Unity `6000.3.26f1`, let the API updater run, and complete a clean script compile.
+- [x] Review scene, prefab, and project-setting re-serialisation against `pre-unity6-upgrade` before committing it (binary assets reviewed by file list only).
+- [x] Remove the `com.unity.multiplayer.center` package Unity 6 added during import.
 - [ ] Run `Prepare Game Scene Baseline` with `Game.unity` open and review all changes before saving.
-- [ ] Run interactive and batch `Validate Project Baseline` checks.
+- [x] Run the batch `Validate Project Baseline` check.
+- [ ] Run the interactive `Validate Project Baseline` check.
 - [ ] Verify direct Play mode entry from `Game.unity`.
 - [ ] Verify the complete `Init -> InitGame -> Game` flow.
 - [ ] Create and launch an arm64 development player on Apple silicon.
@@ -175,20 +177,34 @@ After the arm64 path is stable:
 
 ## Immediate next actions
 
-1. Open the project in Unity `6000.3.26f1` and run the batch baseline validator.
-2. Repair any importer, compiler, scene, or asset failures found by a clean import.
+1. Verify direct `Game` Play mode entry and the `Init -> InitGame -> Game` flow in the editor.
+2. Check the image effects render correctly under Metal.
 3. Save and review only intentional scene changes.
 4. Build and launch the first arm64 development player.
 5. Lock that evidence-backed baseline in version control.
 6. Begin `BuggyControllerModern` with wheel contacts and suspension.
 
+## Unity 6.3 import results
+
+First import on 2026-10-13 with Unity `6000.3.26f1` on macOS `27.0.1` (`arm64`), batch mode:
+
+- Script compilation succeeded with no errors; the API updater changed no scripts. Obsolete-API warnings remain (`Rigidbody.velocity`, `drag`, `angularDrag`, `FindObjectsOfType`, `SystemInfo.supportsImageEffects`, `GameObject.active`, and others).
+- Batch `Validate Project Baseline` passed; `Game.unity` was not modified.
+- The image-effect shaders under `Pro Standard Assets/Image Based/Resources/` imported without shader errors.
+- Unity re-serialised 236 binary assets (materials, flares, the `Init`, `InitGame`, and `Lobby` scenes, some prefabs, and project settings) and generated per-scene `*Settings.lighting` files, `_TerrainAutoUpgrade/` terrain layers, and three `No Name` materials. These were committed as one dedicated upgrade change; `pre-unity6-upgrade` holds the previous state.
+
+Known issues exposed by the import (pre-existing, not regressions):
+
+- `Buggy`, `Jet`, `Hovercraft`, `Tank`, `LaserAuto`, `LaserSnipe`, and the Whirld `Sea`, `Base`, `JumpPoint`, and `Floor` prefabs still reference legacy UnityScript components, which Unity no longer compiles. Unity refuses to re-save prefabs with missing scripts, so these remain in their previous serialisation until modern components replace the missing ones.
+- `Whirld/ResourceSources/Materials/Object.mat` uses `Legacy Shaders/Diffuse Fast`, which Unity 6 no longer supports.
+
 ## Editor-free compile status
 
-`tools/compile-check.sh` against Unity `6000.3.26f1` passes for all predefined assemblies (2026-10-13).
+`tools/compile-check.sh` against Unity `6000.3.26f1` passes for all predefined assemblies (2026-10-13), matching the editor compile.
 
 The legacy image effects (`Pro Standard Assets/Image Based/` and the Unity Island copies) previously built materials from shader source strings, which modern Unity rejects. Those shaders now live, unchanged in substance, as fixed-function shader assets under `Pro Standard Assets/Image Based/Resources/`, and `ImageEffects.Blit` once again honours its blend mode instead of the earlier plain-copy stub. Still unverified in the editor:
 
-- the fixed-function shaders import and render under Metal;
+- the fixed-function shaders render correctly under Metal;
 - glow, colour correction, and motion blur match the original look in `Game`.
 
 ## Definition of done for the single-player milestone
