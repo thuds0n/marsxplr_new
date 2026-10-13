@@ -20,7 +20,8 @@ The vehicle physics, representative world loading, combat loop, and end-to-end m
 
 ## Repository layout
 
-- `Unity6/` — canonical modern runtime project. Despite the directory name, it currently targets Unity `2022.3.62f3`.
+- `Unity6/` — canonical modern runtime project, targeting Unity 6.3 LTS (`6000.3.26f1`).
+- `tools/` — command-line helpers, including an editor-free C# compile check.
 - `unity/` — historical/original project used as a behavioural and asset reference.
 - `graphics/` — original supporting graphics.
 - `PLAN.md` — implementation roadmap, verification status, and prioritised next work.
@@ -30,14 +31,14 @@ The vehicle physics, representative world loading, combat loop, and end-to-end m
 ## Requirements
 
 - macOS on Apple silicon for the primary development target;
-- Unity `2022.3.62f3` with macOS Build Support;
+- Unity 6.3 LTS (`6000.3.26f1`) with macOS Build Support;
 - Xcode for IL2CPP macOS builds.
 
 The first deliverable targets native macOS `arm64`. A universal `arm64` and `x86_64` player is planned only after the arm64 vertical slice is stable.
 
 ## Getting started
 
-1. Open `Unity6/` in Unity `2022.3.62f3`.
+1. Open `Unity6/` in Unity `6000.3.26f1`.
 2. Open `Assets/_Scenes/Game.unity`.
 3. Run `Tools -> MarsXPLR -> Prepare Game Scene Baseline`.
 4. Run `Tools -> MarsXPLR -> Validate Project Baseline`.
@@ -59,6 +60,8 @@ Init -> InitGame -> Game
 - `Build Buggy Visual Prefab` recreates `Assets/Modernization/Generated/BuggyVisual.prefab`.
 - `Validate Project Baseline` checks the editor version, required scenes and assets, build settings, and active `Game` scene wiring.
 - `Scan Missing Scripts (Active Scene)` reports missing components in the open scene.
+
+`tools/compile-check.sh` compiles the project's C# scripts against an installed Unity 6 editor's reference assemblies without launching the editor.
 
 These tools reduce manual recovery work, but they do not replace compile, Play mode, or player-build testing.
 
