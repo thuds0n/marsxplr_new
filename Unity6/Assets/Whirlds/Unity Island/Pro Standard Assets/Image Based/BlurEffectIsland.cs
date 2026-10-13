@@ -18,30 +18,14 @@ public class BlurEffectIsland : MonoBehaviour
 	// Basically it just takes 4 texture samples and averages them.
 	// By applying it repeatedly and spreading out sample locations
 	// we get a Gaussian blur approximation.
+	// The shader is Pro Standard Assets/Image Based/Resources/BlurConeTapIsland.shader.
 	
-	private static string blurMatString =
-@"Shader ""BlurConeTap"" {
-	SubShader {
-		Pass {
-			ZTest Always Cull Off ZWrite Off Fog { Mode Off }
-			SetTexture [__RenderTex] {constantColor (0,0,0,0.25) combine texture * constant alpha}
-			SetTexture [__RenderTex] {constantColor (0,0,0,0.25) combine texture * constant + previous}
-			SetTexture [__RenderTex] {constantColor (0,0,0,0.25) combine texture * constant + previous}
-			SetTexture [__RenderTex] {constantColor (0,0,0,0.25) combine texture * constant + previous}
-		}
-	}
-	Fallback off
-}";
-
 	static Material m_Material = null;
 	protected static Material material {
 		get {
 			if (m_Material == null) {
-#pragma warning disable 0618
-				m_Material = new Material( blurMatString );
-#pragma warning restore 0618
+				m_Material = new Material( Resources.Load<Shader>("BlurConeTapIsland") );
 				m_Material.hideFlags = HideFlags.HideAndDontSave;
-				m_Material.shader.hideFlags = HideFlags.HideAndDontSave;
 			}
 			return m_Material;
 		} 
@@ -49,7 +33,6 @@ public class BlurEffectIsland : MonoBehaviour
 	
 	protected void OnDisable() {
 		if( m_Material ) {
-			DestroyImmediate( m_Material.shader );
 			DestroyImmediate( m_Material );
 		}
 	}	
@@ -75,7 +58,7 @@ public class BlurEffectIsland : MonoBehaviour
 	public void FourTapCone (RenderTexture source, RenderTexture dest, int iteration)
 	{
 		RenderTexture.active = dest;
-		source.SetGlobalShaderProperty ("__RenderTex");
+		Shader.SetGlobalTexture ("__RenderTex", source);
 		
 		float offsetX = (.5F+iteration*blurSpread) / (float)source.width;
 		float offsetY = (.5F+iteration*blurSpread) / (float)source.height;
@@ -93,7 +76,7 @@ public class BlurEffectIsland : MonoBehaviour
 	private void DownSample4x (RenderTexture source, RenderTexture dest)
 	{
 		RenderTexture.active = dest;
-		source.SetGlobalShaderProperty ("__RenderTex");
+		Shader.SetGlobalTexture ("__RenderTex", source);
 		
 		float offsetX = 1.0f / (float)source.width;
 		float offsetY = 1.0f / (float)source.height;

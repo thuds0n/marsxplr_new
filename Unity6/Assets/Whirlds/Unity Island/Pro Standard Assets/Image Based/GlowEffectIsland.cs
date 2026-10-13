@@ -31,32 +31,15 @@ public class GlowEffectIsland : MonoBehaviour
 	//   adds (glow color * glow alpha * amount) to the original image.
 	// In the combiner glow amount can be only in 0..1 range; we apply extra
 	// amount during the blurring phase.
+	// The shader is Pro Standard Assets/Image Based/Resources/GlowCompose.shader.
 	
-	private static string compositeMatString =
-@"Shader ""GlowCompose"" {
-	Properties {
-		_Color (""Glow Amount"", Color) = (1,1,1,1)
-		_MainTex ("""", RECT) = ""white"" {}
-	}
-	SubShader {
-		Pass {
-			ZTest Always Cull Off ZWrite Off Fog { Mode Off }
-			Blend One One
-			SetTexture [_MainTex] {constantColor [_Color] combine constant * texture DOUBLE}
-		}
-	}
-	Fallback off
-}";
 	
 	static Material m_CompositeMaterial = null;
 	protected static Material compositeMaterial {
 		get {
 			if (m_CompositeMaterial == null) {
-#pragma warning disable 0618
-				m_CompositeMaterial = new Material (compositeMatString);
-#pragma warning restore 0618
+				m_CompositeMaterial = new Material (Resources.Load<Shader>("GlowCompose"));
 				m_CompositeMaterial.hideFlags = HideFlags.HideAndDontSave;
-				m_CompositeMaterial.shader.hideFlags = HideFlags.HideAndDontSave;
 			}
 			return m_CompositeMaterial;
 		} 
@@ -70,34 +53,14 @@ public class GlowEffectIsland : MonoBehaviour
 	// we get a Gaussian blur approximation.
 	// The alpha value in _Color would normally be 0.25 (to average 4 samples),
 	// however if we have glow amount larger than 1 then we increase this.
+	// The shader is Pro Standard Assets/Image Based/Resources/GlowConeTap.shader.
 	
-	private static string blurMatString =
-@"Shader ""GlowConeTap"" {
-	Properties {
-		_Color (""Blur Boost"", Color) = (0,0,0,0.25)
-		_MainTex ("""", RECT) = ""white"" {}
-	}
-	SubShader {
-		Pass {
-			ZTest Always Cull Off ZWrite Off Fog { Mode Off }
-			SetTexture [_MainTex] {constantColor [_Color] combine texture * constant alpha}
-			SetTexture [_MainTex] {constantColor [_Color] combine texture * constant + previous}
-			SetTexture [_MainTex] {constantColor [_Color] combine texture * constant + previous}
-			SetTexture [_MainTex] {constantColor [_Color] combine texture * constant + previous}
-		}
-	}
-	Fallback off
-}";
-
 	static Material m_BlurMaterial = null;
 	protected static Material blurMaterial {
 		get {
 			if (m_BlurMaterial == null) {
-#pragma warning disable 0618
-				m_BlurMaterial = new Material( blurMatString );
-#pragma warning restore 0618
+				m_BlurMaterial = new Material( Resources.Load<Shader>("GlowConeTap") );
 				m_BlurMaterial.hideFlags = HideFlags.HideAndDontSave;
-				m_BlurMaterial.shader.hideFlags = HideFlags.HideAndDontSave;
 			}
 			return m_BlurMaterial;
 		} 
@@ -127,11 +90,9 @@ public class GlowEffectIsland : MonoBehaviour
 	protected void OnDisable()
 	{
 		if( m_CompositeMaterial ) {
-			DestroyImmediate( m_CompositeMaterial.shader );
 			DestroyImmediate( m_CompositeMaterial );
 		}
 		if( m_BlurMaterial ) {
-			DestroyImmediate( m_BlurMaterial.shader );
 			DestroyImmediate( m_BlurMaterial );
 		}
 		if( m_DownsampleMaterial )

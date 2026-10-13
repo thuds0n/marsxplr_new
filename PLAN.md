@@ -53,7 +53,7 @@ The current working tree has not been compiled or played in Unity since its newe
 ### Required before the baseline is locked
 
 - [x] Add `tools/compile-check.sh`, an editor-free compile check against Unity 6 reference assemblies.
-- [ ] Fix the editor-free compile errors (see Known compile blockers).
+- [x] Fix the editor-free compile errors (see Editor-free compile status).
 - [ ] Open the project in Unity `6000.3.26f1`, let the API updater run, and complete a clean script compile.
 - [ ] Review scene, prefab, and project-setting re-serialisation against `pre-unity6-upgrade` before committing it.
 - [ ] Run `Prepare Game Scene Baseline` with `Game.unity` open and review all changes before saving.
@@ -175,21 +175,21 @@ After the arm64 path is stable:
 
 ## Immediate next actions
 
-1. Fix the known compile blockers below and rerun `tools/compile-check.sh`.
-2. Open the project in Unity `6000.3.26f1` and run the batch baseline validator.
-3. Repair any importer, compiler, scene, or asset failures found by a clean import.
-4. Save and review only intentional scene changes.
-5. Build and launch the first arm64 development player.
-6. Lock that evidence-backed baseline in version control.
-7. Begin `BuggyControllerModern` with wheel contacts and suspension.
+1. Open the project in Unity `6000.3.26f1` and run the batch baseline validator.
+2. Repair any importer, compiler, scene, or asset failures found by a clean import.
+3. Save and review only intentional scene changes.
+4. Build and launch the first arm64 development player.
+5. Lock that evidence-backed baseline in version control.
+6. Begin `BuggyControllerModern` with wheel contacts and suspension.
 
-## Known compile blockers
+## Editor-free compile status
 
-From `tools/compile-check.sh` against Unity `6000.3.26f1` on 2026-10-13:
+`tools/compile-check.sh` against Unity `6000.3.26f1` passes for all predefined assemblies (2026-10-13).
 
-- `Pro Standard Assets/Image Based/BlurEffect.cs`, `GlowEffect.cs`, and `ImageEffects.cs` create materials from shader source strings (`new Material(string)`), which modern Unity rejects. The other effects in that folder fail because they depend on `ImageEffects`.
-- `Modernization/Scripts/Replacements/CameraVehicle.cs` references `ColorCorrectionEffect`, `GlowEffect`, and `MotionBlur` from that folder.
-- With that folder excluded, the rest of firstpass compiles and the runtime assembly fails only on those `CameraVehicle` references. Editor scripts have not been checked yet because they depend on the runtime assembly. Resolve by porting the effects to shader assets or replacing them, then recheck.
+The legacy image effects (`Pro Standard Assets/Image Based/` and the Unity Island copies) previously built materials from shader source strings, which modern Unity rejects. Those shaders now live, unchanged in substance, as fixed-function shader assets under `Pro Standard Assets/Image Based/Resources/`, and `ImageEffects.Blit` once again honours its blend mode instead of the earlier plain-copy stub. Still unverified in the editor:
+
+- the fixed-function shaders import and render under Metal;
+- glow, colour correction, and motion blur match the original look in `Game`.
 
 ## Definition of done for the single-player milestone
 
