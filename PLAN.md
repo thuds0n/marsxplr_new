@@ -198,6 +198,10 @@ Known issues exposed by the import (pre-existing, not regressions):
 - `Buggy`, `Jet`, `Hovercraft`, `Tank`, `LaserAuto`, `LaserSnipe`, and the Whirld `Sea`, `Base`, `JumpPoint`, and `Floor` prefabs still reference legacy UnityScript components, which Unity no longer compiles. Unity refuses to re-save prefabs with missing scripts, so these remain in their previous serialisation until modern components replace the missing ones.
 - `Whirld/ResourceSources/Materials/Object.mat` uses `Legacy Shaders/Diffuse Fast`, which Unity 6 no longer supports.
 
+### HUD font
+
+The Ethnocentric fonts were empty in every copy of the project because their data lived in classic Mac resource forks. The TrueType data was recovered from the AppleDouble sidecars in `unity/` and the fonts switched from "ASCII upper case" to Dynamic, which Unity 6's IMGUI text renderer requires. All Ethnocentric lowercase glyphs match its capitals, so presentation is unchanged. Verified in the Unity `6000.3.26f1` editor on 2026-10-15: no font warnings and HUD text renders.
+
 ## Editor-free compile status
 
 `tools/compile-check.sh` against Unity `6000.3.26f1` passes for all predefined assemblies (2026-10-13), matching the editor compile.
