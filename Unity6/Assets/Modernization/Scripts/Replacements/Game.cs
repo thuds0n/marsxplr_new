@@ -222,6 +222,27 @@ public class Game : MonoBehaviour
         }
     }
 
+    private static readonly RaycastHit[] _laserHits = new RaycastHit[32];
+
+    // Nearest hit along the ray that does not belong to the player's own vehicle.
+    public static bool RaycastIgnoringPlayer(Ray ray, float range, out RaycastHit hit)
+    {
+        int count = Physics.RaycastNonAlloc(ray, _laserHits, range, ~0, QueryTriggerInteraction.Ignore);
+        Transform playerRoot = Player != null ? Player.transform : null;
+        hit = default;
+        float best = float.MaxValue;
+        for (int i = 0; i < count; i++)
+        {
+            if (playerRoot != null && _laserHits[i].transform.IsChildOf(playerRoot)) continue;
+            if (_laserHits[i].distance < best)
+            {
+                best = _laserHits[i].distance;
+                hit = _laserHits[i];
+            }
+        }
+        return best < float.MaxValue;
+    }
+
     public void RegisterLaserHit(Collider hitCollider, Vector3 hitPoint, Vector3 hitNormal, Vector3 shotDir)
     {
         if (hitCollider == null) return;

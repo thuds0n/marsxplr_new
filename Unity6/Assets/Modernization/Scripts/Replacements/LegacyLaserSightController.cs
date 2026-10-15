@@ -94,7 +94,7 @@ public class LegacyLaserSightController : MonoBehaviour
 
         float rayStart = ((lockScale + camOffset * 0.1f) * 15f);
         Vector3 origin = transform.position + transform.forward * rayStart;
-        if (Physics.Raycast(origin, transform.forward, out RaycastHit hit, Mathf.Infinity, ~0, QueryTriggerInteraction.Ignore))
+        if (Game.RaycastIgnoringPlayer(new Ray(origin, transform.forward), Mathf.Infinity, out RaycastHit hit))
         {
             Transform t = hit.transform;
             Transform q = Game.QuarryVeh.transform;
