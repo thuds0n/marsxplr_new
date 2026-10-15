@@ -58,7 +58,7 @@ public class BlurEffectIsland : MonoBehaviour
 	public void FourTapCone (RenderTexture source, RenderTexture dest, int iteration)
 	{
 		RenderTexture.active = dest;
-		Shader.SetGlobalTexture ("__RenderTex", source);
+		Shader.SetGlobalTexture ("_RenderTex", source);
 		
 		float offsetX = (.5F+iteration*blurSpread) / (float)source.width;
 		float offsetY = (.5F+iteration*blurSpread) / (float)source.height;
@@ -76,7 +76,7 @@ public class BlurEffectIsland : MonoBehaviour
 	private void DownSample4x (RenderTexture source, RenderTexture dest)
 	{
 		RenderTexture.active = dest;
-		Shader.SetGlobalTexture ("__RenderTex", source);
+		Shader.SetGlobalTexture ("_RenderTex", source);
 		
 		float offsetX = 1.0f / (float)source.width;
 		float offsetY = 1.0f / (float)source.height;

@@ -62,9 +62,9 @@ The current working tree has not been compiled or played in Unity since its newe
 - [ ] Run the interactive `Validate Project Baseline` check.
 - [ ] Verify direct Play mode entry from `Game.unity`.
 - [x] Verify the complete `Init -> InitGame -> Game` flow (Unity `6000.3.26f1` editor, 2026-10-13: reaches `Game`, spawns the buggy on fallback ground, no exceptions; required driving later scene hops from `SceneManager.sceneLoaded`).
-- [ ] Create and launch an arm64 development player on Apple silicon.
+- [x] Create and launch an arm64 development player on Apple silicon (see arm64 development player).
 - [ ] Repeat the import and smoke test from a clean checkout or clean clone.
-- [ ] Record the Unity version, macOS version, scripting backend, architecture, and known warnings.
+- [x] Record the Unity version, macOS version, scripting backend, architecture, and known warnings.
 
 ## Milestone 1: Original buggy ground model
 
@@ -180,9 +180,8 @@ After the arm64 path is stable:
 1. Verify direct `Game` Play mode entry and buggy controls in the editor.
 2. Check the image effects render correctly under Metal.
 3. Save and review only intentional scene changes.
-4. Build and launch the first arm64 development player.
-5. Lock that evidence-backed baseline in version control.
-6. Begin `BuggyControllerModern` with wheel contacts and suspension.
+4. Lock that evidence-backed baseline in version control.
+5. Begin `BuggyControllerModern` with wheel contacts and suspension.
 
 ## Unity 6.3 import results
 
@@ -197,6 +196,17 @@ Known issues exposed by the import (pre-existing, not regressions):
 
 - `Buggy`, `Jet`, `Hovercraft`, `Tank`, `LaserAuto`, `LaserSnipe`, and the Whirld `Sea`, `Base`, `JumpPoint`, and `Floor` prefabs still reference legacy UnityScript components, which Unity no longer compiles. Unity refuses to re-save prefabs with missing scripts, so these remain in their previous serialisation until modern components replace the missing ones.
 - `Whirld/ResourceSources/Materials/Object.mat` uses `Legacy Shaders/Diffuse Fast`, which Unity 6 no longer supports.
+
+### arm64 development player
+
+Built with `Tools -> MarsXPLR -> Build macOS arm64 Development Player` (`MarsXPLRBuild.BuildMacArm64DevelopmentBatchMode` in batch mode) on 2026-10-15: Unity `6000.3.26f1`, macOS `27.0.1`, Mono scripting backend, Metal, development build, output `Unity6/Build/macOS-arm64/Mars Explorer.app` (not committed).
+
+- `file` and `lipo` report a single `arm64` Mach-O executable, so it cannot run under Rosetta.
+- A fresh launch reached `Game` through `Init -> InitGame -> Game`, spawned the buggy on fallback ground, and logged no exceptions.
+- The build reports 9 errors, all missing legacy scripts on prefabs (`Buggy`, `Wings`, `Sea`, `JumpPoint`, `Floor`); the player logs the same missing components on `Init`, `Vehicle`, `Buggy`, `Wings`, `ORB`, and `Buggy Skidmarks`.
+- `Lobby.unity` fails to parse during the build (line 171). `Lobby` is outside the single-player flow but still in Build Settings.
+- The placeholder laser repeatedly reports hits on the player itself.
+- Not yet verified: controls and image effects in the player, and a launch from a clean clone.
 
 ### HUD font
 

@@ -9,7 +9,7 @@ Shader "Hidden/ImageEffectsBlit" {
 	SubShader { Pass {
 		Blend [_SrcBlend] [_DstBlend]
 		ZTest Always Cull Off ZWrite Off Fog { Mode Off }
-		SetTexture [__RenderTex] { combine texture }
+		SetTexture [_RenderTex] { combine texture }
 	}}
 	Fallback Off
 }

@@ -60,7 +60,7 @@ public class ImageEffects {
 		// Make the destination texture the target for all rendering
 		RenderTexture.active = dest;  		
 		// Assign the source texture to a property from a shader
-		Shader.SetGlobalTexture ("__RenderTex", source);
+		Shader.SetGlobalTexture ("_RenderTex", source);
 		bool invertY = source.texelSize.y < 0.0f;
 		// Set up the simple Matrix
 		GL.PushMatrix ();

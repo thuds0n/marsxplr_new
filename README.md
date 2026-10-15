@@ -60,6 +60,7 @@ Init -> InitGame -> Game
 - `Build Buggy Visual Prefab` recreates `Assets/Modernization/Generated/BuggyVisual.prefab`.
 - `Validate Project Baseline` checks the editor version, required scenes and assets, build settings, and active `Game` scene wiring.
 - `Scan Missing Scripts (Active Scene)` reports missing components in the open scene.
+- `Build macOS arm64 Development Player` builds `Build/macOS-arm64/Mars Explorer.app` inside `Unity6/`.
 
 `tools/compile-check.sh` compiles the project's C# scripts against an installed Unity 6 editor's reference assemblies without launching the editor.
 
