@@ -215,7 +215,7 @@ public class SimplePlayerController : MonoBehaviour
             ? cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f))
             : new Ray(transform.position + Vector3.up * 1.2f, transform.forward);
 
-        if (Physics.Raycast(ray, out RaycastHit hit, range, ~0, QueryTriggerInteraction.Ignore))
+        if (Game.RaycastIgnoringPlayer(ray, range, out RaycastHit hit))
         {
             Debug.DrawLine(ray.origin, hit.point, Color.red, Mathf.Min(0.2f, range / tunedSpeed));
             if (Game.Controller != null)
