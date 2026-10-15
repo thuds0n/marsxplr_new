@@ -81,13 +81,28 @@ Implementation order:
 7. Drive wheel and axle presentation from the authoritative contact state.
 8. Switch the bootstrap between fallback and modern controllers without changing camera, HUD, or combat consumers.
 
+Status (2026-10-15): steps 1–6 and 8 are ported in `BuggyControllerModern` from the default ("Modified Yoggy") branch of `Buggy.js`; step 7 is open. Source values recovered from the original assets:
+
+- `wheelPos` (0.7, 0, 0.8) and `axelPos` (0.375, −0.1, 0.75) from `Buggy.prefab`; wheel radius 0.3 and body mass 30 from `Buggy.js`.
+- The convex body collider from the `Collider` mesh in `Buggy.jas` (lost in the FBX conversion), at the prefab's ×2 scale, in `BuggyColliderShape`.
+- `Vehicle Body.physicmaterial`: zero friction, bounciness 0.5.
+- `Settings.js` defaults for `buggyCG`, `buggyTr`, `buggySh`, and smart suspension, and its runtime fixed timestep of 0.02 s (0.025 s at low render levels). The project setting is 0.002 s, so the player previously ran physics at 500 Hz.
+
+Supporting changes: `PlayerVehicleInputModern` ports the `VehicleMe.js` input mapping (including `Fire3` brakes and the `Throttle`/`Yaw` fallbacks); the placeholder laser moved to `PlayerLaserModern`; the buggy visual is fitted to the original body size with closed wings and only the detailed LOD shown.
+
+Deliberate deviations: wheel raycasts skip the vehicle's own colliders and ignore triggers.
+
+Verified in the Unity `6000.3.26f1` editor on fallback ground: the buggy spawns on its wheels, accelerates to about 49 MPH, steers while coasting, and logs no errors. Not yet verified: braking, reversing, side slip, landing, uneven terrain, and handling feel against the original.
+
+Open follow-ups: wheel and axle presentation, skidmarks, lava floating and diving, the optional "new physics" motor, and camera distances, which were tuned for the previous oversized 5.2 m visual. The converted `Lod0` mesh shows side fins that need checking against the original model.
+
 Acceptance criteria:
 
-- [ ] The buggy rests on its wheel contacts rather than a capsule approximation.
+- [x] The buggy rests on its wheel contacts rather than a capsule approximation.
 - [ ] All four wheels respond independently to uneven ground.
 - [ ] Acceleration, reversing, steering, braking, side slip, and landing are controllable.
-- [ ] Camera and HUD telemetry continue to consume `VehicleStateModern`.
-- [ ] `SimplePlayerController` can still be selected temporarily for recovery.
+- [x] Camera and HUD telemetry continue to consume `VehicleStateModern`.
+- [x] `SimplePlayerController` can still be selected temporarily for recovery (`useModernBuggyController` on `SinglePlayerPlayableBootstrap`).
 - [ ] Behaviour is tested on a small representative Mars terrain fixture, not only `FallbackGround`.
 
 ## Milestone 2: Wing and flight parity
@@ -181,7 +196,7 @@ After the arm64 path is stable:
 2. Check the image effects render correctly under Metal.
 3. Save and review only intentional scene changes.
 4. Lock that evidence-backed baseline in version control.
-5. Begin `BuggyControllerModern` with wheel contacts and suspension.
+5. Verify buggy braking, reversing, and landing, then add wheel presentation and a representative terrain fixture.
 
 ## Unity 6.3 import results
 

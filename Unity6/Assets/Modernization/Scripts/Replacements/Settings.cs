@@ -27,6 +27,11 @@ public class Settings : MonoBehaviour
     public float buggySpeed = 30f;
     public float buggyFlightDrag = 300f;
     public float buggyFlightAgility = 1f;
+    // Settings.js defaults.
+    public bool buggySmartSuspension = true;
+    public float buggyCG = -0.4f;
+    public float buggyTr = 1f;
+    public float buggySh = 70f;
     public bool autoSelectQuarry = true;
     public int quarryScore;
     public float lavaAlt = -300f;
@@ -40,6 +45,9 @@ public class Settings : MonoBehaviour
 
     public void updatePrefs()
     {
+        // Settings.js ran physics at 50 Hz, or 40 Hz at lower render levels.
+        Time.fixedDeltaTime = renderLevel > 3 ? 0.02f : 0.025f;
+
         laserLocking = false;
         if (laserLock != null)
         {

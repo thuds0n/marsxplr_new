@@ -11,6 +11,8 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
     public GameObject playerVehicleModelFallbackPrefab;
     public GameObject legacyVehicleRigPrefab;
     public bool tryLegacyBuggyPrefab = false;
+    // BuggyControllerModern with the original body collider; disable to fall back to SimplePlayerController.
+    public bool useModernBuggyController = true;
 
     private float _nextAttemptTime;
 
@@ -61,13 +63,25 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
         }
 
         // Always create a clean root player object for control/physics.
-        GameObject go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-        go.transform.localScale = new Vector3(1.4f, 1.4f, 1.4f);
-        Renderer rootRenderer = go.GetComponent<Renderer>();
-        if (rootRenderer != null)
+        GameObject go;
+        Renderer rootRenderer = null;
+        if (useModernBuggyController)
         {
-            rootRenderer.sharedMaterial = new Material(Shader.Find("Standard"));
-            rootRenderer.sharedMaterial.color = new Color(0.8f, 0.25f, 0.2f, 1f);
+            go = new GameObject();
+            var body = go.AddComponent<MeshCollider>();
+            body.sharedMesh = BuggyColliderShape.GetMesh();
+            body.convex = true;
+        }
+        else
+        {
+            go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            go.transform.localScale = new Vector3(1.4f, 1.4f, 1.4f);
+            rootRenderer = go.GetComponent<Renderer>();
+            if (rootRenderer != null)
+            {
+                rootRenderer.sharedMaterial = new Material(Shader.Find("Standard"));
+                rootRenderer.sharedMaterial.color = new Color(0.8f, 0.25f, 0.2f, 1f);
+            }
         }
 
         go.name = "Player";
@@ -81,13 +95,19 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
             rb = go.AddComponent<Rigidbody>();
         }
         rb.useGravity = true;
-        rb.linearDamping = 0.5f;
-        rb.angularDamping = 0.05f;
 
-        if (go.GetComponent<SimplePlayerController>() == null)
+        if (useModernBuggyController)
         {
+            go.AddComponent<BuggyControllerModern>();
+            go.AddComponent<PlayerVehicleInputModern>();
+        }
+        else
+        {
+            rb.linearDamping = 0.5f;
+            rb.angularDamping = 0.05f;
             go.AddComponent<SimplePlayerController>();
         }
+        go.AddComponent<PlayerLaserModern>();
         var vehicleState = go.GetComponent<VehicleStateModern>();
         if (go.GetComponent<FallReset>() == null)
         {
@@ -331,10 +351,13 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
         SetLayerRecursively(visual.transform, 0); // Default layer
 
         // Normalize old asset scale so it reads as a vehicle-sized object in modern scene units.
-        float scaleFactor = EstimateScaleToTargetLength(visual, 5.2f);
-        if (scaleFactor > 0.001f)
+        if (!useModernBuggyController)
         {
-            visual.transform.localScale *= scaleFactor;
+            float scaleFactor = EstimateScaleToTargetLength(visual, 5.2f);
+            if (scaleFactor > 0.001f)
+            {
+                visual.transform.localScale *= scaleFactor;
+            }
         }
 
         visual.transform.localPosition = Vector3.zero;
@@ -356,6 +379,8 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
 
         if (lowestY == float.MaxValue) return;
 
+        if (useModernBuggyController && FitToOriginalBuggyBody(playerRoot, visual)) return;
+
         // Align to the player collider bottom so visual stays grounded across scale changes.
         float desiredLowest = -0.95f;
         var capsule = playerRoot.GetComponent<CapsuleCollider>();
@@ -367,6 +392,45 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
 
         float delta = Mathf.Clamp(desiredLowest - lowestY, -0.15f, 1.2f);
         visual.transform.localPosition += new Vector3(0f, delta, 0f);
+    }
+
+    // Scales and places the visual so its detailed body matches the original
+    // Body mesh (Buggy.jas, scaled by 2): 1.88 long, bottom at -0.18, centred
+    // at z -0.02. Wings stay hidden while closed and only the detailed LOD shows.
+    private bool FitToOriginalBuggyBody(GameObject playerRoot, GameObject visual)
+    {
+        Transform lod0 = FindChildRecursive(visual.transform, "Lod0");
+        Renderer body = lod0 != null ? lod0.GetComponent<Renderer>() : null;
+        if (body == null) return false;
+
+        foreach (string hidden in new[] { "Wings", "Wings_1", "Lod1" })
+        {
+            Transform t = FindChildRecursive(visual.transform, hidden);
+            if (t != null) t.gameObject.SetActive(false);
+        }
+
+        Bounds local = BoundsInSpace(body, playerRoot.transform);
+        if (local.size.z < 0.001f) return false;
+        visual.transform.localScale *= 1.88f / local.size.z;
+
+        local = BoundsInSpace(body, playerRoot.transform);
+        visual.transform.localPosition += new Vector3(-local.center.x, -0.18f - local.min.y, -0.02f - local.center.z);
+        return true;
+    }
+
+    private static Bounds BoundsInSpace(Renderer renderer, Transform space)
+    {
+        Bounds world = renderer.bounds;
+        Vector3 min = world.min, max = world.max;
+        var result = new Bounds(space.InverseTransformPoint(min), Vector3.zero);
+        for (int i = 1; i < 8; i++)
+        {
+            result.Encapsulate(space.InverseTransformPoint(new Vector3(
+                (i & 1) != 0 ? max.x : min.x,
+                (i & 2) != 0 ? max.y : min.y,
+                (i & 4) != 0 ? max.z : min.z)));
+        }
+        return result;
     }
 
     private void EnsureSpawnVisuals(GameObject go)
