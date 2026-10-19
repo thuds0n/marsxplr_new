@@ -16,6 +16,48 @@ public static class BuggyHandlingProbe
         if (buggy == null) { Debug.LogWarning("[HandlingProbe] No BuggyControllerModern found."); return; }
         buggy.gameObject.AddComponent<BuggyHandlingProbeRunner>();
     }
+
+    // Drives from wherever the buggy is: 3 s of throttle, then 1.5 s of full
+    // right lock while coasting, for comparing tyre tracks on real ground.
+    [MenuItem("Tools/MarsXPLR/Run Buggy Track Test")]
+    private static void RunTrackTest()
+    {
+        if (!Application.isPlaying) { Debug.LogWarning("[HandlingProbe] Enter Play mode first."); return; }
+        BuggyControllerModern buggy = Object.FindAnyObjectByType<BuggyControllerModern>();
+        if (buggy == null) { Debug.LogWarning("[HandlingProbe] No BuggyControllerModern found."); return; }
+        buggy.gameObject.AddComponent<BuggyTrackTestRunner>();
+    }
+}
+
+public class BuggyTrackTestRunner : MonoBehaviour
+{
+    private IEnumerator Start()
+    {
+        var state = GetComponent<VehicleStateModern>();
+        var input = GetComponent<PlayerVehicleInputModern>();
+        if (input != null) input.enabled = false;
+        // Open floor south of Fort Boxy's castle, facing away from it.
+        var rb = GetComponent<Rigidbody>();
+        if (Physics.Raycast(new Vector3(0f, 200f, -300f), Vector3.down, out RaycastHit ground, 400f))
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.position = ground.point + Vector3.up * 0.6f;
+            rb.rotation = Quaternion.Euler(0f, 180f, 0f);
+            transform.SetPositionAndRotation(rb.position, rb.rotation);
+        }
+        for (float t = 0f; t < 1.5f; t += Time.fixedDeltaTime) yield return new WaitForFixedUpdate();
+        foreach (var step in new[] { (new Vector4(0, 1, 0, 0), 3f), (new Vector4(1, 0, 0, 0), 1.5f), (Vector4.zero, 2f) })
+        {
+            for (float t = 0f; t < step.Item2; t += Time.fixedDeltaTime)
+            {
+                state.input = step.Item1;
+                yield return new WaitForFixedUpdate();
+            }
+        }
+        if (input != null) input.enabled = true;
+        Destroy(this);
+    }
 }
 
 public class BuggyHandlingProbeRunner : MonoBehaviour
