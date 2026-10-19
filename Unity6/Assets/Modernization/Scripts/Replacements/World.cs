@@ -50,6 +50,7 @@ public class World : MonoBehaviour
         }
 
         FinishWorld();
+        DoubleLegacyLighting();
     }
 
     private IEnumerator LoadWorldScene()
@@ -67,6 +68,7 @@ public class World : MonoBehaviour
         }
 
         FinishWorld();
+        DoubleLegacyLighting();
         if (Game.Settings != null) Game.Settings.fogColor = RenderSettings.fogColor;
         // Restart the camera's world entry effect from the moment the world is ready.
         if (Game.Controller != null) Game.Controller.worldLoadTime = Time.time;
@@ -126,6 +128,21 @@ public class World : MonoBehaviour
         {
             EnsureFallbackGround();
         }
+    }
+
+    // Unity 2.x's built-in legacy shaders finished with "texture * lighting
+    // DOUBLE", so lights and ambient light counted twice; Unity 5 dropped the
+    // doubling. Doubling the world's light intensities and ambient colour once
+    // restores the original brightness (Unity's own upgrade advice for legacy
+    // content).
+    private static void DoubleLegacyLighting()
+    {
+        foreach (Light light in FindObjectsByType<Light>(FindObjectsSortMode.None))
+        {
+            light.intensity *= 2f;
+        }
+        Color ambient = RenderSettings.ambientLight;
+        RenderSettings.ambientLight = new Color(ambient.r * 2f, ambient.g * 2f, ambient.b * 2f, ambient.a);
     }
 
     // WhirldIn.js built world primitives named cube, pyramid, cone, or mesh from
