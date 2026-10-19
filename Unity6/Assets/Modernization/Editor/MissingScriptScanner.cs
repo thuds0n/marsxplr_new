@@ -5,36 +5,6 @@ using UnityEngine.SceneManagement;
 
 public static class MissingScriptScanner
 {
-    [MenuItem("Tools/MarsXPLR/Scan Missing Scripts (Selection)")]
-    public static void ScanSelection()
-    {
-        var roots = Selection.gameObjects;
-        if (roots == null || roots.Length == 0)
-        {
-            Debug.Log("[MissingScriptScanner] Nothing selected.");
-            return;
-        }
-
-        var results = new List<string>();
-        foreach (var root in roots)
-        {
-            ScanGameObject(root, results);
-        }
-
-        if (results.Count == 0)
-        {
-            Debug.Log("[MissingScriptScanner] No missing scripts found in selected object(s).");
-            return;
-        }
-
-        Debug.Log("[MissingScriptScanner] Found " + results.Count + " missing script component(s) in selected object(s).");
-        foreach (var line in results)
-        {
-            Debug.Log(line);
-        }
-    }
-
-    [MenuItem("Tools/MarsXPLR/Scan Missing Scripts (Active Scene)")]
     public static void ScanActiveScene()
     {
         var scene = SceneManager.GetActiveScene();

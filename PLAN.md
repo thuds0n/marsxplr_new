@@ -13,7 +13,7 @@ The repository contains a promising but incomplete modernisation foundation:
 - replacement C# components cover the active camera, HUD, messaging, minimap, world, settings, and game scaffolding;
 - `SimplePlayerController` provides temporary drive and flight behaviour;
 - `VehicleStateModern` provides a shared vehicle-state seam;
-- a generated buggy visual and runtime bootstrap provide a playable placeholder vehicle path;
+- the runtime bootstrap spawns the buggy with the original body, wheel, and axle models;
 - quarry, laser, and score behaviour are placeholders rather than parity ports;
 - editor tooling can rebuild and inspect the `Game` scene baseline;
 - the intended offline flow is now `Init -> InitGame -> Game`, with `Lobby` retained outside the active vertical slice.
@@ -88,7 +88,7 @@ Status (2026-10-19): steps 1–8 are ported. Steps 1–6 and 8 live in `BuggyCon
 - `Vehicle Body.physicmaterial`: zero friction, bounciness 0.5.
 - `Settings.js` defaults for `buggyCG`, `buggyTr`, `buggySh`, and smart suspension, and its runtime fixed timestep of 0.02 s (0.025 s at low render levels). The project setting is 0.002 s, so the player previously ran physics at 500 Hz.
 
-Supporting changes: `PlayerVehicleInputModern` ports the `VehicleMe.js` input mapping (including `Fire3` brakes and the `Throttle`/`Yaw` fallbacks); the placeholder laser moved to `PlayerLaserModern`; the buggy visual is fitted to the original body size with closed wings and only the detailed LOD shown.
+Supporting changes: `PlayerVehicleInputModern` ports the `VehicleMe.js` input mapping (including `Fire3` brakes and the `Throttle`/`Yaw` fallbacks); the placeholder laser moved to `PlayerLaserModern`; the body is the original `Buggy.prefab` detailed LOD (`Lod0`, `Cockpit`, `Headlights`) with its original materials, copied at the prefab's own transforms with the wings closed.
 
 Deliberate deviations: wheel raycasts skip the vehicle's own colliders and ignore triggers.
 
@@ -104,7 +104,9 @@ Known parity behaviour: the Agile camera's direction starts at the original (1, 
 
 Verified: editor-free compile check, and an arm64 development build that launches into Fort Boxy (Unity `6000.3.26f1`, macOS `27.0.1`). Not yet verified: chase framing while driving, and a comparison with the Wine version. Keyboard input did not reach the player during the automated check.
 
-Open follow-ups: confirm tyre tracks on lighter ground and the wheel spin direction, lava floating and diving, the optional "new physics" motor, and camera distances, which were tuned for the previous oversized 5.2 m visual. The converted `Lod0` mesh shows side fins that need checking against the original model.
+Body (2026-10-19): `SinglePlayerPlayableBootstrap` copies the meshes and materials of `Lod0`, `Cockpit`, and `Headlights` from the original `Buggy.prefab`. It does not instantiate the prefab, which still carries missing UnityScript components. This replaces the generated `BuggyVisual` prefab, its generator, and the bounds-based fitting. In the original, the body mesh is already at vehicle scale: 1.96 m long, bottom at −0.19, centred at z −0.02. Wings and trails stay out until the wing port. Verified in the Unity `6000.3.26f1` editor on Fort Boxy: the body sits on the wheels and axles at the original size, the cockpit and headlights render, and no new errors are logged. The body shows the material's default blue rather than the player colour, because `Vehicle.js` `setColor()` (player colour from `vehColR/G/B` preferences) is not ported yet. The Wine version drew the buggy magenta.
+
+Open follow-ups: port the vehicle colour from `Vehicle.js`; check the wheel spin direction; lava floating and diving; the optional "new physics" motor.
 
 Handling comparison with the Wine version (2026-10-19, macOS `27.0.1`). The original is Mars Explorer 4.0.2 under the `/Applications/Mars Explorer.app` Wine wrapper. It hosted a local Fort Boxy game and ran at 12–21 FPS. Its figures come from the HUD, read off screenshots, so their timing is only accurate to about ±0.5 s. The port ran in the Unity `6000.3.26f1` editor, entered through `Init`, with a 0.02 s fixed timestep. Synthetic key presses do not reach the editor's Game view, so the port was driven by `Tools -> MarsXPLR -> Run Buggy Handling Probe` (`Editor/BuggyHandlingProbe.cs`). The probe writes the same inputs into `VehicleStateModern` and logs to `Unity6/Logs/handling-probe.txt`. Both builds were tested on the flat orange floor outside the castle.
 

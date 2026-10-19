@@ -22,12 +22,6 @@ public static class MarsXPLRProjectTools
             return;
         }
 
-        var buggyVisual = BuildBuggyVisualPrefab.BuildOrUpdate();
-        if (buggyVisual == null)
-        {
-            Debug.LogWarning("[MarsXPLRProjectTools] Buggy visual regeneration did not produce a prefab. Continuing with existing references.");
-        }
-
         ReplaceMissingCoreScripts.ReplaceInGameScene();
         MissingScriptScanner.ScanActiveScene();
         ValidateProjectBaseline(logSuccess: false);
@@ -177,8 +171,7 @@ public static class MarsXPLRProjectTools
     private static bool ValidateRequiredAssets()
     {
         bool ok = true;
-        ok &= ValidateAsset("Assets/Modernization/Generated/BuggyVisual.prefab", "generated buggy visual prefab");
-        ok &= ValidateAsset("Assets/Martian Assets/Vehicles/Buggy/Buggy.prefab", "legacy buggy prefab source");
+        ok &= ValidateAsset("Assets/Martian Assets/Vehicles/Buggy/Buggy.prefab", "original buggy prefab (body source)");
         ok &= ValidateAsset("Assets/Martian Assets/Vehicles/Prefabs/Vehicle.prefab", "legacy vehicle rig prefab");
         ok &= ValidateAsset("Assets/Martian Assets/GUI/Cursors/Crosshairs.png", "crosshair texture");
         ok &= ValidateAsset("Assets/Martian Assets/GUI/Cursors/CrosshairsLook.png", "look crosshair texture");
@@ -256,12 +249,6 @@ public static class MarsXPLRProjectTools
             if (bootstrap.playerVehiclePrefab == null)
             {
                 Debug.LogWarning("[MarsXPLRProjectTools] SinglePlayerPlayableBootstrap.playerVehiclePrefab is not assigned.");
-                ok = false;
-            }
-
-            if (bootstrap.playerVehicleModelFallbackPrefab == null)
-            {
-                Debug.LogWarning("[MarsXPLRProjectTools] SinglePlayerPlayableBootstrap.playerVehicleModelFallbackPrefab is not assigned.");
                 ok = false;
             }
 

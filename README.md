@@ -55,11 +55,9 @@ Init -> InitGame -> Game
 
 ## Editor tools
 
-- `Prepare Game Scene Baseline` rebuilds the generated buggy visual, reapplies replacement components and asset bindings, scans for missing scripts, and validates the result.
-- `Replace Missing Core Scripts (Game Scene)` reapplies the required replacement components and references.
-- `Build Buggy Visual Prefab` recreates `Assets/Modernization/Generated/BuggyVisual.prefab`.
+- `Prepare Game Scene Baseline` reapplies replacement components and asset bindings, reports missing scripts in the open scene, and validates the result.
 - `Validate Project Baseline` checks the editor version, required scenes and assets, build settings, and active `Game` scene wiring.
-- `Scan Missing Scripts (Active Scene)` reports missing components in the open scene.
+- `Run Buggy Handling Probe` (Play mode) drives the buggy through a fixed input script and writes telemetry to `Logs/handling-probe.txt`.
 - `Build macOS arm64 Development Player` builds `Build/macOS-arm64/Mars Explorer.app` inside `Unity6/`.
 
 `tools/compile-check.sh` compiles the project's C# scripts against an installed Unity 6 editor's reference assemblies without launching the editor.

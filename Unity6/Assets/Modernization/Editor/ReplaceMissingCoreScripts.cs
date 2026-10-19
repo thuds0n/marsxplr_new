@@ -4,7 +4,6 @@ using UnityEngine;
 
 public static class ReplaceMissingCoreScripts
 {
-    [MenuItem("Tools/MarsXPLR/Replace Missing Core Scripts (Game Scene)")]
     public static void ReplaceInGameScene()
     {
         var scene = EditorSceneManager.GetActiveScene();
@@ -95,25 +94,6 @@ public static class ReplaceMissingCoreScripts
             bootstrap.playerVehiclePrefab = prefab;
             EditorUtility.SetDirty(bootstrap);
             Debug.Log("[ReplaceMissingCoreScripts] Assigned Buggy prefab to SinglePlayerPlayableBootstrap.");
-        }
-
-        // Prefer a generated clean visual prefab that strips legacy scripts/components.
-        var modelFallback = BuildBuggyVisualPrefab.BuildOrUpdate();
-        if (modelFallback == null)
-        {
-            modelFallback = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Martian Assets/Vehicles/Buggy/Components/Buggy Wheels Simple.blend");
-            if (modelFallback == null)
-            {
-                Debug.LogWarning("[ReplaceMissingCoreScripts] Could not load generated or legacy Buggy model fallback.");
-            }
-        }
-
-        if (modelFallback != null && bootstrap.playerVehicleModelFallbackPrefab != modelFallback)
-        {
-            bootstrap.playerVehicleModelFallbackPrefab = modelFallback;
-            bootstrap.tryLegacyBuggyPrefab = false;
-            EditorUtility.SetDirty(bootstrap);
-            Debug.Log("[ReplaceMissingCoreScripts] Assigned Buggy model fallback prefab: " + AssetDatabase.GetAssetPath(modelFallback));
         }
 
         var legacyRig = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Martian Assets/Vehicles/Prefabs/Vehicle.prefab");

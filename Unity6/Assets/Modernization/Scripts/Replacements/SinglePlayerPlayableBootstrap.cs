@@ -7,14 +7,13 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
 {
     public bool enabledForSinglePlayer = true;
     public Vector3 spawnOffset = new Vector3(0f, 4f, 0f);
+    // Original Buggy.prefab: source of the body meshes and materials.
     public GameObject playerVehiclePrefab;
-    public GameObject playerVehicleModelFallbackPrefab;
     public GameObject legacyVehicleRigPrefab;
     // Original buggy wheel, axle, and tyre-track assets for BuggyPresentationModern.
     public GameObject buggyWheelPrefab;
     public GameObject buggyAxelPrefab;
     public Material buggySkidmarkMaterial;
-    public bool tryLegacyBuggyPrefab = false;
     // BuggyControllerModern with the original body collider; disable to fall back to SimplePlayerController.
     public bool useModernBuggyController = true;
 
@@ -129,64 +128,14 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
             go.AddComponent<FallReset>();
         }
 
-        bool usingBuggyVisual = false;
-        GameObject attachedVisual = null;
-
-        // Try cleaner model-only fallback first.
-        GameObject fallbackVisual = TrySpawnFallbackModel(go.transform, spawn, spawnRot);
-        if (fallbackVisual != null && HasVisibleMesh(fallbackVisual))
+        bool usingBuggyVisual = AttachOriginalBody(go.transform);
+        if (usingBuggyVisual)
         {
-            usingBuggyVisual = true;
-            attachedVisual = fallbackVisual;
-        }
-        else if (fallbackVisual != null)
-        {
-            Destroy(fallbackVisual);
-        }
-
-        // Legacy buggy prefab still contains missing UnityScript components.
-        // Keep this opt-in so default play mode is warning-free.
-        if (!usingBuggyVisual && tryLegacyBuggyPrefab && playerVehiclePrefab != null)
-        {
-            GameObject visual = Instantiate(playerVehiclePrefab, spawn, spawnRot);
-            if (visual != null)
-            {
-                visual.name = "BuggyVisual";
-                visual.transform.SetParent(go.transform, false);
-                visual.transform.localPosition = Vector3.zero;
-                visual.transform.localRotation = Quaternion.identity;
-
-                SanitizeVisualInstance(visual);
-                EnsureSpawnVisuals(visual);
-                usingBuggyVisual = HasVisibleMesh(visual);
-
-                if (!usingBuggyVisual)
-                {
-                    Destroy(visual);
-                }
-                else
-                {
-                    attachedVisual = visual;
-                }
-            }
-        }
-
-        if (!usingBuggyVisual)
-        {
-            EnsureSpawnVisuals(go);
+            if (rootRenderer != null) rootRenderer.enabled = false;
         }
         else
         {
-            // Keep physics capsule, but hide it when we have a proper vehicle visual.
-            if (rootRenderer != null)
-            {
-                rootRenderer.enabled = false;
-            }
-        }
-
-        if (attachedVisual != null)
-        {
-            AlignVisualToPlayerCollider(go, attachedVisual);
+            EnsureSpawnVisuals(go);
         }
 
         AttachLegacyLaserSight(go);
@@ -314,138 +263,41 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
         }
     }
 
-    private GameObject TrySpawnFallbackModel(Transform parent, Vector3 spawn, Quaternion spawnRot)
+    // Copies the detailed (Lod0) body, cockpit, and headlights from the original
+    // Buggy.prefab at their original transforms. The prefab itself is not
+    // instantiated because it still carries missing UnityScript components. Wings
+    // and trails stay out while the wings are closed (see Buggy.js).
+    private bool AttachOriginalBody(Transform parent)
     {
-        if (playerVehicleModelFallbackPrefab == null) return null;
+        if (playerVehiclePrefab == null) return false;
+        Transform lod0 = playerVehiclePrefab.transform.Find("Lod0");
+        if (lod0 == null) return false;
 
-        GameObject visual = Instantiate(playerVehicleModelFallbackPrefab, spawn, spawnRot);
-        if (visual == null) return null;
-
-        visual.name = "BuggyVisualFallback";
-        visual.transform.SetParent(parent, false);
-        visual.transform.localPosition = Vector3.zero;
-        visual.transform.localRotation = Quaternion.identity;
-
-        SanitizeVisualInstance(visual);
-        PrepareVisualForAttachment(visual);
-        EnsureSpawnVisuals(visual);
-        return visual;
-    }
-
-    private void SanitizeVisualInstance(GameObject visual)
-    {
-        if (visual == null) return;
-
-        // Keep this purely visual: no legacy physics/network scripts running.
-        MonoBehaviour[] scripts = visual.GetComponentsInChildren<MonoBehaviour>(true);
-        for (int i = 0; i < scripts.Length; i++)
-        {
-            if (scripts[i] != null)
-            {
-                scripts[i].enabled = false;
-            }
-        }
-
-        Rigidbody[] rigidbodies = visual.GetComponentsInChildren<Rigidbody>(true);
-        for (int i = 0; i < rigidbodies.Length; i++)
-        {
-            rigidbodies[i].isKinematic = true;
-            rigidbodies[i].detectCollisions = false;
-        }
-
-        Collider[] colliders = visual.GetComponentsInChildren<Collider>(true);
-        for (int i = 0; i < colliders.Length; i++)
-        {
-            colliders[i].enabled = false;
-        }
-    }
-
-    private void PrepareVisualForAttachment(GameObject visual)
-    {
-        if (visual == null) return;
-        SetLayerRecursively(visual.transform, 0); // Default layer
-
-        // Normalize old asset scale so it reads as a vehicle-sized object in modern scene units.
-        if (!useModernBuggyController)
-        {
-            float scaleFactor = EstimateScaleToTargetLength(visual, 5.2f);
-            if (scaleFactor > 0.001f)
-            {
-                visual.transform.localScale *= scaleFactor;
-            }
-        }
-
-        visual.transform.localPosition = Vector3.zero;
-    }
-
-    private void AlignVisualToPlayerCollider(GameObject playerRoot, GameObject visual)
-    {
-        if (playerRoot == null || visual == null) return;
-
-        float lowestY = float.MaxValue;
-        var renderers = visual.GetComponentsInChildren<Renderer>(true);
-        for (int i = 0; i < renderers.Length; i++)
-        {
-            if (renderers[i] == null || !renderers[i].enabled) continue;
-            var b = renderers[i].bounds;
-            Vector3 localMin = playerRoot.transform.InverseTransformPoint(new Vector3(b.center.x, b.min.y, b.center.z));
-            if (localMin.y < lowestY) lowestY = localMin.y;
-        }
-
-        if (lowestY == float.MaxValue) return;
-
-        if (useModernBuggyController && FitToOriginalBuggyBody(playerRoot, visual)) return;
-
-        // Align to the player collider bottom so visual stays grounded across scale changes.
-        float desiredLowest = -0.95f;
-        var capsule = playerRoot.GetComponent<CapsuleCollider>();
-        if (capsule != null)
-        {
-            Vector3 worldBottom = new Vector3(playerRoot.transform.position.x, capsule.bounds.min.y, playerRoot.transform.position.z);
-            desiredLowest = playerRoot.transform.InverseTransformPoint(worldBottom).y + 0.04f;
-        }
-
-        float delta = Mathf.Clamp(desiredLowest - lowestY, -0.15f, 1.2f);
-        visual.transform.localPosition += new Vector3(0f, delta, 0f);
-    }
-
-    // Scales and places the visual so its detailed body matches the original
-    // Body mesh (Buggy.jas, scaled by 2): 1.88 long, bottom at -0.18, centred
-    // at z -0.02. Wings stay hidden while closed and only the detailed LOD shows.
-    private bool FitToOriginalBuggyBody(GameObject playerRoot, GameObject visual)
-    {
-        Transform lod0 = FindChildRecursive(visual.transform, "Lod0");
-        Renderer body = lod0 != null ? lod0.GetComponent<Renderer>() : null;
+        GameObject body = CopyMeshObject(lod0, parent);
         if (body == null) return false;
-
-        foreach (string hidden in new[] { "Wings", "Wings_1", "Lod1" })
+        body.name = "Body";
+        foreach (string part in new[] { "Cockpit", "Headlights" })
         {
-            Transform t = FindChildRecursive(visual.transform, hidden);
-            if (t != null) t.gameObject.SetActive(false);
+            Transform source = lod0.Find(part);
+            if (source != null) CopyMeshObject(source, body.transform);
         }
-
-        Bounds local = BoundsInSpace(body, playerRoot.transform);
-        if (local.size.z < 0.001f) return false;
-        visual.transform.localScale *= 1.88f / local.size.z;
-
-        local = BoundsInSpace(body, playerRoot.transform);
-        visual.transform.localPosition += new Vector3(-local.center.x, -0.18f - local.min.y, -0.02f - local.center.z);
         return true;
     }
 
-    private static Bounds BoundsInSpace(Renderer renderer, Transform space)
+    private static GameObject CopyMeshObject(Transform source, Transform parent)
     {
-        Bounds world = renderer.bounds;
-        Vector3 min = world.min, max = world.max;
-        var result = new Bounds(space.InverseTransformPoint(min), Vector3.zero);
-        for (int i = 1; i < 8; i++)
-        {
-            result.Encapsulate(space.InverseTransformPoint(new Vector3(
-                (i & 1) != 0 ? max.x : min.x,
-                (i & 2) != 0 ? max.y : min.y,
-                (i & 4) != 0 ? max.z : min.z)));
-        }
-        return result;
+        var filter = source.GetComponent<MeshFilter>();
+        var renderer = source.GetComponent<MeshRenderer>();
+        if (filter == null || renderer == null || filter.sharedMesh == null) return null;
+
+        var copy = new GameObject(source.name);
+        copy.transform.SetParent(parent, false);
+        copy.transform.localPosition = source.localPosition;
+        copy.transform.localRotation = source.localRotation;
+        copy.transform.localScale = source.localScale;
+        copy.AddComponent<MeshFilter>().sharedMesh = filter.sharedMesh;
+        copy.AddComponent<MeshRenderer>().sharedMaterials = renderer.sharedMaterials;
+        return copy;
     }
 
     private void EnsureSpawnVisuals(GameObject go)
@@ -505,48 +357,12 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
         return false;
     }
 
-    private float EstimateScaleToTargetLength(GameObject go, float targetLength)
-    {
-        var renderers = go.GetComponentsInChildren<Renderer>(true);
-        if (renderers.Length == 0) return 1f;
-
-        bool haveBounds = false;
-        Bounds b = new Bounds(Vector3.zero, Vector3.zero);
-        for (int i = 0; i < renderers.Length; i++)
-        {
-            if (!renderers[i].enabled) continue;
-            if (!haveBounds)
-            {
-                b = renderers[i].bounds;
-                haveBounds = true;
-            }
-            else
-            {
-                b.Encapsulate(renderers[i].bounds);
-            }
-        }
-
-        if (!haveBounds) return 1f;
-        float currentLength = Mathf.Max(0.01f, Mathf.Max(b.size.x, b.size.z));
-        float raw = targetLength / currentLength;
-        return Mathf.Clamp(raw, 0.2f, 12f);
-    }
-
     private void SetActiveRecursively(Transform root)
     {
         root.gameObject.SetActive(true);
         for (int i = 0; i < root.childCount; i++)
         {
             SetActiveRecursively(root.GetChild(i));
-        }
-    }
-
-    private void SetLayerRecursively(Transform root, int layer)
-    {
-        root.gameObject.layer = layer;
-        for (int i = 0; i < root.childCount; i++)
-        {
-            SetLayerRecursively(root.GetChild(i), layer);
         }
     }
 
