@@ -106,6 +106,21 @@ Verified: editor-free compile check, and an arm64 development build that launche
 
 Open follow-ups: confirm tyre tracks on lighter ground and the wheel spin direction, lava floating and diving, the optional "new physics" motor, and camera distances, which were tuned for the previous oversized 5.2 m visual. The converted `Lod0` mesh shows side fins that need checking against the original model.
 
+Handling comparison with the Wine version (2026-10-19, macOS `27.0.1`). The original is Mars Explorer 4.0.2 under the `/Applications/Mars Explorer.app` Wine wrapper. It hosted a local Fort Boxy game and ran at 12–21 FPS. Its figures come from the HUD, read off screenshots, so their timing is only accurate to about ±0.5 s. The port ran in the Unity `6000.3.26f1` editor, entered through `Init`, with a 0.02 s fixed timestep. Synthetic key presses do not reach the editor's Game view, so the port was driven by `Tools -> MarsXPLR -> Run Buggy Handling Probe` (`Editor/BuggyHandlingProbe.cs`). The probe writes the same inputs into `VehicleStateModern` and logs to `Unity6/Logs/handling-probe.txt`. Both builds were tested on the flat orange floor outside the castle.
+
+| Test | Original (Wine) | Port (Unity 6) |
+| --- | --- | --- |
+| Full throttle for 4 s from rest | 51 MPH | 39 MPH (a 1.5–2 s pitch/roll disturbance repeats at the same spot) |
+| Coast after release | 53 → 50 → 47 MPH over about 5 s (about 1.5 MPH/s) | 40 → 31 MPH in the first second, then holds about 30 MPH for 3 s; ended by an obstacle (54.6 m in 6 s) |
+| Reverse throttle as a brake | 32 → 18 → 1 MPH in about 2 s | 39 → <1 MPH in 6.3 s over 16.9 m |
+| Reverse from rest | Reaches about 16 MPH within 1 s and stays capped there for 4 s | Rears up and half-rolls (pitch 59°, roll 147°) before recovering; reaches 30 MPH after 3.5 s |
+| Full right lock for 2 s while coasting | From 46 MPH: about 90° turn, slides onto its outer wheels, ends at 14 MPH | From 36 MPH: 16° turn, scrubs to 2 MPH, stays nearly level |
+| `Fire3` brakes | Not measured: Wine does not pass Cmd through as the Windows key | 40 → <1 MPH in 0.92 s over 10.7 m |
+| Drop of about 18 m | Driving off the spawn platform lands upright with no visible bounce and keeps going straight | Inconclusive: the probe's release point struck castle geometry in mid-air, rolled, and settled upright after bouncing |
+| Idle after spawn | Stays on the spawn platform at 0 MPH, 18 ALT | Twice found on the floor below, moving at about 10 MPH, about 25 s after entry with no input |
+
+Conclusions: the port's tyre and drag model is too resistive overall. Steering at speed scrubs speed like a brake instead of turning the buggy. Reverse has no speed cap, and engaging it from rest pitches the buggy over. Acceleration is about 25% slow, and coasting does not match the original's steady, gentle decay. Next: compare traction, drag, reverse limit, and the steering slip formula in `BuggyControllerModern` against `Buggy.js`. Then repeat the drop test by driving off the spawn platform. Also find out why the port leaves the spawn slab without input.
+
 Acceptance criteria:
 
 - [x] The buggy rests on its wheel contacts rather than a capsule approximation.
@@ -217,7 +232,7 @@ After the arm64 path is stable:
 2. Check the image effects render correctly under Metal.
 3. Save and review only intentional scene changes.
 4. Lock that evidence-backed baseline in version control.
-5. Verify buggy braking, reversing, and landing on Fort Boxy, then add wheel presentation.
+5. Fix the buggy handling gaps found in the Wine comparison (steering scrub, reverse cap, acceleration, coast decay), then repeat the comparison and the spawn-platform drop.
 
 ## Unity 6.3 import results
 
