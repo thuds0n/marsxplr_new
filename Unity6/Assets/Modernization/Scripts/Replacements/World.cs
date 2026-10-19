@@ -1,4 +1,6 @@
+using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class World : MonoBehaviour
 {
@@ -9,29 +11,97 @@ public class World : MonoBehaviour
     public static Color seaFogColor;
     public static Color seaGlowColor;
     public static GameObject fallbackGround;
+    // True while the world scene is streaming in; the player spawn waits for it.
+    public static bool loading;
 
+    // Fort Boxy is the first entry in the original Game scene's built-in world
+    // list, which the game fell back to when the update server was unreachable.
+    public string worldSceneName = "Fort Boxy";
     public bool autoCreateFallbackGround = true;
     public float fallbackGroundSize = 2000f;
     public float fallbackGroundThickness = 8f;
 
     private void Awake()
     {
-        if (@base == null)
-        {
-            var go = GameObject.Find("Base");
-            if (go != null) @base = go.transform;
-        }
-
-        terrains = FindObjectsOfType<Terrain>();
-
-        if (sea == null)
-        {
-            var seaGo = GameObject.Find("Sea");
-            if (seaGo != null) sea = seaGo.transform;
-        }
+        @base = null;
+        sea = null;
+        fallbackGround = null;
+        loading = false;
 
         if (seaFogColor == default) seaFogColor = new Color(0.6f, 0.2f, 0.1f, 1f);
         if (seaGlowColor == default) seaGlowColor = new Color(1f, 0.4f, 0.1f, 1f);
+
+        if (!string.IsNullOrEmpty(worldSceneName))
+        {
+            if (SceneManager.GetSceneByName(worldSceneName).isLoaded)
+            {
+                SceneManager.SetActiveScene(SceneManager.GetSceneByName(worldSceneName));
+            }
+            else if (Application.CanStreamedLevelBeLoaded(worldSceneName))
+            {
+                loading = true;
+                StartCoroutine(LoadWorldScene());
+                return;
+            }
+            else
+            {
+                Debug.LogError("[World] World scene is not available in Build Settings: " + worldSceneName);
+            }
+        }
+
+        FinishWorld();
+    }
+
+    private IEnumerator LoadWorldScene()
+    {
+        yield return SceneManager.LoadSceneAsync(worldSceneName, LoadSceneMode.Additive);
+
+        // The world's skybox, fog, and ambient light apply, as when Whirld loaded it.
+        var worldScene = SceneManager.GetSceneByName(worldSceneName);
+        if (worldScene.IsValid()) SceneManager.SetActiveScene(worldScene);
+
+        FinishWorld();
+        if (Game.Settings != null) Game.Settings.fogColor = RenderSettings.fogColor;
+        loading = false;
+        Debug.Log("[World] Loaded world: " + worldSceneName);
+    }
+
+    // Mirrors the standard-component checks in Game.js Init().
+    private void FinishWorld()
+    {
+        var baseGo = GameObject.Find("Base");
+        if (baseGo != null) @base = baseGo.transform;
+        else
+        {
+            var basePrefab = Resources.Load<GameObject>("Base");
+            if (basePrefab != null) @base = Instantiate(basePrefab, Vector3.up * 5f, Quaternion.identity).transform;
+        }
+
+        terrains = FindObjectsByType<Terrain>(FindObjectsSortMode.None);
+
+        var seaGo = GameObject.Find("Sea");
+        if (seaGo != null)
+        {
+            sea = seaGo.transform;
+            if (Game.Settings != null) Game.Settings.lavaAlt = sea.position.y;
+        }
+
+        if (GameObject.Find("Floor") == null && terrains.Length == 0 && sea == null)
+        {
+            var floorPrefab = Resources.Load<GameObject>("Floor");
+            if (floorPrefab != null) Instantiate(floorPrefab, Vector3.zero, Quaternion.identity).name = "Floor";
+        }
+
+        bool thereIsALight = false;
+        foreach (var light in FindObjectsByType<Light>(FindObjectsSortMode.None))
+        {
+            if (light.gameObject.name != "VehicleLight") thereIsALight = true;
+        }
+        if (!thereIsALight)
+        {
+            var lightPrefab = Resources.Load<GameObject>("Light");
+            if (lightPrefab != null) Instantiate(lightPrefab);
+        }
 
         if (autoCreateFallbackGround)
         {

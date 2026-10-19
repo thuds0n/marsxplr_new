@@ -103,7 +103,7 @@ Acceptance criteria:
 - [ ] Acceleration, reversing, steering, braking, side slip, and landing are controllable.
 - [x] Camera and HUD telemetry continue to consume `VehicleStateModern`.
 - [x] `SimplePlayerController` can still be selected temporarily for recovery (`useModernBuggyController` on `SinglePlayerPlayableBootstrap`).
-- [ ] Behaviour is tested on a small representative Mars terrain fixture, not only `FallbackGround`.
+- [ ] Behaviour is tested on a small representative Mars terrain fixture, not only `FallbackGround` (Fort Boxy now loads; handling not yet assessed on it).
 
 ## Milestone 2: Wing and flight parity
 
@@ -127,6 +127,12 @@ Acceptance criteria:
 - Make world and base discovery deterministic for full-flow and direct-scene entry.
 - Audit missing scripts and incompatible shaders within the selected environment only.
 - Validate suspension feel, scale, speed perception, altitude, minimap, arrow, and camera obstruction behaviour.
+
+Status (2026-10-18): `Game` now loads Fort Boxy (`Whirlds/FortBoxy/Fort Boxy.unity`) additively in place of `FallbackGround`. Fort Boxy is the first entry in the original `Game` scene's built-in world list, which the game used when the update server was unreachable, so it is the world an offline original build opens on. `World` loads the scene, makes it the active scene so its skybox, fog, and ambient light apply, then repeats the standard-component checks from `Game.js` `Init()`: find `Base` (or instantiate `Resources/Base`), collect terrains and `Sea`, and instantiate `Resources/Floor` and `Resources/Light` when the world has none. The player spawn waits for the load. `FallbackGround` remains only as a last resort when no ground is found under `Base`.
+
+Verified in the Unity `6000.3.26f1` editor on macOS `27.0.1`: both `Init -> InitGame -> Game` and direct `Game` entry log `[World] Loaded world: Fort Boxy`, spawn the buggy on the castle beside `Base`, create no fallback ground, and log no errors. The chase camera starts at y = 10000 and descends to the buggy; it only does so while the editor is advancing frames (an unfocused editor or locked screen leaves the Game view showing flat fog colour).
+
+Open: Fort Boxy's original world parameters (fog, floor texture, `ccc`) came from the downloaded `.utw` file and are not restored; world objects stay on layer 0 rather than the terrain layer 8 the camera and minimap test against; the `Base`, `Floor`, and Whirld library objects still carry missing legacy scripts; not yet checked in an arm64 player build.
 
 ## Milestone 4: Gameplay loop parity
 
@@ -196,7 +202,7 @@ After the arm64 path is stable:
 2. Check the image effects render correctly under Metal.
 3. Save and review only intentional scene changes.
 4. Lock that evidence-backed baseline in version control.
-5. Verify buggy braking, reversing, and landing, then add wheel presentation and a representative terrain fixture.
+5. Verify buggy braking, reversing, and landing on Fort Boxy, then add wheel presentation.
 
 ## Unity 6.3 import results
 

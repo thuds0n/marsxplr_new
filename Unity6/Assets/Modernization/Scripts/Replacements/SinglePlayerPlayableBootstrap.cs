@@ -37,7 +37,7 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
             return;
         }
 
-        if (Time.time < _nextAttemptTime)
+        if (World.loading || Time.time < _nextAttemptTime)
         {
             return;
         }

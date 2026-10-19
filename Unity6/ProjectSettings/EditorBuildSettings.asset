@@ -17,5 +17,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Scenes/Game.unity
     guid: 00000000000000000000000000000000
+  - enabled: 1
+    path: Assets/Whirlds/FortBoxy/Fort Boxy.unity
+    guid: 2dc959150a4fa4ce3af9ed489c09bfb8
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
