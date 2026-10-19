@@ -60,6 +60,8 @@ public class World : MonoBehaviour
         var worldScene = SceneManager.GetSceneByName(worldSceneName);
         if (worldScene.IsValid()) SceneManager.SetActiveScene(worldScene);
 
+        if (worldScene.IsValid()) GiveRenderersOwnMaterials(worldScene);
+
         FinishWorld();
         if (Game.Settings != null) Game.Settings.fogColor = RenderSettings.fogColor;
         // Restart the camera's world entry effect from the moment the world is ready.
@@ -77,6 +79,17 @@ public class World : MonoBehaviour
         {
             var basePrefab = Resources.Load<GameObject>("Base");
             if (basePrefab != null) @base = Instantiate(basePrefab, Vector3.up * 5f, Quaternion.identity).transform;
+        }
+
+        // The base prefab's BaseSimple.js components are missing scripts; restore them.
+        if (@base != null)
+        {
+            foreach (string part in new[] { "Outer", "Inner" })
+            {
+                Transform t = @base.Find(part);
+                if (t == null) t = FindDescendant(@base, part);
+                if (t != null && t.GetComponent<BaseSimpleModern>() == null) t.gameObject.AddComponent<BaseSimpleModern>();
+            }
         }
 
         terrains = FindObjectsByType<Terrain>(FindObjectsSortMode.None);
@@ -109,6 +122,35 @@ public class World : MonoBehaviour
         {
             EnsureFallbackGround();
         }
+    }
+
+    // Compatibility workaround: in Unity 6 on Metal, legacy Whirld meshes that
+    // share one material (Fort Boxy's AirCastle) draw with the wrong texture or
+    // not at all, depending on draw order. A material per renderer renders them
+    // correctly.
+    private static void GiveRenderersOwnMaterials(Scene scene)
+    {
+        foreach (GameObject root in scene.GetRootGameObjects())
+        {
+            foreach (MeshRenderer r in root.GetComponentsInChildren<MeshRenderer>(true))
+            {
+                Material[] shared = r.sharedMaterials;
+                for (int i = 0; i < shared.Length; i++)
+                {
+                    if (shared[i] != null) shared[i] = new Material(shared[i]);
+                }
+                r.sharedMaterials = shared;
+            }
+        }
+    }
+
+    private static Transform FindDescendant(Transform root, string name)
+    {
+        foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+        {
+            if (t.name == name) return t;
+        }
+        return null;
     }
 
     private void EnsureFallbackGround()

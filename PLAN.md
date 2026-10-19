@@ -142,6 +142,10 @@ Status (2026-10-18): `Game` now loads Fort Boxy (`Whirlds/FortBoxy/Fort Boxy.uni
 
 Verified in the Unity `6000.3.26f1` editor on macOS `27.0.1`: both `Init -> InitGame -> Game` and direct `Game` entry log `[World] Loaded world: Fort Boxy`, spawn the buggy on the castle beside `Base`, create no fallback ground, and log no errors. The chase camera starts at y = 10000 and descends to the buggy; it only does so while the editor is advancing frames (an unfocused editor or locked screen leaves the Game view showing flat fog colour).
 
+Base marker (2026-10-19): `BaseSimpleModern` ports `BaseSimple.js`, whose missing script left the base marker's `Outer` and `Inner` cylinders at their smallest size. They now grow with camera distance (0.5 to 10 times), spin, and scroll their texture. `World` attaches it when the world loads. Verified in the editor: the marker is visible from the far camera.
+
+Rendering workaround (2026-10-19): in Unity `6000.3.26f1` on Metal, Fort Boxy's AirCastle renderers that share the `Object` material drew with the wrong texture, or not at all, depending on camera distance and draw order. The spawn slab looked like the floor and the hanging pyramids vanished. A material copy per renderer draws them correctly; a single shared fresh copy does not. Ruled out: shader (`Diffuse Fast` and `Diffuse` behave the same), lightmaps, occlusion data, dynamic batching (already off), mesh bounds and mipmaps. The likely cause is the legacy meshes' differing vertex layouts across draws that share a material, but this is unconfirmed. `World` gives every world renderer its own material copy after loading. Verified in the editor at near and far camera distances.
+
 Open: Fort Boxy's original world parameters (fog, floor texture, `ccc`) came from the downloaded `.utw` file and are not restored; world objects stay on layer 0 rather than the terrain layer 8 the camera and minimap test against; the `Base`, `Floor`, and Whirld library objects still carry missing legacy scripts; not yet checked in an arm64 player build.
 
 ## Milestone 4: Gameplay loop parity
