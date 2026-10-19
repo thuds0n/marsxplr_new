@@ -40,6 +40,10 @@ public class Settings : MonoBehaviour
     public float lavaAlt = -300f;
     public float lavaFog = 0.005f;
     public float worldFog = 0.0004f;
+    // Settings.js: the player's visibility cap (1000 means no cap) and the
+    // world's view distance, which together set the camera's far clip.
+    public float renderViewCap = 1000f;
+    public float worldViewDist = 5000f;
     public Color fogColor = Color.clear;
     public int renderLevel = 4;
     public float resetTime = -10f;
@@ -84,10 +88,36 @@ public class Settings : MonoBehaviour
         PlayerPrefs.SetFloat("vehColAccB", vehicle.vehicleAccent.b);
     }
 
+    // Settings.js Start: load saved preferences, then apply them.
+    private void Start()
+    {
+        getPrefs();
+        updatePrefs();
+    }
+
+    // Settings.js getPrefs(), the rendering and camera preferences only.
+    public void getPrefs()
+    {
+        renderLevel = PlayerPrefs.GetInt("renderLevel", 4);
+        renderViewCap = PlayerPrefs.GetFloat("viewCap", 1000f);
+        camMode = PlayerPrefs.GetInt("cam", 1);
+        camChase = PlayerPrefs.GetInt("camChase", 1);
+        camDist = PlayerPrefs.GetFloat("camDist", 0.01f);
+        flightCam = PlayerPrefs.GetInt("flightCam", 0) == 1;
+        gyroCam = PlayerPrefs.GetInt("gyroCam", 0) == 1;
+    }
+
     public void updatePrefs()
     {
         // Settings.js ran physics at 50 Hz, or 40 Hz at lower render levels.
         Time.fixedDeltaTime = renderLevel > 3 ? 0.02f : 0.025f;
+
+        // Beyond 2000 m CameraVehicle clears to the skybox instead of the fog colour.
+        if (Camera.main != null)
+        {
+            Camera.main.farClipPlane = renderViewCap == 1000f ? worldViewDist : Mathf.Min(renderViewCap, worldViewDist);
+            worldFog = Mathf.Lerp(0.007f, 0.0003f, Camera.main.farClipPlane / 6000f);
+        }
 
         laserLocking = false;
         if (laserLock != null)

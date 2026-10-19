@@ -248,3 +248,52 @@ public class BuggyHandlingProbeRunner : MonoBehaviour
 
     private void Line(string s) { _log.AppendLine(s); }
 }
+
+// Logs what decides the world's look: skybox, camera clear mode, and the base marker's materials.
+public static class SceneLookProbe
+{
+    [MenuItem("Tools/MarsXPLR/Log Scene Look")]
+    private static void Log()
+    {
+        var sb = new StringBuilder();
+        Material sky = RenderSettings.skybox;
+        sb.AppendLine("skybox=" + (sky != null ? sky.name + " shader=" + sky.shader.name + " supported=" + sky.shader.isSupported : "none")
+            + " fog=" + RenderSettings.fog + " fogColour=" + RenderSettings.fogColor + " ambient=" + RenderSettings.ambientLight);
+        foreach (Camera c in Camera.allCameras)
+        {
+            var sbx = c.GetComponent<Skybox>();
+            sb.AppendLine("camera " + c.name + " clear=" + c.clearFlags + " bg=" + c.backgroundColor + " far=" + c.farClipPlane
+                + " skyboxComponent=" + (sbx != null && sbx.material != null ? sbx.material.name + "/" + sbx.material.shader.name : "none")
+                + " pos=" + c.transform.position.ToString("F1") + " euler=" + c.transform.eulerAngles.ToString("F1"));
+        }
+        if (Game.Settings != null) sb.AppendLine("settings camMode=" + Game.Settings.camMode + " camChase=" + Game.Settings.camChase + " camDist=" + Game.Settings.camDist + " flightCam=" + Game.Settings.flightCam);
+        if (Game.Player != null && Camera.main != null)
+        {
+            Transform p = Game.Player.transform;
+            Vector3 local = p.InverseTransformPoint(Camera.main.transform.position);
+            var rb = Game.Player.GetComponent<Rigidbody>();
+            sb.AppendLine("camera offset in buggy space=" + local.ToString("F2") + " buggy euler=" + p.eulerAngles.ToString("F1")
+                + " velocity=" + (rb != null ? rb.linearVelocity.ToString("F2") : "-"));
+        }
+        GameObject b = GameObject.Find("Base");
+        if (b != null)
+        {
+            foreach (Renderer r in b.GetComponentsInChildren<Renderer>(true))
+            {
+                foreach (Material m in r.sharedMaterials)
+                {
+                    if (m == null) { sb.AppendLine("base " + r.name + " material=null"); continue; }
+                    sb.AppendLine("base " + r.name + " active=" + r.gameObject.activeInHierarchy + " enabled=" + r.enabled + " " + r.GetType().Name
+                        + " material=" + m.name + " shader=" + m.shader.name + " supported=" + m.shader.isSupported
+                        + " tex=" + (m.HasProperty("_MainTex") ? m.mainTexture : null) + " colour=" + (m.HasProperty("_Color") ? m.color.ToString() : "-"));
+                }
+            }
+            foreach (ParticleSystem ps in b.GetComponentsInChildren<ParticleSystem>(true)) sb.AppendLine("base particles " + ps.name + " playing=" + ps.isPlaying + " count=" + ps.particleCount + " at " + ps.transform.position.ToString("F1"));
+            foreach (Light l in b.GetComponentsInChildren<Light>(true)) sb.AppendLine("base light " + l.name + " " + l.type + " colour=" + l.color + " range=" + l.range + " enabled=" + l.enabled);
+            foreach (Component c in b.GetComponentsInChildren<Component>(true)) if (c == null) sb.AppendLine("base has a missing script");
+        }
+        string path = Path.Combine(Application.dataPath, "../Logs/scene-look.txt");
+        File.WriteAllText(path, sb.ToString());
+        Debug.Log("[SceneLook] -> " + path);
+    }
+}

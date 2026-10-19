@@ -59,7 +59,12 @@ public class World : MonoBehaviour
 
         // The world's skybox, fog, and ambient light apply, as when Whirld loaded it.
         var worldScene = SceneManager.GetSceneByName(worldSceneName);
+        Material gameSkybox = RenderSettings.skybox;
         if (worldScene.IsValid()) SceneManager.SetActiveScene(worldScene);
+        // An additive load in Unity 2 left the Game scene's skybox in place;
+        // keep it when the world does not bring its own.
+        if (RenderSettings.skybox == null) RenderSettings.skybox = gameSkybox;
+        Debug.Log("[World] Skybox: " + (RenderSettings.skybox != null ? RenderSettings.skybox.name : "none") + " (Game scene: " + (gameSkybox != null ? gameSkybox.name : "none") + ")");
 
         if (worldScene.IsValid())
         {
@@ -87,7 +92,7 @@ public class World : MonoBehaviour
             if (basePrefab != null) @base = Instantiate(basePrefab, Vector3.up * 5f, Quaternion.identity).transform;
         }
 
-        // The base prefab's BaseSimple.js components are missing scripts; restore them.
+        // The base prefab's BaseSimple.js and WhirldLOD.js components are missing scripts; restore them.
         if (@base != null)
         {
             foreach (string part in new[] { "Outer", "Inner" })
@@ -96,6 +101,7 @@ public class World : MonoBehaviour
                 if (t == null) t = FindDescendant(@base, part);
                 if (t != null && t.GetComponent<BaseSimpleModern>() == null) t.gameObject.AddComponent<BaseSimpleModern>();
             }
+            if (@base.GetComponent<BaseMarkerModern>() == null) @base.gameObject.AddComponent<BaseMarkerModern>();
         }
 
         terrains = FindObjectsByType<Terrain>(FindObjectsSortMode.None);
