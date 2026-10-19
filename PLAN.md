@@ -165,6 +165,7 @@ The Unity 6.3 LTS baseline is accepted only when it provides:
 
 After the arm64 path is stable:
 
+- decide the release scripting backend (IL2CPP was the earlier intent; development builds use Mono);
 - produce a universal macOS player;
 - inspect the application with `file`/`lipo` to confirm both architectures;
 - test Apple-silicon launch without Rosetta;
