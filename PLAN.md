@@ -49,7 +49,7 @@ The current working tree has not been compiled or played in Unity since its newe
 - [x] Make PNG source assets visible despite the user's global Git ignore.
 - [x] Consolidate offline automatic routing under one scene-flow coordinator.
 - [x] Define `Init -> InitGame -> Game` as the active offline path.
-- [x] Allow `Lobby` to remain in Build Settings without making it part of the active path.
+- [x] Keep `Lobby` in the project without making it part of the active path. It was removed from Build Settings on 2026-10-20 because its scene YAML does not parse (see arm64 development player).
 - [x] Add a Unity batchmode baseline-validation entry point.
 - [x] Separate buggy flight state from the legacy `inputThrottle` state flag.
 - [x] Stage every PNG source asset alongside its existing `.meta` (static check: no asset without a `.meta`; the only `.meta` files without tracked sources are empty folders).
@@ -198,7 +198,7 @@ World textures (2026-10-19): in Fort Boxy as captured in this repository, 880 `C
 
 Lighting (2026-10-19): Fort Boxy rendered at about half the Wine version's brightness (orange floor about 62–67 against 110–120 in screenshots). The built-in legacy shaders of Unity 4 and earlier (the original shipped on them; `unity/` is on 4.6.1f1) finished with `texture * lighting DOUBLE`, so lights and ambient light counted twice. Unity 5 dropped the doubling. After the world loads, `World` now doubles every light's intensity and the ambient colour once. Fort Boxy's only light is the `Resources/Light` directional light (intensity 1). Ambient is flat 0.2 and the colour space is Gamma, as in the original. The 0.2 ambient comes from the scene in this repository. Downloaded worlds set their own ambient light (`rndAmbientLight` in `.utw` files), and the author's example exports use about 0.5–0.66. Fort Boxy's real value is unknown, because its world file is not in the repository history or the Wine install. Verified in the Unity `6000.3.26f1` editor: the floor now measures about 116–131, matching the Wine version.
 
-Open: Fort Boxy's original world parameters (fog, floor texture, `ccc`) came from the downloaded `.utw` file and are not restored.; world objects stay on layer 0 rather than the terrain layer 8 the camera and minimap test against; the `Base`, `Floor`, and Whirld library objects still carry missing legacy scripts; not yet checked in an arm64 player build.
+Open: Fort Boxy's original world parameters (fog, floor texture, `ccc`) came from the downloaded `.utw` file and are not restored.; world objects stay on layer 0 rather than the terrain layer 8 the camera and minimap test against; the `Base`, `Floor`, and Whirld library objects still carry missing legacy scripts. Checked in the arm64 player on 2026-10-20 (see arm64 development player); the pyramid meshes were not confirmed on screen.
 
 ## Milestone 4: Gameplay loop parity
 
@@ -292,9 +292,16 @@ Built with `Tools -> MarsXPLR -> Build macOS arm64 Development Player` (`MarsXPL
 - `file` and `lipo` report a single `arm64` Mach-O executable, so it cannot run under Rosetta.
 - A fresh launch reached `Game` through `Init -> InitGame -> Game`, spawned the buggy on fallback ground, and logged no exceptions.
 - The build reports 9 errors, all missing legacy scripts on prefabs (`Buggy`, `Wings`, `Sea`, `JumpPoint`, `Floor`); the player logs the same missing components on `Init`, `Vehicle`, `Buggy`, `Wings`, `ORB`, and `Buggy Skidmarks`.
-- `Lobby.unity` fails to parse during the build (line 171). `Lobby` is outside the single-player flow but still in Build Settings.
 - The placeholder laser repeatedly reports hits on the player itself.
+- `Lobby.unity` failed to parse during the build (line 171).
 - Not yet verified: controls and image effects in the player, and a launch from a clean clone.
+
+Rebuilt on 2026-10-20 with the same toolchain (Unity `6000.3.26f1`, macOS `27.0.1` build `26A434`) after the buggy body, `VehicleColourModern`, Whirld texture and lighting changes:
+
+- `Lobby` was removed from Build Settings rather than repaired. Its re-serialised YAML nests a block-style colour inside a flow mapping (a stray `}` at line 171), so fixing it means hand-editing a serialised scene that Unity cannot then verify; nothing in `Init -> InitGame -> Game` loads it, and baseline validation only requires the scene asset to exist. The asset stays in the project as reference content. `LobbyStarfield` keys off build index 1, which is now `InitGame`, but only acts when given a `Lobby` component, so it stays inert.
+- The build succeeded (164 MB) with no Lobby parse error. `file` and `lipo` again report a single `arm64` executable. The 8 build errors are Metal shader compile errors in `Hidden/SSAO`, `ForceField`, and `FX/Island Water Simple`/`Full`; missing legacy scripts are now reported as warnings (including `Fort Boxy`'s `Castle`, `AirCastle`, and `Base`).
+- A fresh launch reached Fort Boxy through `Init -> InitGame -> Game` (`[World] Loaded world: Fort Boxy`, space skybox) and logged no exceptions; the only errors are the known missing-script messages.
+- On screen: the original buggy body in a random player colour (purple) with wings, wheels and axles; the hex-textured castle; and the brighter orange floor. Pyramid meshes were not in view and remain unconfirmed in the player.
 
 ### HUD font
 
