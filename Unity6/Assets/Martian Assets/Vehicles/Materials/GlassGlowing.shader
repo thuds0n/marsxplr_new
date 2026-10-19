@@ -23,11 +23,10 @@ Category {
 		Pass {
 			
 CGPROGRAM
-// profiles arbfp1
-// fragment frag
-// fragmentoption ARB_fog_exp2
-// fragmentoption ARB_precision_hint_fastest 
-// vertex vert
+// Unity 2 directives ("// vertex vert") replaced with pragmas; without them no programs compiled.
+#pragma vertex vert
+#pragma fragment frag
+#pragma fragmentoption ARB_precision_hint_fastest
 #include "UnityCG.cginc"
 
 struct v2f {
@@ -36,7 +35,7 @@ struct v2f {
 	float3	viewDir	: TEXCOORD1;
 };
 
-v2f vert (appdata_tan v)
+v2f vert (appdata_base v)
 {	
 	v2f o;
 	o.pos = UnityObjectToClipPos (v.vertex);
@@ -46,13 +45,13 @@ v2f vert (appdata_tan v)
 	return o;
 }
 
-uniform samplerCUBE _Cube : register(s0);
+uniform samplerCUBE _Cube;
 uniform float4 _Color;
 uniform float4 _SpecColor;
 
-float4 frag (v2f i)  : COLOR
+float4 frag (v2f i)  : SV_Target
 {
-	float3 normal = i.normal;
+	float3 normal = normalize(i.normal);
 	i.viewDir = normalize(i.viewDir);
 	half nsv = saturate(dot( normal, i.viewDir ));
 	
@@ -67,7 +66,6 @@ float4 frag (v2f i)  : COLOR
 	return half4( c, fresnel );
 }
 ENDCG  
-			SetTexture [_Cube] {combine texture}
 		}
 	}
 	

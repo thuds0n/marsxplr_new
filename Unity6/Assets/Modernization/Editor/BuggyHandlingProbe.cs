@@ -160,7 +160,8 @@ public class BuggyHandlingProbeRunner : MonoBehaviour
         {
             Renderer r = wings.wings.GetComponent<Renderer>();
             Line("wings active=" + wings.wings.gameObject.activeInHierarchy + " bounds=" + r.bounds.size.ToString("F2")
-                + " shader=" + r.sharedMaterial.shader.name + " colour=" + r.sharedMaterial.color
+                + " shader=" + r.sharedMaterial.shader.name + " supported=" + r.sharedMaterial.shader.isSupported + " colour=" + r.sharedMaterial.color
+                + " spec=" + r.sharedMaterial.GetColor("_SpecColor") + " cube=" + r.sharedMaterial.GetTexture("_Cube") + " layer=" + r.gameObject.layer
                 + " trails=" + (wings.leftTrail != null ? wings.leftTrail.localPosition.ToString("F1") : "none") + " " + (wings.rightTrail != null ? wings.rightTrail.localPosition.ToString("F1") : "none"));
         }
         Line("== glide");
