@@ -62,6 +62,8 @@ public class World : MonoBehaviour
 
         FinishWorld();
         if (Game.Settings != null) Game.Settings.fogColor = RenderSettings.fogColor;
+        // Restart the camera's world entry effect from the moment the world is ready.
+        if (Game.Controller != null) Game.Controller.worldLoadTime = Time.time;
         loading = false;
         Debug.Log("[World] Loaded world: " + worldSceneName);
     }

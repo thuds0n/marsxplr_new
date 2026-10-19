@@ -7,7 +7,6 @@ public class CameraVehicle : MonoBehaviour
     public MotionBlur mb;
     public GlowEffect glowEffect;
     public ColorCorrectionEffect colorEffect;
-    public float baseCamOffset = 4.2f;
 
     private float _rotationX;
     private float _rotationY;
@@ -18,6 +17,7 @@ public class CameraVehicle : MonoBehaviour
     private string _cameraToast = "";
     private float _cameraToastUntil;
     private bool _wasFirstPersonViewActive;
+    private float _worldTime;
 
     private void Start()
     {
@@ -46,10 +46,20 @@ public class CameraVehicle : MonoBehaviour
         }
 
         ApplyHotkeys();
-        float camDist = baseCamOffset + Game.Settings.camDist;
-        if (camDist < 1f) camDist = 1f;
+        // CameraVehicle.js: the vehicle's camOffset (2 for the buggy) plus the player's setting.
+        float camDist = (playerState != null ? playerState.camOffset : 2f) + Game.Settings.camDist;
+        Vector3 playerPos = Game.Player.transform.position;
+        Vector3 lookUp = Game.Settings.flightCam ? Game.Player.transform.up : Vector3.up;
 
-        if (firstPersonActive)
+        // World entry effect: drift from the start position down to the player for 7 s.
+        if (_worldTime < 7f && Game.Controller != null)
+        {
+            _worldTime = Time.time - Game.Controller.worldLoadTime;
+            transform.position = Vector3.Lerp(transform.position, playerPos, Time.deltaTime);
+            Quaternion wr = Quaternion.LookRotation(playerPos - transform.position, Vector3.up);
+            if (_worldTime > 1f) transform.rotation = Quaternion.Slerp(transform.rotation, wr, Time.deltaTime * 0.5f * Mathf.Min(1f, (_worldTime - 1f) * 0.5f));
+        }
+        else if (firstPersonActive)
         {
             if (!_wasFirstPersonViewActive)
             {
@@ -60,7 +70,9 @@ public class CameraVehicle : MonoBehaviour
                     : Quaternion.identity;
             }
 
-            transform.position = rideTarget.position + Vector3.up * 1.5f;
+            // The buggy model's RideCam marks the original ridePos.
+            Transform ridePos = FindRidePos();
+            transform.position = ridePos != null ? ridePos.position : rideTarget.position + Vector3.up * 1.5f;
 
             if (Game.Settings.gyroCam)
             {
@@ -72,7 +84,7 @@ public class CameraVehicle : MonoBehaviour
             }
             else
             {
-                transform.rotation = Game.Player.transform.rotation;
+                transform.rotation = ridePos != null ? ridePos.rotation : Game.Player.transform.rotation;
             }
 
             _rotationX += Input.GetAxis("Mouse X") * 2f;
@@ -101,17 +113,12 @@ public class CameraVehicle : MonoBehaviour
                 {
                     _lastDir = Vector3.Lerp(_lastDir, rb.linearVelocity.normalized, 0.1f);
                 }
-                else
-                {
-                    _lastDir = Vector3.Lerp(_lastDir, new Vector3(_lastDir.x, 0f, _lastDir.z), 0.1f);
-                }
 
-                Vector3 newPos = rideTarget.position + _lastDir * -camDist + Vector3.up * (camDist / 3f);
-                float chaseHeight = Mathf.Lerp(0.9f, 2.2f, Mathf.Clamp01(camDist / 30f));
-                newPos.y = rideTarget.position.y + chaseHeight;
-                transform.position += Vector3.up * ((rideTarget.position.y - _lastY) * Time.deltaTime);
+                Vector3 newPos = playerPos + _lastDir * -camDist + Vector3.up * (camDist / 3f);
+                transform.position += Vector3.up * ((playerPos.y - _lastY) * Time.deltaTime);
                 transform.position = Vector3.Lerp(transform.position, newPos, Time.deltaTime * 4f);
-                _lastY = rideTarget.position.y;
+                _lastY = playerPos.y;
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(playerPos - transform.position, lookUp), Time.deltaTime * 4f);
             }
             else if (Game.Settings.camChase == 2)
             {
@@ -152,13 +159,15 @@ public class CameraVehicle : MonoBehaviour
             }
             else
             {
-                Vector3 target = rideTarget.position + Vector3.up * 1.2f;
-                Vector3 desired = target - Game.Player.transform.forward * (camDist + 1.2f);
+                bool camSmooth = playerState != null && playerState.camSmooth;
+                Vector3 desired = playerPos - Vector3.Normalize(playerPos - transform.position) * camDist
+                    + Vector3.one * (camSmooth ? 0f : Mathf.Lerp(0f, 15f, camDist / 30f));
                 transform.position = Vector3.Lerp(transform.position, desired, Time.deltaTime * 3.5f);
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(target - transform.position, Vector3.up), Time.deltaTime * 4f);
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(playerPos - transform.position, lookUp), Time.deltaTime * 4f);
             }
 
-            if (Physics.Linecast(transform.position + Vector3.up * 50f, transform.position + Vector3.down * 1f, out var groundHit, 1 << 8) && !(groundHit.collider is TerrainCollider))
+            // Smooth and Agile lift the camera out of world geometry; Arcade has its own avoidance.
+            if (Game.Settings.camChase != 2 && Physics.Linecast(transform.position + Vector3.up * 50f, transform.position + Vector3.down * 1f, out var groundHit, 1 << 8) && !(groundHit.collider is TerrainCollider))
             {
                 transform.position += Vector3.up * (51f - groundHit.distance);
             }
@@ -239,6 +248,23 @@ public class CameraVehicle : MonoBehaviour
         _cameraToast = text;
         _cameraToastUntil = Time.time + 1.4f;
         if (Game.Controller != null) Game.Controller.msg(text, 0);
+    }
+
+    private Transform _ridePos;
+    private GameObject _ridePosOwner;
+
+    private Transform FindRidePos()
+    {
+        if (_ridePosOwner != Game.Player)
+        {
+            _ridePosOwner = Game.Player;
+            _ridePos = null;
+            foreach (Transform t in Game.Player.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name == "RideCam") { _ridePos = t; break; }
+            }
+        }
+        return _ridePos;
     }
 
     private void OnPreRender()

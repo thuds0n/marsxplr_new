@@ -98,6 +98,12 @@ Wheel presentation (2026-10-19): `BuggyPresentationModern` instantiates the orig
 
 Verified in the Unity `6000.3.26f1` editor on Fort Boxy: wheels and axles render at the original positions, the front wheels steer, and no errors are logged. The skidmark mesh fills with segments while driving, but the tracks were not confirmed visually. The original material draws them black at about 25% opacity, which barely shows on Fort Boxy's dark floor.
 
+Camera (2026-10-19): `CameraVehicle` again uses the original chase distance: the vehicle's `camOffset` (2, confirmed in the original `Buggy.prefab` `VehicleData`) plus the player's `camDist` setting. This replaces the 4.2 m scaffold tuned for the old oversized visual. The Agile and Smooth formulas, the 7 s world-entry glide, the RideCam ride position, and the ground lift (Smooth and Agile only) are restored from `CameraVehicle.js`. `World` restarts the entry glide when the world finishes loading.
+
+Known parity behaviour: the Agile camera's direction starts at the original (1, 1, 1), so it sits below a stationary buggy, under Fort Boxy's one-sided floor, until the buggy moves. Compare this start with the Wine version before deciding whether to change it.
+
+Verified: editor-free compile check, and an arm64 development build that launches into Fort Boxy (Unity `6000.3.26f1`, macOS `27.0.1`). Not yet verified: chase framing while driving, and a comparison with the Wine version. Keyboard input did not reach the player during the automated check.
+
 Open follow-ups: confirm tyre tracks on lighter ground and the wheel spin direction, lava floating and diving, the optional "new physics" motor, and camera distances, which were tuned for the previous oversized 5.2 m visual. The converted `Lod0` mesh shows side fins that need checking against the original model.
 
 Acceptance criteria:
