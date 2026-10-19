@@ -4,7 +4,7 @@ using UnityEngine;
 // Player vehicle colouring, ported from Vehicle.js (Start and the updateColor
 // section of Update) and the colour start-up in Game.js. The body material
 // (materialMain) fades to vehicleColor and the accent materials (the buggy's
-// wheel beadlocks; wings once ported) to vehicleAccent. The green "it" colours
+// wheel beadlocks and wings) to vehicleAccent. The green "it" colours
 // are not ported with the rest of the quarry rules.
 [RequireComponent(typeof(VehicleStateModern))]
 public class VehicleColourModern : MonoBehaviour
@@ -70,7 +70,7 @@ public class VehicleColourModern : MonoBehaviour
         {
             // Renderer.material gives each vehicle its own instance, as Vehicle.js did.
             if (r.name == "Body") _materialMain.Add(r.material);
-            else if (r.name == "Beadlock") _materialAccent.Add(r.material);
+            else if (r.name == "Beadlock" || r.name == "Wings") _materialAccent.Add(r.material);
         }
     }
 

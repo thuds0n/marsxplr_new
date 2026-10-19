@@ -17,6 +17,16 @@ public static class BuggyHandlingProbe
         buggy.gameObject.AddComponent<BuggyHandlingProbeRunner>();
     }
 
+    // Take-off, glide, airbrake, stall, and landing on the probe pad.
+    [MenuItem("Tools/MarsXPLR/Run Buggy Flight Probe")]
+    private static void RunFlight()
+    {
+        if (!Application.isPlaying) { Debug.LogWarning("[HandlingProbe] Enter Play mode first."); return; }
+        BuggyControllerModern buggy = Object.FindAnyObjectByType<BuggyControllerModern>();
+        if (buggy == null) { Debug.LogWarning("[HandlingProbe] No BuggyControllerModern found."); return; }
+        buggy.gameObject.AddComponent<BuggyHandlingProbeRunner>().flight = true;
+    }
+
     // Drives from wherever the buggy is: 3 s of throttle, then 1.5 s of full
     // right lock while coasting, for comparing tyre tracks on real ground.
     [MenuItem("Tools/MarsXPLR/Run Buggy Track Test")]
@@ -62,6 +72,8 @@ public class BuggyTrackTestRunner : MonoBehaviour
 
 public class BuggyHandlingProbeRunner : MonoBehaviour
 {
+    public bool flight;
+    private BuggyControllerModern _buggy;
     private VehicleStateModern _state;
     private Rigidbody _rb;
     private readonly StringBuilder _log = new StringBuilder();
@@ -74,6 +86,7 @@ public class BuggyHandlingProbeRunner : MonoBehaviour
     {
         _state = GetComponent<VehicleStateModern>();
         _rb = GetComponent<Rigidbody>();
+        _buggy = GetComponent<BuggyControllerModern>();
         PlayerVehicleInputModern input = GetComponent<PlayerVehicleInputModern>();
         if (input != null) input.enabled = false;
 
@@ -97,6 +110,12 @@ public class BuggyHandlingProbeRunner : MonoBehaviour
         _ledge.transform.localScale = new Vector3(40f, 1f, 40f);
         _origin = new Vector3(0f, 1001f, -800f);
         _heading = Quaternion.identity;
+        if (flight)
+        {
+            yield return Flight();
+            Finish(input, "flight-probe.txt");
+            yield break;
+        }
         yield return Reset("coast");
         yield return Hold(new Vector4(0, 1, 0, 0), false, 4f, "throttle");
         Vector3 start = transform.position;
@@ -124,10 +143,51 @@ public class BuggyHandlingProbeRunner : MonoBehaviour
         yield return Hold(new Vector4(0, 1, 0, 0), false, 6f, "drive/fall/land", 0.1f);
         yield return Hold(Vector4.zero, false, 2f, "settle", 0.25f);
 
+        Finish(input, "handling-probe.txt");
+    }
+
+    private IEnumerator Flight()
+    {
+        yield return Reset("flight: take-off from the pad");
+        yield return Hold(new Vector4(0, 1, 0, 0), false, 4f, "throttle", 0.5f);
+        _state.specialInput = true;
+        yield return Hold(new Vector4(0, 1, 0, 0), false, 0.75f, "wings opening", 0.25f);
+        // A full pull-up for more than about half a second loops the buggy.
+        yield return Hold(new Vector4(0, -1, 0, 0), false, 0.4f, "pull up", 0.1f);
+        yield return Hold(new Vector4(0, 0.5f, 0, 0), false, 0.3f, "level off", 0.1f);
+        BuggyWingsModern wings = GetComponent<BuggyWingsModern>();
+        if (wings != null && wings.wings != null)
+        {
+            Renderer r = wings.wings.GetComponent<Renderer>();
+            Line("wings active=" + wings.wings.gameObject.activeInHierarchy + " bounds=" + r.bounds.size.ToString("F2")
+                + " shader=" + r.sharedMaterial.shader.name + " colour=" + r.sharedMaterial.color
+                + " trails=" + (wings.leftTrail != null ? wings.leftTrail.localPosition.ToString("F1") : "none") + " " + (wings.rightTrail != null ? wings.rightTrail.localPosition.ToString("F1") : "none"));
+        }
+        Line("== glide");
+        yield return Hold(Vector4.zero, false, 2f, "glide", 0.25f);
+        yield return Hold(new Vector4(1, 0, 0, 0), false, 0.5f, "roll right", 0.1f);
+        yield return Hold(Vector4.zero, false, 1.5f, "level", 0.25f);
+        Line("== airbrake");
+        yield return Hold(Vector4.zero, true, 1.5f, "airbrake", 0.1f);
+        Line("== stall: climb steeply until airspeed falls below 4 m/s");
+        yield return Hold(new Vector4(0, -1, 0, 0), false, 0.35f, "stall", 0.1f);
+        yield return Hold(Vector4.zero, false, 3f, "stall", 0.1f);
+        Line("== descend and land with wings open");
+        float t = 0f;
+        while (!_state.grounded && t < 30f) { yield return Hold(Vector4.zero, false, 0.5f, "descend", 0.5f); t += 0.5f; }
+        yield return Hold(Vector4.zero, false, 2f, "landed", 0.5f);
+        _state.specialInput = false;
+        Line("== wings closing");
+        yield return Hold(Vector4.zero, false, 1f, "closing", 0.25f);
+        yield return Hold(Vector4.zero, false, 2f, "drive mode", 0.5f);
+    }
+
+    private void Finish(PlayerVehicleInputModern input, string file)
+    {
         Destroy(_pad);
         Destroy(_ledge);
         if (input != null) input.enabled = true;
-        string path = Path.Combine(Application.dataPath, "../Logs/handling-probe.txt");
+        string path = Path.Combine(Application.dataPath, "../Logs/" + file);
         File.WriteAllText(path, _log.ToString());
         Debug.Log("[HandlingProbe] done -> " + path);
         Destroy(this);
@@ -138,6 +198,7 @@ public class BuggyHandlingProbeRunner : MonoBehaviour
         Line("== " + name);
         _rb.linearVelocity = Vector3.zero;
         _rb.angularVelocity = Vector3.zero;
+        _state.specialInput = false;
         _rb.position = _origin + Vector3.up * 0.5f;
         _rb.rotation = _heading;
         transform.SetPositionAndRotation(_rb.position, _rb.rotation);
@@ -175,7 +236,9 @@ public class BuggyHandlingProbeRunner : MonoBehaviour
                 Vector3 e = transform.eulerAngles;
                 Line(label + " t=" + t.ToString("F1") + " mph=" + _state.mph.ToString("F0") + " alt=" + _state.altitude.ToString("F1")
                     + " pitch=" + Mathf.DeltaAngle(0, e.x).ToString("F0") + " roll=" + Mathf.DeltaAngle(0, e.z).ToString("F0")
-                    + " vy=" + _rb.linearVelocity.y.ToString("F1") + " yawRate=" + (_rb.angularVelocity.y * Mathf.Rad2Deg).ToString("F0"));
+                    + " vy=" + _rb.linearVelocity.y.ToString("F1") + " yawRate=" + (_rb.angularVelocity.y * Mathf.Rad2Deg).ToString("F0")
+                    + (flight ? " wing=" + _buggy.wingState.ToString("F2") + (_buggy.wingOpen ? " open" : " shut") + " grounded=" + _state.grounded
+                        + " susp=" + _buggy.suspensionRange.ToString("F2") + " drag=" + _rb.linearDamping.ToString("F2") + " angDrag=" + _rb.angularDamping.ToString("F1") : ""));
             }
         }
     }

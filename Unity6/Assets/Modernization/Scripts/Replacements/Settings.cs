@@ -27,6 +27,9 @@ public class Settings : MonoBehaviour
     public float buggySpeed = 30f;
     public float buggyFlightDrag = 300f;
     public float buggyFlightAgility = 1f;
+    // Settings.js "Stall Blending" and "Powered Loops", both off by default.
+    public bool buggyFlightSlip;
+    public bool buggyFlightLooPower;
     // Settings.js defaults.
     public bool buggySmartSuspension = true;
     public float buggyCG = -0.4f;

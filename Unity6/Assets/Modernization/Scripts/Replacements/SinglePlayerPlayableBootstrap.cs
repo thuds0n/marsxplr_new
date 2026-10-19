@@ -132,6 +132,7 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
         if (usingBuggyVisual)
         {
             if (rootRenderer != null) rootRenderer.enabled = false;
+            if (useModernBuggyController) AttachWings(go.transform);
             go.AddComponent<VehicleColourModern>();
         }
         else
@@ -283,6 +284,34 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
             if (source != null) CopyMeshObject(source, body.transform);
         }
         return true;
+    }
+
+    // Buggy.js wing0 (Lod0/Wings) and its left and right trails. The trail
+    // objects hold only a TrailRenderer, so they are cloned directly.
+    private void AttachWings(Transform vehicle)
+    {
+        Transform lod0 = playerVehiclePrefab.transform.Find("Lod0");
+        Transform body = vehicle.Find("Body");
+        Transform source = lod0 != null ? lod0.Find("Wings") : null;
+        if (source == null || body == null) return;
+        GameObject wings = CopyMeshObject(source, body);
+        if (wings == null) return;
+        wings.SetActive(false);
+
+        var presentation = vehicle.gameObject.AddComponent<BuggyWingsModern>();
+        presentation.wings = wings.GetComponent<MeshFilter>();
+        foreach (TrailRenderer trail in playerVehiclePrefab.GetComponentsInChildren<TrailRenderer>(true))
+        {
+            Transform t = trail.transform;
+            Transform parent = t.parent == lod0 || t.parent == playerVehiclePrefab.transform ? (t.parent == lod0 ? body : vehicle) : wings.transform;
+            GameObject copy = Instantiate(t.gameObject, parent, false);
+            copy.name = t.name;
+            copy.transform.localPosition = t.localPosition;
+            copy.transform.localRotation = t.localRotation;
+            copy.transform.localScale = t.localScale;
+            if (t.name == "Trail1") presentation.leftTrail = copy.transform;
+            else if (t.name == "Trail2") presentation.rightTrail = copy.transform;
+        }
     }
 
     private static GameObject CopyMeshObject(Transform source, Transform parent)
