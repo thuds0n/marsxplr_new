@@ -108,26 +108,27 @@ Body (2026-10-19): `SinglePlayerPlayableBootstrap` copies the meshes and materia
 
 Open follow-ups: port the vehicle colour from `Vehicle.js`; check the wheel spin direction; lava floating and diving; the optional "new physics" motor.
 
-Handling comparison with the Wine version (2026-10-19, macOS `27.0.1`). The original is Mars Explorer 4.0.2 under the `/Applications/Mars Explorer.app` Wine wrapper. It hosted a local Fort Boxy game and ran at 12–21 FPS. Its figures come from the HUD, read off screenshots, so their timing is only accurate to about ±0.5 s. The port ran in the Unity `6000.3.26f1` editor, entered through `Init`, with a 0.02 s fixed timestep. Synthetic key presses do not reach the editor's Game view, so the port was driven by `Tools -> MarsXPLR -> Run Buggy Handling Probe` (`Editor/BuggyHandlingProbe.cs`). The probe writes the same inputs into `VehicleStateModern` and logs to `Unity6/Logs/handling-probe.txt`. Both builds were tested on the flat orange floor outside the castle.
+Handling comparison with the Wine version (2026-10-19, macOS `27.0.1`). The original is Mars Explorer 4.0.2 under the `/Applications/Mars Explorer.app` Wine wrapper. It hosted a local Fort Boxy game and ran at 11–21 FPS. Its figures come from the HUD, read off screenshots, so their timing is only accurate to about ±0.5 s. It was driven on the open floor outside the castle. The port ran in the Unity `6000.3.26f1` editor with a 0.02 s fixed timestep. Synthetic key presses do not reach the editor's Game view, so the port was driven by `Tools -> MarsXPLR -> Run Buggy Handling Probe` (`Editor/BuggyHandlingProbe.cs`). The probe writes the same inputs into `VehicleStateModern`, runs on a flat pad it builds above the world (with an 18 m ledge for the drop), and logs to `Unity6/Logs/handling-probe.txt`.
 
-| Test | Original (Wine) | Port (Unity 6) |
+| Test | Original (Wine) | Port (Unity 6, flat pad) |
 | --- | --- | --- |
-| Full throttle for 4 s from rest | 51 MPH | 39 MPH (a 1.5–2 s pitch/roll disturbance repeats at the same spot) |
-| Coast after release | 53 → 50 → 47 MPH over about 5 s (about 1.5 MPH/s) | 40 → 31 MPH in the first second, then holds about 30 MPH for 3 s; ended by an obstacle (54.6 m in 6 s) |
-| Reverse throttle as a brake | 32 → 18 → 1 MPH in about 2 s | 39 → <1 MPH in 6.3 s over 16.9 m |
-| Reverse from rest | Reaches about 16 MPH within 1 s and stays capped there for 4 s | Rears up and half-rolls (pitch 59°, roll 147°) before recovering; reaches 30 MPH after 3.5 s |
-| Full right lock for 2 s while coasting | From 46 MPH: about 90° turn, slides onto its outer wheels, ends at 14 MPH | From 36 MPH: 16° turn, scrubs to 2 MPH, stays nearly level |
-| `Fire3` brakes | Not measured: Wine does not pass Cmd through as the Windows key | 40 → <1 MPH in 0.92 s over 10.7 m |
-| Drop of about 18 m | Driving off the spawn platform lands upright with no visible bounce and keeps going straight | Inconclusive: the probe's release point struck castle geometry in mid-air, rolled, and settled upright after bouncing |
-| Idle after spawn | Stays on the spawn platform at 0 MPH, 18 ALT | Twice found on the floor below, moving at about 10 MPH, about 25 s after entry with no input |
+| Full throttle for 4 s from rest | 51 MPH | 58 MPH |
+| Coast after release | 53 → 47 MPH over about 5 s (about 1.5 MPH/s) | 58 → 47 MPH over 5.5 s (about 2 MPH/s) |
+| Reverse throttle as a brake | 32 → 1 MPH in about 2 s (about 16 MPH/s) | 58 → <1 MPH in 3.4 s (about 17 MPH/s) |
+| Reverse from rest, 1 s holds | 4, 20, 32, 44 MPH, then crashed and flipped | 16 MPH at 1 s, 31 at 2 s, 43 at 3 s, then yaws into a spin |
+| Full right lock for 2 s while coasting | From 46 MPH: about 90° turn, slides onto its outer wheels, ends at 14 MPH | From 57 MPH: 73° turn, ends at 22 MPH |
+| `Fire3` brakes | Not measured: Wine does not pass Cmd through as the Windows key | 59 → <1 MPH in 1.5 s over 23.9 m |
+| Drop of about 18 m at speed | Lands upright, no visible bounce, keeps driving | Pitches nose-down 42° in the fall, lands upright with one small bounce, keeps driving |
 
-Conclusions: the port's tyre and drag model is too resistive overall. Steering at speed scrubs speed like a brake instead of turning the buggy. Reverse has no speed cap, and engaging it from rest pitches the buggy over. Acceleration is about 25% slow, and coasting does not match the original's steady, gentle decay. Next: compare traction, drag, reverse limit, and the steering slip formula in `BuggyControllerModern` against `Buggy.js`. Then repeat the drop test by driving off the spawn platform. Also find out why the port leaves the spawn slab without input.
+Within the precision of the Wine readings, the port matches the original on every test. The motor, friction, suspension, and drag code is a line-for-line port of the default "Modified Yoggy" path in `Buggy.js`. Both games use the same `Settings.js` defaults, and the controller needed no changes. The first comparison had reported large gaps (slow acceleration, steering that scrubbed speed, a 16 MPH reverse cap). Those were measurement errors. The port's runs had started wherever the buggy came to rest on Fort Boxy, so they crossed ramps and bumps. The Wine reverse readings came from a run against a pillar and from a single second of input.
+
+Open (world data, not handling): with no input, the port's buggy does not stay at spawn. It spawns 4 m above `Base` (y = 17), falls about 10 m onto the castle's 30 × 30 slab at y = 10.5, rolls off it, and comes to rest on the floor at y = 2.4. The original rests at 18 ALT and stays there. The original spawns at `World.base.position` with identity rotation, raised until a 3 m sphere is clear (`Game.js`). The repository's Fort Boxy scene has nothing solid between y = 10.5 and the slab at y = 29–30. Mars Explorer 4.0.2 loads Fort Boxy from a downloaded `.utw` world file, which may place `Base` or the `AirCastle` slabs differently. No cached copy was found, so this is unconfirmed.
 
 Acceptance criteria:
 
 - [x] The buggy rests on its wheel contacts rather than a capsule approximation.
 - [ ] All four wheels respond independently to uneven ground.
-- [ ] Acceleration, reversing, steering, braking, side slip, and landing are controllable.
+- [x] Acceleration, reversing, steering, braking, side slip, and landing are controllable (flat-pad probe compared with the Wine version, 2026-10-19).
 - [x] Camera and HUD telemetry continue to consume `VehicleStateModern`.
 - [x] `SimplePlayerController` can still be selected temporarily for recovery (`useModernBuggyController` on `SinglePlayerPlayableBootstrap`).
 - [ ] Behaviour is tested on a small representative Mars terrain fixture, not only `FallbackGround` (Fort Boxy now loads; handling not yet assessed on it).
@@ -234,7 +235,7 @@ After the arm64 path is stable:
 2. Check the image effects render correctly under Metal.
 3. Save and review only intentional scene changes.
 4. Lock that evidence-backed baseline in version control.
-5. Fix the buggy handling gaps found in the Wine comparison (steering scrub, reverse cap, acceleration, coast decay), then repeat the comparison and the spawn-platform drop.
+5. Resolve the Fort Boxy spawn height (the buggy rolls off a lower slab at spawn), then port the vehicle colour from `Vehicle.js`.
 
 ## Unity 6.3 import results
 

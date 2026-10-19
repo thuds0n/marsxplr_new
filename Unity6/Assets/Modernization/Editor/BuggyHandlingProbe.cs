@@ -25,6 +25,8 @@ public class BuggyHandlingProbeRunner : MonoBehaviour
     private readonly StringBuilder _log = new StringBuilder();
     private Vector3 _origin;
     private Quaternion _heading;
+    private GameObject _pad;
+    private GameObject _ledge;
 
     private IEnumerator Start()
     {
@@ -34,14 +36,25 @@ public class BuggyHandlingProbeRunner : MonoBehaviour
         if (input != null) input.enabled = false;
 
         Line("fixedDeltaTime " + Time.fixedDeltaTime);
-        yield return Hold(Vector4.zero, false, 2f, null);
-        _origin = transform.position;
-        Vector3 away = _origin;
-        GameObject baseObject = GameObject.Find("Base");
-        if (baseObject != null) away -= baseObject.transform.position;
-        away.y = 0f;
-        _heading = Quaternion.LookRotation(away.sqrMagnitude > 0.01f ? away.normalized : Vector3.forward);
-
+        Line("mass " + _rb.mass + " inertia " + _rb.inertiaTensor.ToString("F2") + " inertiaRot " + _rb.inertiaTensorRotation.eulerAngles.ToString("F0")
+            + " centreOfMass " + _rb.centerOfMass.ToString("F2") + " maxAngularVelocity " + _rb.maxAngularVelocity);
+        foreach (Collider c in GetComponentsInChildren<Collider>(true))
+        {
+            Line("collider " + c.GetType().Name + " on '" + c.name + "' enabled=" + c.enabled + " active=" + c.gameObject.activeInHierarchy
+                + " trigger=" + c.isTrigger + " layer=" + c.gameObject.layer + " bounds=" + c.bounds.size.ToString("F2"));
+        }
+        // A flat pad above the world removes Fort Boxy's ramps and bumps from the
+        // measurements; a ledge 18 m higher matches the original spawn-platform drop.
+        _pad = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        _pad.name = "HandlingProbePad";
+        _pad.transform.position = new Vector3(0f, 1000f, 0f);
+        _pad.transform.localScale = new Vector3(2000f, 1f, 2000f);
+        _ledge = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        _ledge.name = "HandlingProbeLedge";
+        _ledge.transform.position = new Vector3(0f, 1018f, -480f);
+        _ledge.transform.localScale = new Vector3(40f, 1f, 40f);
+        _origin = new Vector3(0f, 1001f, -800f);
+        _heading = Quaternion.identity;
         yield return Reset("coast");
         yield return Hold(new Vector4(0, 1, 0, 0), false, 4f, "throttle");
         Vector3 start = transform.position;
@@ -64,11 +77,13 @@ public class BuggyHandlingProbeRunner : MonoBehaviour
         yield return Hold(new Vector4(1, 0, 0, 0), false, 2f, "steer");
         Line("heading change " + Mathf.DeltaAngle(yaw0, transform.eulerAngles.y).ToString("F0") + " deg");
 
-        yield return Reset("jump: released 18 m up at 20 m/s");
-        transform.position += Vector3.up * 18f;
-        _rb.linearVelocity = transform.forward * 20f;
-        yield return Hold(Vector4.zero, false, 5f, "fall/land", 0.1f);
+        _origin = new Vector3(0f, 1019f, -495f);
+        yield return Reset("drop: drive off an 18 m ledge at full throttle");
+        yield return Hold(new Vector4(0, 1, 0, 0), false, 6f, "drive/fall/land", 0.1f);
+        yield return Hold(Vector4.zero, false, 2f, "settle", 0.25f);
 
+        Destroy(_pad);
+        Destroy(_ledge);
         if (input != null) input.enabled = true;
         string path = Path.Combine(Application.dataPath, "../Logs/handling-probe.txt");
         File.WriteAllText(path, _log.ToString());
@@ -118,7 +133,7 @@ public class BuggyHandlingProbeRunner : MonoBehaviour
                 Vector3 e = transform.eulerAngles;
                 Line(label + " t=" + t.ToString("F1") + " mph=" + _state.mph.ToString("F0") + " alt=" + _state.altitude.ToString("F1")
                     + " pitch=" + Mathf.DeltaAngle(0, e.x).ToString("F0") + " roll=" + Mathf.DeltaAngle(0, e.z).ToString("F0")
-                    + " vy=" + _rb.linearVelocity.y.ToString("F1"));
+                    + " vy=" + _rb.linearVelocity.y.ToString("F1") + " yawRate=" + (_rb.angularVelocity.y * Mathf.Rad2Deg).ToString("F0"));
             }
         }
     }
