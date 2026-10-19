@@ -26,7 +26,7 @@ The vehicle physics, representative world loading, combat loop, and end-to-end m
 - `graphics/` — original supporting graphics.
 - `PLAN.md` — implementation roadmap, verification status, and prioritised next work.
 
-`Unity5/` may exist locally as an ignored asset-conversion bridge, but it is not an active gameplay project.
+`Unity5/` may exist locally as an ignored asset-conversion bridge: the Unity 5 compatibility port merged into the original repository as pull request #1. It is not an active gameplay project.
 
 ## Requirements
 
