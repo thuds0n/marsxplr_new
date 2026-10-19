@@ -39,6 +39,18 @@ public class CameraVehicle : MonoBehaviour
         bool firstPersonActive = Game.Settings.camMode == 0 || firstPersonHold;
         Cursor.lockState = firstPersonActive ? CursorLockMode.Locked : CursorLockMode.None;
 
+        // CameraVehicle.js snipe zoom: holding Snipe drops to 10 degrees, the scroll wheel adjusts within 1.5-50.
+        Camera cam = GetComponent<Camera>();
+        if (Input.GetButton("Snipe") && !chatting)
+        {
+            if (cam.fieldOfView == 60f) cam.fieldOfView = 10f;
+            cam.fieldOfView = Mathf.Clamp(cam.fieldOfView - Input.GetAxis("Mouse ScrollWheel"), 1.5f, 50f);
+        }
+        else if (cam.fieldOfView != 60f)
+        {
+            cam.fieldOfView = 60f;
+        }
+
         if (mb != null && mb.enabled)
         {
             mb.blurAmount -= Time.deltaTime * 0.13f;

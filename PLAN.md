@@ -27,6 +27,7 @@ The current working tree has not been compiled or played in Unity since its newe
   2. How the engine the game shipped on (Unity 4 and earlier) rendered that content decides the look. Neither `Unity5/` nor a modern editor shows the original look, for example the doubled legacy lighting.
   3. The Wine build of Mars Explorer 4.0.2, which is newer than the 2.22 source, is evidence for checks and for data found nowhere else (downloaded worlds, values in binary prefabs). Values taken only from it are recorded as inferences.
 
+- Record faithful-but-improvable behaviour in `IMPROVEMENTS.md` rather than changing it during parity work.
 - Keep `Unity6/` as the only active gameplay implementation.
 - Target Unity 6.3 LTS directly. The earlier plan to capture a Unity `2022.3.62f3` proof build first was dropped (2026-10-13): the project had never been verified in 2022.3, so that build would have protected no known-good state. The tag `pre-unity6-upgrade` is the pre-upgrade reference instead.
 - Remain on the Built-in Render Pipeline, IMGUI, and the legacy Input Manager for parity; any move to URP or the Input System is a separate later decision.
@@ -104,6 +105,8 @@ Wheel presentation (2026-10-19): `BuggyPresentationModern` instantiates the orig
 Verified in the Unity `6000.3.26f1` editor on Fort Boxy: wheels and axles render at the original positions, the front wheels steer, and no errors are logged. The skidmark mesh fills with segments while driving, but the tracks were not confirmed visually. The original material draws them black at about 25% opacity, which barely shows on Fort Boxy's dark floor.
 
 Camera (2026-10-19): `CameraVehicle` again uses the original chase distance: the vehicle's `camOffset` (2, confirmed in the original `Buggy.prefab` `VehicleData`) plus the player's `camDist` setting. This replaces the 4.2 m scaffold tuned for the old oversized visual. The Agile and Smooth formulas, the 7 s world-entry glide, the RideCam ride position, and the ground lift (Smooth and Agile only) are restored from `CameraVehicle.js`. `World` restarts the entry glide when the world finishes loading.
+
+Snipe zoom (2026-10-19): holding Shift (`Snipe`, not while chatting) drops the camera's field of view from 60 to 10 degrees and the scroll wheel adjusts it between 1.5 and 50, as in `CameraVehicle.js`; releasing restores 60. Verified in the Unity `6000.3.26f1` editor.
 
 Known parity behaviour: the Agile camera's direction starts at the original (1, 1, 1), so it sits below a stationary buggy, under Fort Boxy's one-sided floor, until the buggy moves. Compare this start with the Wine version before deciding whether to change it.
 
