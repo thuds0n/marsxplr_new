@@ -42,6 +42,44 @@ public class Settings : MonoBehaviour
     public float resetTime = -10f;
 
     public bool enteredfullscreen;
+    // Settings.js: true once the player picks a colour; otherwise each game
+    // starts with a random one (Game.js).
+    public bool colorCustom;
+
+    // Settings.js ramdomizeVehicleColor().
+    public void randomizeVehicleColor(VehicleStateModern vehicle)
+    {
+        Color c = vehicle.vehicleColor;
+        c.r = Random.value * 0.7f;
+        c.b = Random.value * 0.7f;
+        c.g = Random.value * Mathf.Lerp(0.1f, 0.8f, (c.r + c.b) / 2f) * 0.7f;
+        vehicle.vehicleColor = c;
+        colorCustom = false;
+        updateVehicleAccent(vehicle);
+        saveVehicleColor(vehicle);
+    }
+
+    public void updateVehicleAccent(VehicleStateModern vehicle)
+    {
+        const float offset = -0.25f;
+        Color c = vehicle.vehicleColor;
+        Color a = vehicle.vehicleAccent;
+        a.r = Mathf.Max(0f, c.r + offset);
+        a.g = Mathf.Max(0f, c.g + offset);
+        a.b = Mathf.Max(0f, c.b + offset);
+        vehicle.vehicleAccent = a;
+    }
+
+    public void saveVehicleColor(VehicleStateModern vehicle)
+    {
+        PlayerPrefs.SetInt("vehColCustom", colorCustom ? 1 : 0);
+        PlayerPrefs.SetFloat("vehColR", vehicle.vehicleColor.r);
+        PlayerPrefs.SetFloat("vehColG", vehicle.vehicleColor.g);
+        PlayerPrefs.SetFloat("vehColB", vehicle.vehicleColor.b);
+        PlayerPrefs.SetFloat("vehColAccR", vehicle.vehicleAccent.r);
+        PlayerPrefs.SetFloat("vehColAccG", vehicle.vehicleAccent.g);
+        PlayerPrefs.SetFloat("vehColAccB", vehicle.vehicleAccent.b);
+    }
 
     public void updatePrefs()
     {

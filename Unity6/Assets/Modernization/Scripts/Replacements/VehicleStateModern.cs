@@ -18,6 +18,9 @@ public class VehicleStateModern : MonoBehaviour
     public float mph;
     public float altitude;
     public Transform rideTarget;
+    // Vehicle.js vehicleColor and vehicleAccent, applied by VehicleColourModern.
+    public Color vehicleColor;
+    public Color vehicleAccent;
 
     public void SetInput(float horizontal, float vertical, float auxiliary = 0f, float brakeAxis = 0f)
     {

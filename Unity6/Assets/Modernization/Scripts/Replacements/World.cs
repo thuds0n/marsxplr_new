@@ -60,7 +60,11 @@ public class World : MonoBehaviour
         var worldScene = SceneManager.GetSceneByName(worldSceneName);
         if (worldScene.IsValid()) SceneManager.SetActiveScene(worldScene);
 
-        if (worldScene.IsValid()) GiveRenderersOwnMaterials(worldScene);
+        if (worldScene.IsValid())
+        {
+            RestoreWhirldPrimitiveTextures(worldScene);
+            GiveRenderersOwnMaterials(worldScene);
+        }
 
         FinishWorld();
         if (Game.Settings != null) Game.Settings.fogColor = RenderSettings.fogColor;
@@ -122,6 +126,120 @@ public class World : MonoBehaviour
         {
             EnsureFallbackGround();
         }
+    }
+
+    // WhirldIn.js built world primitives named cube, pyramid, cone, or mesh from
+    // Resources prefabs (the Whirld "Object" material) and gave them world-space
+    // UVs in TextureObject(). Worlds captured as scenes, such as Fort Boxy's
+    // Castle, lost both and render with Unity's default white material.
+    private static void RestoreWhirldPrimitiveTextures(Scene scene)
+    {
+        GameObject cube = Resources.Load<GameObject>("Cube");
+        Renderer source = cube != null ? cube.GetComponentInChildren<Renderer>(true) : null;
+        Material objectMaterial = source != null ? source.sharedMaterial : null;
+        if (objectMaterial == null) return;
+        foreach (GameObject root in scene.GetRootGameObjects())
+        {
+            foreach (MeshRenderer r in root.GetComponentsInChildren<MeshRenderer>(true))
+            {
+                string n = r.gameObject.name;
+                if (n != "cube" && n != "pyramid" && n != "cone" && n != "mesh") continue;
+                Material m = r.sharedMaterial;
+                if (m != null && !m.name.StartsWith("Default-")) continue;
+                MeshFilter mf = r.GetComponent<MeshFilter>();
+                if (mf == null) continue;
+                // Fort Boxy's captured pyramids also lost their mesh, so they
+                // were neither drawn nor solid.
+                if (mf.sharedMesh == null && n == "pyramid")
+                {
+                    mf.sharedMesh = PyramidMesh();
+                    MeshCollider mc = r.GetComponent<MeshCollider>();
+                    if (mc != null && mc.sharedMesh == null)
+                    {
+                        mc.convex = false;
+                        mc.sharedMesh = mf.sharedMesh;
+                    }
+                }
+                if (mf.sharedMesh == null) continue;
+                r.sharedMaterial = objectMaterial;
+                if (mf.sharedMesh.isReadable) ApplyWorldSpaceUVs(mf);
+            }
+        }
+    }
+
+    private static Mesh _pyramidMesh;
+
+    // The Whirld pyramid from Pyramid.blend, which imports only when Blender is
+    // installed (and its converted FBX is empty): a square base at y = -0.5 with
+    // corners at x, z = ±0.5 and the apex at (0, 0.5, 0), flat shaded. The
+    // .blend is twice this size; the halved size matches how Fort Boxy's
+    // pyramids sit on the surrounding geometry.
+    private static Mesh PyramidMesh()
+    {
+        if (_pyramidMesh != null) return _pyramidMesh;
+        Vector3 apex = new Vector3(0f, 0.5f, 0f);
+        Vector3[] c =
+        {
+            new Vector3(0.5f, -0.5f, -0.5f), new Vector3(0.5f, -0.5f, 0.5f),
+            new Vector3(-0.5f, -0.5f, 0.5f), new Vector3(-0.5f, -0.5f, -0.5f),
+        };
+        var vertices = new Vector3[16];
+        var triangles = new int[18];
+        // Base, facing down.
+        vertices[0] = c[0]; vertices[1] = c[1]; vertices[2] = c[2]; vertices[3] = c[3];
+        triangles[0] = 0; triangles[1] = 1; triangles[2] = 2;
+        triangles[3] = 0; triangles[4] = 2; triangles[5] = 3;
+        // Sides, wound clockwise when seen from outside.
+        for (int i = 0; i < 4; i++)
+        {
+            int v = 4 + i * 3;
+            vertices[v] = c[(i + 1) % 4];
+            vertices[v + 1] = c[i];
+            vertices[v + 2] = apex;
+            int t = 6 + i * 3;
+            triangles[t] = v; triangles[t + 1] = v + 1; triangles[t + 2] = v + 2;
+        }
+        _pyramidMesh = new Mesh { name = "Pyramid", vertices = vertices, triangles = triangles };
+        _pyramidMesh.RecalculateNormals();
+        _pyramidMesh.RecalculateBounds();
+        return _pyramidMesh;
+    }
+
+    // Port of WhirldIn.js TextureObject(): planar world-space UVs per triangle,
+    // chosen by the face normal, so the texture repeats once per metre.
+    private static void ApplyWorldSpaceUVs(MeshFilter mf)
+    {
+        Mesh mesh = mf.mesh;
+        Vector3[] vertices = mesh.vertices;
+        int[] tris = mesh.triangles;
+        var uvs = new Vector2[vertices.Length];
+        Transform t = mf.transform;
+        for (int i = 0; i < tris.Length; i += 3)
+        {
+            Vector3 a = t.TransformPoint(vertices[tris[i]]);
+            Vector3 b = t.TransformPoint(vertices[tris[i + 1]]);
+            Vector3 c = t.TransformPoint(vertices[tris[i + 2]]);
+            Vector3 n = Vector3.Cross(a - c, b - c).normalized;
+            if (Mathf.Abs(Vector3.Dot(Vector3.up, n)) >= 0.5f)
+            {
+                uvs[tris[i]] = new Vector2(a.x, a.z);
+                uvs[tris[i + 1]] = new Vector2(b.x, b.z);
+                uvs[tris[i + 2]] = new Vector2(c.x, c.z);
+            }
+            else if (Mathf.Abs(Vector3.Dot(Vector3.right, n)) >= 0.5f)
+            {
+                uvs[tris[i]] = new Vector2(a.y, a.z);
+                uvs[tris[i + 1]] = new Vector2(b.y, b.z);
+                uvs[tris[i + 2]] = new Vector2(c.y, c.z);
+            }
+            else
+            {
+                uvs[tris[i]] = new Vector2(a.y, a.x);
+                uvs[tris[i + 1]] = new Vector2(b.y, b.x);
+                uvs[tris[i + 2]] = new Vector2(c.y, c.x);
+            }
+        }
+        mesh.uv = uvs;
     }
 
     // Compatibility workaround: in Unity 6 on Metal, legacy Whirld meshes that

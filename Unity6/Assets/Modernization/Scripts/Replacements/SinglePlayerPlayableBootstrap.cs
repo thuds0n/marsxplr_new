@@ -132,6 +132,7 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
         if (usingBuggyVisual)
         {
             if (rootRenderer != null) rootRenderer.enabled = false;
+            go.AddComponent<VehicleColourModern>();
         }
         else
         {
