@@ -10,6 +10,10 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
     public GameObject playerVehiclePrefab;
     public GameObject playerVehicleModelFallbackPrefab;
     public GameObject legacyVehicleRigPrefab;
+    // Original buggy wheel, axle, and tyre-track assets for BuggyPresentationModern.
+    public GameObject buggyWheelPrefab;
+    public GameObject buggyAxelPrefab;
+    public Material buggySkidmarkMaterial;
     public bool tryLegacyBuggyPrefab = false;
     // BuggyControllerModern with the original body collider; disable to fall back to SimplePlayerController.
     public bool useModernBuggyController = true;
@@ -26,6 +30,13 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
             {
                 EditorUtility.SetDirty(this);
             }
+        }
+        if (buggyWheelPrefab == null || buggyAxelPrefab == null || buggySkidmarkMaterial == null)
+        {
+            if (buggyWheelPrefab == null) buggyWheelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Martian Assets/Vehicles/Buggy/Buggy Wheel.prefab");
+            if (buggyAxelPrefab == null) buggyAxelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Martian Assets/Vehicles/Buggy/Buggy Axel.prefab");
+            if (buggySkidmarkMaterial == null) buggySkidmarkMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Martian Assets/Vehicles/Buggy/Components/Tracks/skidmark.mat");
+            EditorUtility.SetDirty(this);
         }
 #endif
     }
@@ -100,6 +111,10 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
         {
             go.AddComponent<BuggyControllerModern>();
             go.AddComponent<PlayerVehicleInputModern>();
+            var presentation = go.AddComponent<BuggyPresentationModern>();
+            presentation.wheelPrefab = buggyWheelPrefab;
+            presentation.axelPrefab = buggyAxelPrefab;
+            presentation.skidmarkMaterial = buggySkidmarkMaterial;
         }
         else
         {

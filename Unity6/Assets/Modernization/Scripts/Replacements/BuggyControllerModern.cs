@@ -5,7 +5,8 @@ using UnityEngine;
 // default ("Modified Yoggy") motor and wheel friction, springs and dampers,
 // collision friction switching, and self-righting.
 // Not yet ported: wings and flight, lava floating and diving, the optional
-// "new physics" motor, skidmarks, and wheel/axle presentation.
+// "new physics" motor. Wheels, axles, and skidmarks are drawn by
+// BuggyPresentationModern from the telemetry below.
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(VehicleStateModern))]
 public class BuggyControllerModern : MonoBehaviour
@@ -21,6 +22,11 @@ public class BuggyControllerModern : MonoBehaviour
     public float motorSpeed { get; private set; }
     public readonly float[] hitDistance = { -1f, -1f, -1f, -1f };
     public readonly Quaternion[] wheelLocalRotation = new Quaternion[4];
+    // Per-wheel ground contact from the latest FixedUpdate; skidIntensity is
+    // the tyre-track opacity Buggy.js passed to Skidmarks.AddSkidMark.
+    public readonly Vector3[] contactPoint = new Vector3[4];
+    public readonly Vector3[] contactNormal = new Vector3[4];
+    public readonly float[] skidIntensity = new float[4];
 
     private const float MaxAcceleration = 60f;
     private const float MotorMass = 1f;
@@ -158,6 +164,11 @@ public class BuggyControllerModern : MonoBehaviour
                 ), new Vector3(1000f, 1000f, 1000f)), hit.point);
                 motorSpeed += ((_hitVelocity[i].z - motorSpeed) * friction * dt) / _motorTorque;
                 hitDistance[i] = hit.distance;
+                contactPoint[i] = hit.point;
+                contactNormal[i] = hit.normal;
+                skidIntensity[i] = Mathf.Abs(_hitVelocity[i].x) > Mathf.Abs(_hitVelocity[i].z) * 0.3f
+                    ? Mathf.Abs(input.y) * 0.5f + 0.25f
+                    : Mathf.Min(0.5f, friction * 0.05f);
             }
             else
             {

@@ -960,6 +960,9 @@ MonoBehaviour:
     type: 3}
   legacyVehicleRigPrefab: {fileID: 100000, guid: 19380c6f2fba84bbc88a8e8681cbf813,
     type: 3}
+  buggyWheelPrefab: {fileID: 100002, guid: 14459f71663af4a2984aa6faaae8a894, type: 3}
+  buggyAxelPrefab: {fileID: 100002, guid: 410596e6f6a1945019ececefdad14a03, type: 3}
+  buggySkidmarkMaterial: {fileID: 2100000, guid: 0a6743a22a3874c7f8c658fdd338530e, type: 2}
   tryLegacyBuggyPrefab: 0
 --- !u!1 &76
 GameObject:

@@ -81,7 +81,7 @@ Implementation order:
 7. Drive wheel and axle presentation from the authoritative contact state.
 8. Switch the bootstrap between fallback and modern controllers without changing camera, HUD, or combat consumers.
 
-Status (2026-10-15): steps 1–6 and 8 are ported in `BuggyControllerModern` from the default ("Modified Yoggy") branch of `Buggy.js`; step 7 is open. Source values recovered from the original assets:
+Status (2026-10-19): steps 1–8 are ported. Steps 1–6 and 8 live in `BuggyControllerModern`, from the default ("Modified Yoggy") branch of `Buggy.js`. Step 7 lives in `BuggyPresentationModern` and `SkidmarksModern`. Source values recovered from the original assets:
 
 - `wheelPos` (0.7, 0, 0.8) and `axelPos` (0.375, −0.1, 0.75) from `Buggy.prefab`; wheel radius 0.3 and body mass 30 from `Buggy.js`.
 - The convex body collider from the `Collider` mesh in `Buggy.jas` (lost in the FBX conversion), at the prefab's ×2 scale, in `BuggyColliderShape`.
@@ -94,7 +94,11 @@ Deliberate deviations: wheel raycasts skip the vehicle's own colliders and ignor
 
 Verified in the Unity `6000.3.26f1` editor on fallback ground: the buggy spawns on its wheels, accelerates to about 49 MPH, steers while coasting, and logs no errors. Not yet verified: braking, reversing, side slip, landing, uneven terrain, and handling feel against the original.
 
-Open follow-ups: wheel and axle presentation, skidmarks, lava floating and diving, the optional "new physics" motor, and camera distances, which were tuned for the previous oversized 5.2 m visual. The converted `Lod0` mesh shows side fins that need checking against the original model.
+Wheel presentation (2026-10-19): `BuggyPresentationModern` instantiates the original `Buggy Wheel` and `Buggy Axel` prefabs, with `axelPos` (0.375, −0.1, 0.75) from `Buggy.prefab`. It places each wheel at the suspension contact distance, applies the controller's steering rotation, spins the wheel graphic from `motorSpeed`, and points each axle at its wheel, as `Buggy.js` `Update()` did. Only the detailed wheel LOD is shown. `SkidmarksModern` ports `Skidmarks.js` and is fed per-wheel contact points and the original track intensity from the controller. The prefab and material references are serialised on `SinglePlayerPlayableBootstrap` in `Game.unity` so player builds include them.
+
+Verified in the Unity `6000.3.26f1` editor on Fort Boxy: wheels and axles render at the original positions, the front wheels steer, and no errors are logged. The skidmark mesh fills with segments while driving, but the tracks were not confirmed visually. The original material draws them black at about 25% opacity, which barely shows on Fort Boxy's dark floor.
+
+Open follow-ups: confirm tyre tracks on lighter ground and the wheel spin direction, lava floating and diving, the optional "new physics" motor, and camera distances, which were tuned for the previous oversized 5.2 m visual. The converted `Lod0` mesh shows side fins that need checking against the original model.
 
 Acceptance criteria:
 
