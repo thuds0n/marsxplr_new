@@ -292,8 +292,75 @@ public static class SceneLookProbe
             foreach (Light l in b.GetComponentsInChildren<Light>(true)) sb.AppendLine("base light " + l.name + " " + l.type + " colour=" + l.color + " range=" + l.range + " enabled=" + l.enabled);
             foreach (Component c in b.GetComponentsInChildren<Component>(true)) if (c == null) sb.AppendLine("base has a missing script");
         }
+        if (Camera.main != null) sb.AppendLine("screen brightness (0-255, mean RGB) " + MeasureBrightness(Camera.main));
         string path = Path.Combine(Application.dataPath, "../Logs/scene-look.txt");
         File.WriteAllText(path, sb.ToString());
         Debug.Log("[SceneLook] -> " + path);
+    }
+
+    // Samples the lighting state and screen brightness every 0.5 s for 30 s,
+    // to find what changes the picture's brightness during play.
+    [MenuItem("Tools/MarsXPLR/Log Lighting Over Time")]
+    private static void LogLightingOverTime()
+    {
+        if (!Application.isPlaying) { Debug.LogWarning("[SceneLook] Enter Play mode first."); return; }
+        var sb = new StringBuilder();
+        double start = EditorApplication.timeSinceStartup, next = start;
+        string path = Path.Combine(Application.dataPath, "../Logs/lighting-over-time.txt");
+        EditorApplication.CallbackFunction tick = null;
+        tick = () =>
+        {
+            double now = EditorApplication.timeSinceStartup;
+            if (!Application.isPlaying || now - start > 30.0)
+            {
+                EditorApplication.update -= tick;
+                File.WriteAllText(path, sb.ToString());
+                Debug.Log("[SceneLook] -> " + path);
+                return;
+            }
+            if (now < next) return;
+            next += 0.5;
+            Camera cam = Camera.main;
+            var line = new StringBuilder();
+            line.Append("t=" + (now - start).ToString("F1") + " fog=" + RenderSettings.fog + " fogCol=" + RenderSettings.fogColor + " dens=" + RenderSettings.fogDensity.ToString("F5")
+                + " amb=" + RenderSettings.ambientLight + " mode=" + RenderSettings.ambientMode);
+            foreach (Light l in Object.FindObjectsByType<Light>(FindObjectsSortMode.None))
+                line.Append(" light[" + l.name + " " + l.type + " i=" + l.intensity.ToString("F2") + " on=" + (l.enabled && l.gameObject.activeInHierarchy) + "]");
+            if (cam != null)
+            {
+                line.Append(" cam=" + cam.transform.position.ToString("F1") + " clear=" + cam.clearFlags);
+                foreach (Behaviour b in cam.GetComponents<Behaviour>()) if (b != null && !(b is Transform)) line.Append(" " + b.GetType().Name + "=" + b.enabled);
+                line.Append(" " + MeasureBrightness(cam));
+            }
+            sb.AppendLine(line.ToString());
+        };
+        EditorApplication.update += tick;
+        Debug.Log("[SceneLook] Sampling lighting for 30 s");
+    }
+
+    // Renders the camera off screen and reports the mean brightness of the bottom
+    // third (usually floor) and the centre, for comparison with Wine screenshots.
+    private static string MeasureBrightness(Camera cam)
+    {
+        const int w = 320, h = 200;
+        var rt = RenderTexture.GetTemporary(w, h, 24);
+        RenderTexture previousTarget = cam.targetTexture, previousActive = RenderTexture.active;
+        cam.targetTexture = rt;
+        cam.Render();
+        RenderTexture.active = rt;
+        var tex = new Texture2D(w, h, TextureFormat.RGB24, false);
+        tex.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+        cam.targetTexture = previousTarget;
+        RenderTexture.active = previousActive;
+        RenderTexture.ReleaseTemporary(rt);
+        Color[] px = tex.GetPixels();
+        Object.DestroyImmediate(tex);
+        float Mean(int x0, int x1, int y0, int y1)
+        {
+            float sum = 0f; int n = 0;
+            for (int y = y0; y < y1; y++) for (int x = x0; x < x1; x++) { Color c = px[y * w + x]; sum += (c.r + c.g + c.b) / 3f; n++; }
+            return sum / n * 255f;
+        }
+        return "bottomThird=" + Mean(0, w, 0, h / 3).ToString("F0") + " centre=" + Mean(w / 3, 2 * w / 3, h / 3, 2 * h / 3).ToString("F0");
     }
 }

@@ -50,7 +50,6 @@ public class World : MonoBehaviour
         }
 
         FinishWorld();
-        DoubleLegacyLighting();
     }
 
     private IEnumerator LoadWorldScene()
@@ -60,7 +59,13 @@ public class World : MonoBehaviour
         // The world's skybox, fog, and ambient light apply, as when Whirld loaded it.
         var worldScene = SceneManager.GetSceneByName(worldSceneName);
         Material gameSkybox = RenderSettings.skybox;
+        var gameLighting = new GameSceneLighting();
         if (worldScene.IsValid()) SceneManager.SetActiveScene(worldScene);
+        // WhirldIn.js built worlds inside the Game scene and only changed fog and
+        // ambient light when the .utw file set rndFogColor, rndFogDensity, or
+        // rndAmbientLight. FortBoxy.utw sets none of them, so the Game scene's
+        // settings applied; a captured world scene's own values are not original.
+        gameLighting.Apply();
         // An additive load in Unity 2 left the Game scene's skybox in place;
         // keep it when the world does not bring its own.
         if (RenderSettings.skybox == null) RenderSettings.skybox = gameSkybox;
@@ -73,12 +78,41 @@ public class World : MonoBehaviour
         }
 
         FinishWorld();
-        DoubleLegacyLighting();
         if (Game.Settings != null) Game.Settings.fogColor = RenderSettings.fogColor;
         // Restart the camera's world entry effect from the moment the world is ready.
         if (Game.Controller != null) Game.Controller.worldLoadTime = Time.time;
         loading = false;
         Debug.Log("[World] Loaded world: " + worldSceneName);
+    }
+
+    private sealed class GameSceneLighting
+    {
+        private readonly bool _fog;
+        private readonly FogMode _fogMode;
+        private readonly Color _fogColor;
+        private readonly float _fogDensity;
+        private readonly UnityEngine.Rendering.AmbientMode _ambientMode;
+        private readonly Color _ambientLight;
+
+        public GameSceneLighting()
+        {
+            _fog = RenderSettings.fog;
+            _fogMode = RenderSettings.fogMode;
+            _fogColor = RenderSettings.fogColor;
+            _fogDensity = RenderSettings.fogDensity;
+            _ambientMode = RenderSettings.ambientMode;
+            _ambientLight = RenderSettings.ambientLight;
+        }
+
+        public void Apply()
+        {
+            RenderSettings.fog = _fog;
+            RenderSettings.fogMode = _fogMode;
+            RenderSettings.fogColor = _fogColor;
+            RenderSettings.fogDensity = _fogDensity;
+            RenderSettings.ambientMode = _ambientMode;
+            RenderSettings.ambientLight = _ambientLight;
+        }
     }
 
     // Mirrors the standard-component checks in Game.js Init().
@@ -134,21 +168,6 @@ public class World : MonoBehaviour
         {
             EnsureFallbackGround();
         }
-    }
-
-    // Unity 2.x's built-in legacy shaders finished with "texture * lighting
-    // DOUBLE", so lights and ambient light counted twice; Unity 5 dropped the
-    // doubling. Doubling the world's light intensities and ambient colour once
-    // restores the original brightness (Unity's own upgrade advice for legacy
-    // content).
-    private static void DoubleLegacyLighting()
-    {
-        foreach (Light light in FindObjectsByType<Light>(FindObjectsSortMode.None))
-        {
-            light.intensity *= 2f;
-        }
-        Color ambient = RenderSettings.ambientLight;
-        RenderSettings.ambientLight = new Color(ambient.r * 2f, ambient.g * 2f, ambient.b * 2f, ambient.a);
     }
 
     // WhirldIn.js built world primitives named cube, pyramid, cone, or mesh from

@@ -32,8 +32,9 @@ public class LegacyLaserSightController : MonoBehaviour
             if (t != null) laserLockMarker = t.gameObject;
         }
 
-        _fallbackAim = EnsureFallbackVisual(laserAimer, new Color(1f, 0.25f, 0.15f, 0.85f), fallbackBeamLength, fallbackBeamWidth);
-        _fallbackAimLocked = EnsureFallbackVisual(laserAimerLocked, new Color(0.25f, 1f, 0.35f, 0.9f), fallbackBeamLength * 1.1f, fallbackBeamWidth * 1.1f);
+        var materials = Resources.Load<LaserSightMaterials>("LaserSightMaterials");
+        _fallbackAim = EnsureFallbackVisual(laserAimer, materials != null ? materials.aim : null, new Color(0.25f, 1f, 0.35f, 0.9f), fallbackBeamLength, fallbackBeamWidth);
+        _fallbackAimLocked = EnsureFallbackVisual(laserAimerLocked, materials != null ? materials.aimLocked : null, new Color(1f, 0.25f, 0.15f, 0.85f), fallbackBeamLength * 1.1f, fallbackBeamWidth * 1.1f);
         _fallbackLockMarker = EnsureFallbackMarker(laserLockMarker);
     }
 
@@ -122,7 +123,7 @@ public class LegacyLaserSightController : MonoBehaviour
         }
     }
 
-    private GameObject EnsureFallbackVisual(GameObject root, Color color, float beamLength, float beamWidth)
+    private GameObject EnsureFallbackVisual(GameObject root, Material sourceMaterial, Color color, float beamLength, float beamWidth)
     {
         if (root == null) return null;
         Transform existing = root.transform.Find("FallbackBeam");
@@ -149,7 +150,7 @@ public class LegacyLaserSightController : MonoBehaviour
         main.startLifetime = beamLength / 22f;
         main.startSpeed = 22f;
         main.startSize = beamWidth;
-        main.startColor = color;
+        main.startColor = sourceMaterial != null ? Color.white : color;
         main.simulationSpace = ParticleSystemSimulationSpace.Local;
         main.maxParticles = 64;
 
@@ -185,9 +186,14 @@ public class LegacyLaserSightController : MonoBehaviour
         var renderer = fallback.GetComponent<ParticleSystemRenderer>();
         if (renderer != null)
         {
-            var mat = new Material(Shader.Find("Legacy Shaders/Particles/Additive"));
-            mat.color = color;
+            Material mat = sourceMaterial;
+            if (mat == null)
+            {
+                mat = new Material(Shader.Find("Legacy Shaders/Particles/Additive"));
+                mat.color = color;
+            }
             renderer.sharedMaterial = mat;
+            renderer.trailMaterial = mat;
             renderer.renderMode = ParticleSystemRenderMode.Billboard;
             renderer.alignment = ParticleSystemRenderSpace.Local;
         }
