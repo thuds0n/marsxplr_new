@@ -25,6 +25,7 @@ The vehicle physics, representative world loading, combat loop, and end-to-end m
 - `unity/` — historical/original project used as a behavioural and asset reference.
 - `graphics/` — original supporting graphics.
 - `PLAN.md` — implementation roadmap, verification status, and prioritised next work.
+- `docs/` — detailed findings and measurements by area (buggy, flight, world and rendering, validation, release, measuring the original).
 
 `Unity5/` may exist locally as an ignored asset-conversion bridge: the Unity 5 compatibility port merged into the original repository as pull request #1. It is not an active gameplay project.
 
