@@ -292,6 +292,25 @@ public static class SceneLookProbe
             foreach (Light l in b.GetComponentsInChildren<Light>(true)) sb.AppendLine("base light " + l.name + " " + l.type + " colour=" + l.color + " range=" + l.range + " enabled=" + l.enabled);
             foreach (Component c in b.GetComponentsInChildren<Component>(true)) if (c == null) sb.AppendLine("base has a missing script");
         }
+        var sight = Object.FindAnyObjectByType<LegacyLaserSightController>();
+        if (sight != null)
+        {
+            Transform veh = sight.transform;
+            sb.AppendLine("vehicle forward=" + veh.forward.ToString("F2") + " pos=" + veh.position.ToString("F1"));
+            foreach (ParticleSystem ps in sight.GetComponentsInChildren<ParticleSystem>())
+            {
+                var parts = new ParticleSystem.Particle[ps.particleCount];
+                int n = ps.GetParticles(parts);
+                var line = new StringBuilder("beam " + ps.transform.parent.name + " parent localPos=" + ps.transform.parent.localPosition.ToString("F2")
+                    + " localRot=" + ps.transform.parent.localEulerAngles.ToString("F1") + " n=" + n + " ahead(m):");
+                for (int i = 0; i < n; i++)
+                {
+                    Vector3 world = ps.main.simulationSpace == ParticleSystemSimulationSpace.Local ? ps.transform.TransformPoint(parts[i].position) : parts[i].position;
+                    line.Append(" " + Vector3.Dot(world - veh.position, veh.forward).ToString("F0"));
+                }
+                sb.AppendLine(line.ToString());
+            }
+        }
         if (Camera.main != null) sb.AppendLine("screen brightness (0-255, mean RGB) " + MeasureBrightness(Camera.main));
         string path = Path.Combine(Application.dataPath, "../Logs/scene-look.txt");
         File.WriteAllText(path, sb.ToString());
@@ -326,6 +345,16 @@ public static class SceneLookProbe
                 + " amb=" + RenderSettings.ambientLight + " mode=" + RenderSettings.ambientMode);
             foreach (Light l in Object.FindObjectsByType<Light>(FindObjectsSortMode.None))
                 line.Append(" light[" + l.name + " " + l.type + " i=" + l.intensity.ToString("F2") + " on=" + (l.enabled && l.gameObject.activeInHierarchy) + "]");
+            var sight = Object.FindAnyObjectByType<LegacyLaserSightController>();
+            if (sight != null)
+            {
+                var rb = sight.GetComponent<Rigidbody>();
+                var vs = sight.GetComponent<VehicleStateModern>();
+                line.Append(" speed=" + (rb != null ? rb.linearVelocity.magnitude.ToString("F1") : "-"));
+                foreach (ParticleSystem ps in sight.GetComponentsInChildren<ParticleSystem>(true))
+                    line.Append(" ps[" + ps.transform.parent.name + "/" + ps.name + " active=" + ps.gameObject.activeInHierarchy + " playing=" + ps.isPlaying
+                        + " emit=" + ps.emission.enabled + " n=" + ps.particleCount + "]");
+            }
             if (cam != null)
             {
                 line.Append(" cam=" + cam.transform.position.ToString("F1") + " clear=" + cam.clearFlags);

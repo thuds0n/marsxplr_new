@@ -7,8 +7,6 @@ public class LegacyLaserSightController : MonoBehaviour
     public GameObject laserLockMarker;
     public int vehicleId = 0;
     public float camOffset = 2f;
-    public float fallbackBeamLength = 16f;
-    public float fallbackBeamWidth = 0.035f;
 
     private GameObject _fallbackAim;
     private GameObject _fallbackAimLocked;
@@ -33,8 +31,8 @@ public class LegacyLaserSightController : MonoBehaviour
         }
 
         var materials = Resources.Load<LaserSightMaterials>("LaserSightMaterials");
-        _fallbackAim = EnsureFallbackVisual(laserAimer, materials != null ? materials.aim : null, new Color(0.25f, 1f, 0.35f, 0.9f), fallbackBeamLength, fallbackBeamWidth);
-        _fallbackAimLocked = EnsureFallbackVisual(laserAimerLocked, materials != null ? materials.aimLocked : null, new Color(1f, 0.25f, 0.15f, 0.85f), fallbackBeamLength * 1.1f, fallbackBeamWidth * 1.1f);
+        _fallbackAim = EnsureFallbackVisual(laserAimer, materials != null ? materials.aim : null, new Color(0.25f, 1f, 0.35f, 1f), LegacyAimer.Aim);
+        _fallbackAimLocked = EnsureFallbackVisual(laserAimerLocked, materials != null ? materials.aimLocked : null, new Color(1f, 0.25f, 0.15f, 1f), LegacyAimer.Locked);
         _fallbackLockMarker = EnsureFallbackMarker(laserLockMarker);
     }
 
@@ -123,7 +121,25 @@ public class LegacyLaserSightController : MonoBehaviour
         }
     }
 
-    private GameObject EnsureFallbackVisual(GameObject root, Material sourceMaterial, Color color, float beamLength, float beamWidth)
+    // The LaserAim and LaserAimLocked legacy particle settings, read from the
+    // binary Vehicle.prefab (Unity 4.6). The emitter releases particles at rest;
+    // a 200 m/s^2 forward force accelerates them, the renderer stretches them by
+    // speed, and the colour animation keeps them transparent for the first
+    // quarter of their 3 s life, so the beam only shows well ahead of the buggy.
+    private struct LegacyAimer
+    {
+        public float size, emission, sizeGrow, velocityScale;
+
+        public static readonly LegacyAimer Aim = new LegacyAimer { size = 0.05f, emission = 5f, sizeGrow = 6f, velocityScale = 0.4f };
+        public static readonly LegacyAimer Locked = new LegacyAimer { size = 0.1f, emission = 7f, sizeGrow = 4f, velocityScale = 0.5f };
+
+        public const float Energy = 3f;
+        public const float Force = 200f;
+        public const float LengthScale = 1f;
+        public const float MaxParticleSize = 0.1f;
+    }
+
+    private GameObject EnsureFallbackVisual(GameObject root, Material sourceMaterial, Color color, LegacyAimer legacy)
     {
         if (root == null) return null;
         Transform existing = root.transform.Find("FallbackBeam");
@@ -138,7 +154,8 @@ public class LegacyLaserSightController : MonoBehaviour
         if (HasAnyVisibleComponent(root)) return null;
 
         var fallback = new GameObject("FallbackBeam");
-        fallback.name = "FallbackBeam";
+        // The prefab's LaserAim objects are on layer 11, which the minimap skips.
+        fallback.layer = root.layer;
         fallback.transform.SetParent(root.transform, false);
         fallback.transform.localPosition = Vector3.zero;
         fallback.transform.localRotation = Quaternion.identity;
@@ -147,41 +164,50 @@ public class LegacyLaserSightController : MonoBehaviour
         var main = ps.main;
         main.loop = true;
         main.playOnAwake = true;
-        main.startLifetime = beamLength / 22f;
-        main.startSpeed = 22f;
-        main.startSize = beamWidth;
+        main.startLifetime = LegacyAimer.Energy;
+        main.startSpeed = 0f;
+        main.startSize = legacy.size;
         main.startColor = sourceMaterial != null ? Color.white : color;
         main.simulationSpace = ParticleSystemSimulationSpace.Local;
-        main.maxParticles = 64;
+        main.maxParticles = Mathf.CeilToInt(legacy.emission * LegacyAimer.Energy) + 2;
 
         var emission = ps.emission;
-        emission.rateOverTime = 85f;
+        emission.rateOverTime = legacy.emission;
 
+        // The legacy emitter was a point with an empty ellipsoid.
         var shape = ps.shape;
-        shape.enabled = true;
-        shape.shapeType = ParticleSystemShapeType.Cone;
-        shape.angle = 0f;
-        shape.radius = 0.01f;
+        shape.enabled = false;
 
-        var velocity = ps.velocityOverLifetime;
-        velocity.enabled = true;
-        velocity.space = ParticleSystemSimulationSpace.Local;
-        velocity.z = 0f;
+        var force = ps.forceOverLifetime;
+        force.enabled = true;
+        force.space = ParticleSystemSimulationSpace.Local;
+        force.x = 0f;
+        force.y = 0f;
+        force.z = LegacyAimer.Force;
 
-        var sizeOverLifetime = ps.sizeOverLifetime;
-        sizeOverLifetime.enabled = true;
-        AnimationCurve sizeCurve = new AnimationCurve();
-        sizeCurve.AddKey(0f, 1f);
-        sizeCurve.AddKey(1f, 0.35f);
-        sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, sizeCurve);
+        // ParticleAnimator colour keys at 0, 25, 50, 75 and 100% of life, all white.
+        var colour = ps.colorOverLifetime;
+        colour.enabled = true;
+        var gradient = new Gradient();
+        gradient.SetKeys(
+            new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+            new[]
+            {
+                new GradientAlphaKey(0f, 0f),
+                new GradientAlphaKey(0f, 0.25f),
+                new GradientAlphaKey(144f / 255f, 0.5f),
+                new GradientAlphaKey(88f / 255f, 0.75f),
+                new GradientAlphaKey(0f, 1f),
+            });
+        colour.color = gradient;
 
-        var trails = ps.trails;
-        trails.enabled = true;
-        trails.mode = ParticleSystemTrailMode.Ribbon;
-        trails.ratio = 1f;
-        trails.lifetime = 0.06f;
-        trails.dieWithParticles = true;
-        trails.sizeAffectsWidth = true;
+        // sizeGrow, taken as growth relative to the start size per second
+        // (0.05 m grows to 0.95 m over 3 s). Growth in absolute metres per
+        // second made an 18 m wide plume, unlike the Wine version.
+        var size = ps.sizeOverLifetime;
+        size.enabled = true;
+        float endScale = 1f + legacy.sizeGrow * LegacyAimer.Energy;
+        size.size = new ParticleSystem.MinMaxCurve(endScale, AnimationCurve.Linear(0f, 1f / endScale, 1f, 1f));
 
         var renderer = fallback.GetComponent<ParticleSystemRenderer>();
         if (renderer != null)
@@ -193,9 +219,11 @@ public class LegacyLaserSightController : MonoBehaviour
                 mat.color = color;
             }
             renderer.sharedMaterial = mat;
-            renderer.trailMaterial = mat;
-            renderer.renderMode = ParticleSystemRenderMode.Billboard;
-            renderer.alignment = ParticleSystemRenderSpace.Local;
+            renderer.renderMode = ParticleSystemRenderMode.Stretch;
+            renderer.lengthScale = LegacyAimer.LengthScale;
+            renderer.velocityScale = legacy.velocityScale;
+            renderer.cameraVelocityScale = 0f;
+            renderer.maxParticleSize = LegacyAimer.MaxParticleSize;
         }
 
         ps.Play(true);
