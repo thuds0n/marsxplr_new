@@ -6,7 +6,6 @@ using UnityEditor;
 public class SinglePlayerPlayableBootstrap : MonoBehaviour
 {
     public bool enabledForSinglePlayer = true;
-    public Vector3 spawnOffset = new Vector3(0f, 4f, 0f);
     // Original Buggy.prefab: source of the body meshes and materials.
     public GameObject playerVehiclePrefab;
     public GameObject legacyVehicleRigPrefab;
@@ -64,13 +63,11 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
 
     private void SpawnPlayer()
     {
-        Vector3 spawn = Vector3.up * 8f;
+        // Game.js iV(): spawn at the base with identity rotation, raised a metre
+        // at a time until a 3 m sphere there is clear.
+        Vector3 spawn = World.@base != null ? World.@base.position : Vector3.up * 8f;
         Quaternion spawnRot = Quaternion.identity;
-        if (World.@base != null)
-        {
-            spawn = World.@base.position + spawnOffset;
-            spawnRot = World.@base.rotation;
-        }
+        while (Physics.CheckSphere(spawn, 3f)) spawn += Vector3.up;
 
         // Always create a clean root player object for control/physics.
         GameObject go;
