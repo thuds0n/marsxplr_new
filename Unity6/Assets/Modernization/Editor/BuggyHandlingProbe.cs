@@ -17,6 +17,17 @@ public static class BuggyHandlingProbe
         buggy.gameObject.AddComponent<BuggyHandlingProbeRunner>();
     }
 
+    // The same tests on Fort Boxy's open floor south of the castle, with the
+    // jump taken by driving off the spawn slab from the base.
+    [MenuItem("Tools/MarsXPLR/Run Buggy Handling Probe On Fort Boxy")]
+    private static void RunFortBoxy()
+    {
+        if (!Application.isPlaying) { Debug.LogWarning("[HandlingProbe] Enter Play mode first."); return; }
+        BuggyControllerModern buggy = Object.FindAnyObjectByType<BuggyControllerModern>();
+        if (buggy == null) { Debug.LogWarning("[HandlingProbe] No BuggyControllerModern found."); return; }
+        buggy.gameObject.AddComponent<BuggyHandlingProbeRunner>().fortBoxy = true;
+    }
+
     // Take-off, glide, airbrake, stall, and landing on the probe pad.
     [MenuItem("Tools/MarsXPLR/Run Buggy Flight Probe")]
     private static void RunFlight()
@@ -73,6 +84,7 @@ public class BuggyTrackTestRunner : MonoBehaviour
 public class BuggyHandlingProbeRunner : MonoBehaviour
 {
     public bool flight;
+    public bool fortBoxy;
     private BuggyControllerModern _buggy;
     private VehicleStateModern _state;
     private Rigidbody _rb;
@@ -100,6 +112,12 @@ public class BuggyHandlingProbeRunner : MonoBehaviour
         }
         // A flat pad above the world removes Fort Boxy's ramps and bumps from the
         // measurements; a ledge 18 m higher matches the original spawn-platform drop.
+        if (fortBoxy)
+        {
+            yield return FortBoxy();
+            Finish(input, "handling-probe-fortboxy.txt");
+            yield break;
+        }
         _pad = GameObject.CreatePrimitive(PrimitiveType.Cube);
         _pad.name = "HandlingProbePad";
         _pad.transform.position = new Vector3(0f, 1000f, 0f);
@@ -144,6 +162,49 @@ public class BuggyHandlingProbeRunner : MonoBehaviour
         yield return Hold(Vector4.zero, false, 2f, "settle", 0.25f);
 
         Finish(input, "handling-probe.txt");
+    }
+
+    private IEnumerator FortBoxy()
+    {
+        // Open floor south of the castle, facing away from it.
+        if (!Physics.Raycast(new Vector3(0f, 200f, -300f), Vector3.down, out RaycastHit ground, 400f)) { Line("no ground found"); yield break; }
+        _origin = ground.point + Vector3.up * 0.1f;
+        _heading = Quaternion.Euler(0f, 180f, 0f);
+        Line("floor at " + ground.point.ToString("F1") + " on '" + ground.collider.name + "'");
+
+        yield return Reset("long throttle: 20 s from rest");
+        yield return Hold(new Vector4(0, 1, 0, 0), false, 20f, "throttle", 1f);
+
+        yield return Reset("coast");
+        yield return Hold(new Vector4(0, 1, 0, 0), false, 4f, "throttle");
+        Vector3 start = transform.position;
+        float t = 0f;
+        while (_state.mph > 1f && t < 30f) { yield return Hold(Vector4.zero, false, 1f, "coast"); t += 1f; }
+        Line("coast distance " + Flat(transform.position - start).ToString("F1") + " m over " + t + " s");
+
+        yield return Reset("brakes (Fire3)");
+        yield return Hold(new Vector4(0, 1, 0, 0), false, 4f, "throttle");
+        yield return StopTest(Vector4.zero, true, "brakes");
+
+        yield return Reset("reverse throttle as brake, then reverse");
+        yield return Hold(new Vector4(0, 1, 0, 0), false, 4f, "throttle");
+        yield return StopTest(new Vector4(0, -1, 0, 0), false, "reverse-brake");
+        yield return Hold(new Vector4(0, -1, 0, 0), false, 4f, "reverse");
+
+        yield return Reset("cornering: full right lock while coasting");
+        yield return Hold(new Vector4(0, 1, 0, 0), false, 4f, "throttle");
+        float yaw0 = transform.eulerAngles.y;
+        yield return Hold(new Vector4(1, 0, 0, 0), false, 2f, "steer");
+        Line("heading change " + Mathf.DeltaAngle(yaw0, transform.eulerAngles.y).ToString("F0") + " deg");
+
+        // Spawn as Game.js does, then drive straight off the spawn slab.
+        _origin = World.@base != null ? World.@base.position : Vector3.up * 17f;
+        while (Physics.CheckSphere(_origin, 3f)) _origin += Vector3.up;
+        _origin -= Vector3.up * 0.5f;
+        _heading = Quaternion.identity;
+        yield return Reset("jump: from the base, full throttle off the spawn slab");
+        yield return Hold(new Vector4(0, 1, 0, 0), false, 6f, "drive/fall/land", 0.1f);
+        yield return Hold(Vector4.zero, false, 3f, "settle", 0.25f);
     }
 
     private IEnumerator Flight()

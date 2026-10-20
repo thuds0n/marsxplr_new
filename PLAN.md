@@ -99,7 +99,7 @@ Acceptance criteria:
 - [x] Acceleration, reversing, steering, braking, side slip, and landing are controllable (flat-pad probe compared with the Wine version, 2026-10-19).
 - [x] Camera and HUD telemetry continue to consume `VehicleStateModern`.
 - [x] `SimplePlayerController` can still be selected temporarily for recovery (`useModernBuggyController` on `SinglePlayerPlayableBootstrap`).
-- [ ] Behaviour is tested on a small representative Mars terrain fixture, not only `FallbackGround` (Fort Boxy now loads; handling not yet assessed on it).
+- [x] Behaviour is tested on a small representative Mars terrain fixture, not only `FallbackGround` (Fort Boxy, compared with the Wine version on 2026-10-21; see [docs/buggy.md](docs/buggy.md)).
 
 ## Milestone 2: Wing and flight parity
 
