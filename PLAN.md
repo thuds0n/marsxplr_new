@@ -90,7 +90,7 @@ The current working tree has not been compiled or played in Unity since its newe
 
 Create `BuggyControllerModern` without folding new physics into `SimplePlayerController`.
 
-Status: steps 1–8 are ported and match the Wine version on a flat pad; tyre tracks match the original's darkness (2026-10-20). Open: the Fort Boxy spawn height, the `Buggy Skidmarks` track width, lava floating and diving, the optional "new physics" motor. Detail: [docs/buggy.md](docs/buggy.md).
+Status: steps 1–8 are ported and match the Wine version on a flat pad; tyre tracks match the original's darkness (2026-10-20). Open: the `Buggy Skidmarks` track width, lava floating and diving, the optional "new physics" motor. Detail: [docs/buggy.md](docs/buggy.md).
 
 Acceptance criteria:
 
@@ -158,7 +158,6 @@ Status: an arm64 Mono development player builds and launches into Fort Boxy. Acc
 2. Check the image effects render correctly under Metal.
 3. Save and review only intentional scene changes.
 4. Lock that evidence-backed baseline in version control.
-5. Resolve the Fort Boxy spawn height (the buggy rolls off a lower slab at spawn).
 
 ## Definition of done for the single-player milestone
 
