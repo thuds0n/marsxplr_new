@@ -393,3 +393,24 @@ public static class SceneLookProbe
         return "bottomThird=" + Mean(0, w, 0, h / 3).ToString("F0") + " centre=" + Mean(w / 3, 2 * w / 3, h / 3, 2 * h / 3).ToString("F0");
     }
 }
+
+// Sets the saved render level (1 Fastest to 6 Fantastic, as in Settings.js)
+// and applies it to a running game.
+public static class RenderLevelProbe
+{
+    [MenuItem("Tools/MarsXPLR/Render Level/Simple (3)")] private static void Simple() => Set(3);
+    [MenuItem("Tools/MarsXPLR/Render Level/Good (4)")] private static void Good() => Set(4);
+    [MenuItem("Tools/MarsXPLR/Render Level/Fantastic (6)")] private static void Fantastic() => Set(6);
+
+    private static void Set(int level)
+    {
+        PlayerPrefs.SetInt("renderLevel", level);
+        PlayerPrefs.Save();
+        if (Game.Settings != null)
+        {
+            Game.Settings.renderLevel = level;
+            Game.Settings.updatePrefs();
+        }
+        Debug.Log("[RenderLevel] " + level);
+    }
+}
