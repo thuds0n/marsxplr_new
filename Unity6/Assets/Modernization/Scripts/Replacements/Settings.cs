@@ -91,8 +91,24 @@ public class Settings : MonoBehaviour
     // Settings.js Start: load saved preferences, then apply them.
     private void Start()
     {
+        UsePointResolution();
         getPrefs();
         updatePrefs();
+    }
+
+    // The IMGUI HUD is laid out in pixels. Unity 2.5 (and the Wine version)
+    // saw a Retina display at its size in points, but the Unity 6 player picks
+    // the full pixel size, which draws the HUD at half its original size.
+    // macOS reports no backing scale to the player, so displays above 150 dpi
+    // are taken as Retina (2x) and the resolution halved to match.
+    private static void UsePointResolution()
+    {
+        if (Application.platform != RuntimePlatform.OSXPlayer || Screen.dpi < 150f) return;
+        // Already at point size (Unity restores the last resolution on launch).
+        if (Screen.width <= Screen.currentResolution.width * 0.75f) return;
+        int width = Screen.width / 2, height = Screen.height / 2;
+        if (width < 640 || height < 480) return;
+        Screen.SetResolution(width, height, Screen.fullScreenMode);
     }
 
     // Settings.js getPrefs(), the rendering and camera preferences only.

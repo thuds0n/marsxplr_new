@@ -42,6 +42,14 @@ public static class MarsXPLRBuild
         // Values are "x64", "ARM64" and "x64ARM64"; stored per user in Library/.
         EditorUserBuildSettings.SetPlatformSettings("Standalone", "OSXUniversal", "Architecture", "ARM64");
 
+        // The IMGUI HUD is laid out in pixels, as on Unity 2.5, which had no
+        // Retina support; rendering at the backing scale would halve its size.
+        if (PlayerSettings.macRetinaSupport)
+        {
+            PlayerSettings.macRetinaSupport = false;
+            AssetDatabase.SaveAssets();
+        }
+
         Directory.CreateDirectory(Path.GetDirectoryName(OutputPath));
         var options = new BuildPlayerOptions
         {
