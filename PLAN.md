@@ -116,7 +116,7 @@ Acceptance criteria:
 - [ ] Stall, roll, pitch, drag, airbrakes, and landing remain controllable.
 - [ ] Returning to drive mode does not reset orientation or momentum incorrectly.
 
-Status: ported and verified on the probe pad; not yet compared with the Wine version or flown on Fort Boxy. Detail: [docs/flight.md](docs/flight.md).
+Status: ported and verified on the probe pad. Judged comparable to the Wine version by eye on 2026-10-21; an instrumented comparison (take-off, stall, landing) is backlogged. Detail: [docs/flight.md](docs/flight.md).
 
 ## Milestone 3: Representative world vertical slice
 

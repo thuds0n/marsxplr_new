@@ -42,7 +42,7 @@ Camera (2026-10-19): `CameraVehicle` again uses the original chase distance: the
 
 Snipe zoom (2026-10-19): holding Shift (`Snipe`, not while chatting) drops the camera's field of view from 60 to 10 degrees and the scroll wheel adjusts it between 1.5 and 50, as in `CameraVehicle.js`; releasing restores 60. Verified in the Unity `6000.3.26f1` editor.
 
-Known parity behaviour: the Agile camera's direction starts at the original (1, 1, 1), so it sits below a stationary buggy, under Fort Boxy's one-sided floor, until the buggy moves. Compare this start with the Wine version before deciding whether to change it.
+Known parity behaviour: the Agile camera's direction starts at the original (1, 1, 1), so it sits below a stationary buggy, under Fort Boxy's one-sided floor, until the buggy moves. Compare this start with the Wine version before deciding whether to change it. Judged comparable to the Wine version by eye on 2026-10-21; kept as is, with an instrumented comparison backlogged.
 
 Verified: editor-free compile check, and an arm64 development build that launches into Fort Boxy (Unity `6000.3.26f1`, macOS `27.0.1`). Not yet verified: chase framing while driving, and a comparison with the Wine version. Keyboard input did not reach the player during the automated check.
 
