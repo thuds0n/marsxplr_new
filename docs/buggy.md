@@ -60,6 +60,14 @@ Tyre-track opacity fixed (2026-10-20): the faint tracks came from soft particles
 
 Open follow-ups: confirm the track width saved in the original `Buggy Skidmarks` prefab; lava floating and diving; the optional "new physics" motor.
 
+## Centre trail
+
+Centre trail (2026-10-20): the white streak behind the buggy is `Buggy.js`'s `leftTrail` and `rightTrail` (`Trail1` and `Trail2` under `Lod0`). While the wings are closed both sit at the body origin, so they draw on top of each other. They exist on the player's own buggy only and are always on in 2.22, because the `Settings.js` line that would switch them off is commented out. Original values, read from the binary `Buggy.prefab` and `WhiteDot.mat` through the Unity 4.6 type tree: 5 s time, 0.1 m start and end width, 0.3 m minimum vertex distance, white with alpha 0, 1, 1, 1, 0 at five even steps along the trail. The material is `WhiteDot` on built-in shader 200 (Particles/Additive), tint (0.5, 0.5, 0.5, 0.5). The archived 2.22 Mac build carries the same data, so it adds nothing here.
+
+`Tools -> MarsXPLR -> Log Buggy Trails` writes the trails as Unity 6 imported them to `Unity6/Logs/buggy-trails.txt`. In the Unity `6000.3.26f1` editor on macOS `27.0.1` every value matches: 5 s, 0.1/0.1 m, 0.3 m, view alignment, stretch texture mode, a blend gradient with alpha 0, 1, 1, 1, 0 at 0, 0.25, 0.5, 0.75 and 1, and `WhiteDot` on `Legacy Shaders/Particles/Additive` with the same tint and texture.
+
+Compared by eye with the Wine version (4.0.2, Fantastic) from the far Agile chase view on open floor: both show a thin white additive line from the centre of the buggy, between the tyre tracks, fading out behind. The Wine frame was taken almost stopped and turning, and the port's while driving straight at about 20 MPH, so length and width near the camera were not compared like for like. Not yet done: a matched straight run at the same speed in both versions.
+
 ## Handling comparison with the Wine version
 
 Handling comparison with the Wine version (2026-10-19, macOS `27.0.1`). The original is Mars Explorer 4.0.2 under the `/Applications/Mars Explorer.app` Wine wrapper. It hosted a local Fort Boxy game and ran at 11–21 FPS. Its figures come from the HUD, read off screenshots, so their timing is only accurate to about ±0.5 s. It was driven on the open floor outside the castle. The port ran in the Unity `6000.3.26f1` editor with a 0.02 s fixed timestep. Synthetic key presses do not reach the editor's Game view, so the port was driven by `Tools -> MarsXPLR -> Run Buggy Handling Probe` (`Editor/BuggyHandlingProbe.cs`). The probe writes the same inputs into `VehicleStateModern`, runs on a flat pad it builds above the world (with an 18 m ledge for the drop), and logs to `Unity6/Logs/handling-probe.txt`.

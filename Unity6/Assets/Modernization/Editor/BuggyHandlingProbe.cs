@@ -317,6 +317,38 @@ public static class SceneLookProbe
         Debug.Log("[SceneLook] -> " + path);
     }
 
+    // Logs the buggy's Trail1/Trail2 settings as Unity 6 imported them, for
+    // comparison with the original Buggy.prefab and WhiteDot.mat values.
+    [MenuItem("Tools/MarsXPLR/Log Buggy Trails")]
+    private static void LogTrails()
+    {
+        var sb = new StringBuilder();
+        foreach (TrailRenderer t in Object.FindObjectsByType<TrailRenderer>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            sb.AppendLine("trail " + t.transform.parent?.name + "/" + t.name + " active=" + t.gameObject.activeInHierarchy + " enabled=" + t.enabled + " emitting=" + t.emitting
+                + " localPos=" + t.transform.localPosition.ToString("F2") + " layer=" + t.gameObject.layer);
+            sb.AppendLine("  time=" + t.time + " minVertexDistance=" + t.minVertexDistance + " width=" + t.startWidth + "/" + t.endWidth + " widthMultiplier=" + t.widthMultiplier
+                + " alignment=" + t.alignment + " textureMode=" + t.textureMode + " cornerVertices=" + t.numCornerVertices + " capVertices=" + t.numCapVertices
+                + " shadows=" + t.shadowCastingMode + " positions=" + t.positionCount);
+            var g = t.colorGradient;
+            var colours = new StringBuilder("  gradient mode=" + g.mode + " colour:");
+            foreach (GradientColorKey k in g.colorKeys) colours.Append(" " + k.time.ToString("F2") + "=" + k.color);
+            colours.Append(" alpha:");
+            foreach (GradientAlphaKey k in g.alphaKeys) colours.Append(" " + k.time.ToString("F2") + "=" + k.alpha.ToString("F2"));
+            sb.AppendLine(colours.ToString());
+            foreach (Material m in t.sharedMaterials)
+            {
+                if (m == null) { sb.AppendLine("  material=null"); continue; }
+                sb.AppendLine("  material=" + m.name + " shader=" + m.shader.name + " supported=" + m.shader.isSupported + " queue=" + m.renderQueue
+                    + " tex=" + (m.HasProperty("_MainTex") ? m.mainTexture : null) + " tint=" + (m.HasProperty("_TintColor") ? m.GetColor("_TintColor").ToString() : "-"));
+            }
+        }
+        if (sb.Length == 0) sb.AppendLine("no TrailRenderer found");
+        string path = Path.Combine(Application.dataPath, "../Logs/buggy-trails.txt");
+        File.WriteAllText(path, sb.ToString());
+        Debug.Log("[SceneLook] -> " + path);
+    }
+
     // Samples the lighting state and screen brightness every 0.5 s for 30 s,
     // to find what changes the picture's brightness during play.
     [MenuItem("Tools/MarsXPLR/Log Lighting Over Time")]
