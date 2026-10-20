@@ -201,13 +201,23 @@ public class LegacyLaserSightController : MonoBehaviour
             });
         colour.color = gradient;
 
-        // sizeGrow, taken as growth relative to the start size per second
-        // (0.05 m grows to 0.95 m over 3 s). Growth in absolute metres per
-        // second made an 18 m wide plume, unlike the Wine version.
+        // The Unity 2 player's ParticleAnimator multiplies each particle's size
+        // by pow(1 + sizeGrow, deltaTime) every frame, so size grows as
+        // (1 + sizeGrow)^t: 0.05 m becomes 0.05 * 7^3 = 17 m after 3 s.
         var size = ps.sizeOverLifetime;
         size.enabled = true;
-        float endScale = 1f + legacy.sizeGrow * LegacyAimer.Energy;
-        size.size = new ParticleSystem.MinMaxCurve(endScale, AnimationCurve.Linear(0f, 1f / endScale, 1f, 1f));
+        float growth = 1f + legacy.sizeGrow;
+        float endScale = Mathf.Pow(growth, LegacyAimer.Energy);
+        const int keyCount = 13;
+        var keys = new Keyframe[keyCount];
+        for (int i = 0; i < keyCount; i++)
+        {
+            float x = i / (keyCount - 1f);
+            float value = Mathf.Pow(growth, LegacyAimer.Energy * (x - 1f));
+            float slope = value * Mathf.Log(growth) * LegacyAimer.Energy;
+            keys[i] = new Keyframe(x, value, slope, slope);
+        }
+        size.size = new ParticleSystem.MinMaxCurve(endScale, new AnimationCurve(keys));
 
         var renderer = fallback.GetComponent<ParticleSystemRenderer>();
         if (renderer != null)
