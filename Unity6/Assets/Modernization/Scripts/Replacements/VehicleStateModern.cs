@@ -21,6 +21,12 @@ public class VehicleStateModern : MonoBehaviour
     // Vehicle.js vehicleColor and vehicleAccent, applied by VehicleColourModern.
     public Color vehicleColor;
     public Color vehicleAccent;
+    // Vehicle.js quarry state: isIt is 1 for the quarry; lastTag guards the
+    // three seconds after a tag; isResponding is set for local vehicles.
+    public int isIt;
+    public float lastTag;
+    public int score;
+    public bool isResponding = true;
 
     public void SetInput(float horizontal, float vertical, float auxiliary = 0f, float brakeAxis = 0f)
     {

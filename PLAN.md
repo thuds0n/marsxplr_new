@@ -15,6 +15,7 @@ Detail lives in `docs/`, one file per area. This file keeps status, decisions an
 - [docs/world-and-rendering.md](docs/world-and-rendering.md): Fort Boxy, lighting, fog, materials, shaders, HUD font.
 - [docs/validation.md](docs/validation.md): validation strategy, Unity 6.3 import results, editor-free compile status.
 - [docs/release.md](docs/release.md): release path and arm64 player builds.
+- [docs/combat.md](docs/combat.md): lasers, quarry and score.
 - [docs/wine-reference.md](docs/wine-reference.md): how to run and measure the original for comparisons.
 - `IMPROVEMENTS.md`: faithful-but-improvable behaviour deferred from parity work.
 
@@ -28,7 +29,7 @@ The repository contains a promising but incomplete modernisation foundation:
 - `SimplePlayerController` provides temporary drive and flight behaviour;
 - `VehicleStateModern` provides a shared vehicle-state seam;
 - the runtime bootstrap spawns the buggy with the original body, wheel, and axle models;
-- quarry, laser, and score behaviour are placeholders rather than parity ports;
+- laser fire, hits and quarry scoring are ported in a first slice (Milestone 4); weapons lock, bots and impact visuals are not;
 - editor tooling can rebuild and inspect the `Game` scene baseline;
 - the intended offline flow is now `Init -> InitGame -> Game`, with `Lobby` retained outside the active vertical slice.
 
@@ -139,6 +140,8 @@ Replace scaffolding with dedicated systems:
 
 Do not make placeholder cylinders, debug-line lasers, or impact stubs part of the permanent architecture.
 
+Status: in progress. First slice (2026-10-21): auto and snipe fire, `Rocket.js` projectiles, hits, the player defaulting to quarry and tag scoring, with the placeholders removed. Verified by a scripted Play-mode test from `Init`; not yet fired by hand or compared with the Wine version. Open: impact and bolt visuals (legacy particles), weapons lock, bots, ramming, fatal hits. Detail: [docs/combat.md](docs/combat.md).
+
 ## Milestone 5: Rendering and asset compatibility
 
 - Establish one approved source for each converted model and texture.
@@ -157,7 +160,7 @@ Status: an arm64 Mono development player builds and launches into Fort Boxy. Acc
 
 The evidence-backed baseline is tagged `unity6-baseline-2026-10-21` (Milestone 0 complete; buggy ground handling, Fort Boxy, HUD, image effects and shadows checked against the Wine version).
 
-1. Start Milestone 4: replace the quarry, laser and score placeholders with `GameModeSinglePlayerModern` and `CombatSystemModern`, ported from `Game.js`, `Vehicle.js` and the laser scripts.
+1. Continue Milestone 4: fire by hand and compare the bolt and sparks with the Wine version, replace the legacy particle effects, then weapons lock and bots.
 2. Smaller open items: the shadow strip east of the spawn slab, the `Arrow.jas` mesh offset, and the floor's slightly lower saturation (see [docs/world-and-rendering.md](docs/world-and-rendering.md)).
 
 ## Definition of done for the single-player milestone

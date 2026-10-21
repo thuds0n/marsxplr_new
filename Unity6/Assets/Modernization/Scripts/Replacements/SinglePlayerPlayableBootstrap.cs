@@ -118,7 +118,7 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
             rb.angularDamping = 0.05f;
             go.AddComponent<SimplePlayerController>();
         }
-        go.AddComponent<PlayerLaserModern>();
+        go.AddComponent<CombatSystemModern>();
         var vehicleState = go.GetComponent<VehicleStateModern>();
         if (go.GetComponent<FallReset>() == null)
         {

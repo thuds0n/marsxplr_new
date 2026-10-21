@@ -15,11 +15,12 @@ public class Settings : MonoBehaviour
     public bool lasersAllowed = true;
     public bool laserLocking = true;
     public float[] laserLock = { 0.4f, 0.4f, 0.4f, 0.4f };
-    public float laserCooldown = 0.16f;
-    public float laserRange = 1200f;
-    public float laserImpactForce = 18f;
-    public float laserProjectileSpeed = 240f; // Placeholder for future projectile-based path.
-    public float laserProjectileGravity = 0f; // Placeholder for future projectile-based path.
+    // Settings.js laser defaults.
+    public float laserSpeed = 180f;
+    public float laserGrav;
+    public float laserRico;
+    public bool lasersFatal;
+    public bool lasersOptHit;
     public float zorbSpeed = 7f;
     public bool zorbEnabled;
     public int[] firepower = { 2, 2, 3, 2 };
@@ -35,8 +36,6 @@ public class Settings : MonoBehaviour
     public float buggyCG = -0.4f;
     public float buggyTr = 1f;
     public float buggySh = 70f;
-    public bool autoSelectQuarry = true;
-    public int quarryScore;
     public float lavaAlt = -300f;
     public float lavaFog = 0.005f;
     public float worldFog = 0.0004f;
