@@ -109,6 +109,10 @@ public class PlasmaSparksModern : MonoBehaviour
         // ParticleAnimator autodestruct, kept until the hit sound has finished.
         float life = legacy.energy;
         var audio = GetComponent<AudioSource>();
+        // LaserHit.mp3 was imported as a 3D sound, so the hit faded with
+        // distance on the original rolloff curve; the Unity 6 import left this
+        // source 2D, which played every hit at full volume.
+        if (audio != null) audio.spatialBlend = 1f;
         if (audio != null && audio.clip != null) life = Mathf.Max(life, audio.clip.length / Mathf.Max(0.01f, Mathf.Abs(audio.pitch)));
         Destroy(gameObject, life + 0.1f);
     }

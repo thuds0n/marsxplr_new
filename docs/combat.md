@@ -40,3 +40,12 @@ Other values decoded from the binary prefabs (trail widths, materials and clips 
 Verified (Unity `6000.3.26f1` editor, macOS `27.0.1`, Play mode from `Init`): holding the left mouse button in first person fires; a green glow shows at the crosshair; bolts and sparks exist in the scene; no exceptions. The bolt and sparks sources were reported playing in the scripted test. The sound has not been confirmed by ear, and the look has not been compared with the Wine version.
 
 Wing shadows: the wings do not cast shadows, and the original's did not either. `Buggy.prefab` enables shadow casting on the wing renderer, but its `GlassGlowing` shader (same in `unity/`) is transparent with no shadow-caster pass and no fallback, so no shadow was drawn.
+
+## Impact sound and buggy shadows (2026-10-21)
+
+Impact sound: in the Wine version hits are not heard, while the port played them at full volume. The original `LaserHit.mp3` and `LaserShot.mp3` were imported as 3D sounds (`3D: 1` in the `unity/` import settings), so the sparks' hit sound faded with distance on the original rolloff curve (rolloff factor 0.5: about 48% at 3.2 m, 7% at 25.6 m, under 1% at 400 m). Unity 6 dropped that import flag and left the sparks' and the snipe bolt's sources 2D (`spatialBlend` 0). `PlasmaSparksModern` and `CombatSystemModern` now set `spatialBlend` to 1; the imported rolloff curves already match the original. Compile-checked only; not yet listened to against the Wine version.
+
+Buggy shadows, checked in code (Unity `6000.3.26f1`):
+
+- Wings: no shadow, as in the original (see above).
+- Axles: `Buggy Axel.prefab` casts and receives shadows in both `unity/` and Unity 6, and `BuggyPresentationModern` instantiates it without changing that. Its `Vehicle Chrome` material uses `Legacy Shaders/Reflective/Parallax Specular`, the same shader as the body, which gets its shadow-caster pass from its fallback chain. Nothing in the port disables the axle shadows. One possible cause, not tested: the directional light has a normal bias of 0.4 (Unity 2 had no normal bias), which shrinks thin casters such as the axle rods in the shadow map. Not checked visually.
