@@ -26,11 +26,7 @@ uniform sampler2D _MainTex;
 float4 frag (v2f_img i) : COLOR
 {
 	float4 col = tex2D(_MainTex, i.uv);
-	// The original weighted this by (1 + 2 * alpha). Unity 5 and later write
-	// alpha 1 for every opaque surface, which tripled the floor's luminance,
-	// pinned the measured maximum at 1 and all but disabled the stretch.
-	// Without the weighting the stretch is close to the original's.
-	col.rgb = Luminance(col.rgb);
+	col.rgb = Luminance(col.rgb) * (1+col.a*2);
 	return col;
 }
 ENDCG
