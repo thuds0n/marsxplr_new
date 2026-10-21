@@ -28,6 +28,24 @@ public static class BuggyHandlingProbe
         buggy.gameObject.AddComponent<BuggyHandlingProbeRunner>().fortBoxy = true;
     }
 
+    // Puts the buggy on the floor under Fort Boxy's spawn slab, facing north,
+    // for comparing the slab's underside and shadow with the Wine version.
+    [MenuItem("Tools/MarsXPLR/Place Buggy Under Spawn Slab")]
+    private static void PlaceUnderSlab()
+    {
+        if (!Application.isPlaying) { Debug.LogWarning("[HandlingProbe] Enter Play mode first."); return; }
+        BuggyControllerModern buggy = Object.FindAnyObjectByType<BuggyControllerModern>();
+        if (buggy == null) { Debug.LogWarning("[HandlingProbe] No BuggyControllerModern found."); return; }
+        if (!Physics.Raycast(new Vector3(0f, 9f, -12f), Vector3.down, out RaycastHit ground, 20f)) { Debug.LogWarning("[HandlingProbe] No floor under the slab."); return; }
+        var rb = buggy.GetComponent<Rigidbody>();
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+        rb.position = ground.point + Vector3.up * 0.6f;
+        rb.rotation = Quaternion.identity;
+        buggy.transform.SetPositionAndRotation(rb.position, rb.rotation);
+        Debug.Log("[HandlingProbe] Buggy placed under the spawn slab at " + rb.position.ToString("F1") + " on '" + ground.collider.name + "'");
+    }
+
     // Take-off, glide, airbrake, stall, and landing on the probe pad.
     [MenuItem("Tools/MarsXPLR/Run Buggy Flight Probe")]
     private static void RunFlight()

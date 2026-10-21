@@ -60,6 +60,8 @@ public class BaseMarkerModern : MonoBehaviour
         if (_glow == null || !_glow.gameObject.activeInHierarchy) return;
         float dt = Time.deltaTime;
         if (dt <= 0f) return;
+        int max = _glow.main.maxParticles;
+        if (_particles == null || _particles.Length < max) _particles = new ParticleSystem.Particle[max];
         int count = _glow.GetParticles(_particles);
         float damping = Mathf.Pow(Damping, dt);
         for (int i = 0; i < count; i++)
