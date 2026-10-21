@@ -22,6 +22,26 @@ public class PlasmaSparksModern : MonoBehaviour
     public Material material;
     public bool snipe;
 
+    // LaserHit.mp3 and LaserShot.mp3 were 3D sounds. The Unity 6 import left
+    // some of their sources 2D, and kept some rolloff curves keyed in metres
+    // (0–500) although Unity reads the curve's time as a fraction of
+    // maxDistance; such a curve stays near 1 at any real distance.
+    public static void Make3D(AudioSource audio)
+    {
+        audio.spatialBlend = 1f;
+        AnimationCurve curve = audio.GetCustomCurve(AudioSourceCurveType.CustomRolloff);
+        if (curve == null || curve.length == 0 || curve[curve.length - 1].time <= 1.001f) return;
+        float scale = 1f / audio.maxDistance;
+        var keys = curve.keys;
+        for (int i = 0; i < keys.Length; i++)
+        {
+            keys[i].time *= scale;
+            keys[i].inTangent /= scale;
+            keys[i].outTangent /= scale;
+        }
+        audio.SetCustomCurve(AudioSourceCurveType.CustomRolloff, new AnimationCurve(keys));
+    }
+
     private void Start()
     {
         Legacy legacy = snipe ? Snipe : Auto;
@@ -109,10 +129,7 @@ public class PlasmaSparksModern : MonoBehaviour
         // ParticleAnimator autodestruct, kept until the hit sound has finished.
         float life = legacy.energy;
         var audio = GetComponent<AudioSource>();
-        // LaserHit.mp3 was imported as a 3D sound, so the hit faded with
-        // distance on the original rolloff curve; the Unity 6 import left this
-        // source 2D, which played every hit at full volume.
-        if (audio != null) audio.spatialBlend = 1f;
+        if (audio != null) Make3D(audio);
         if (audio != null && audio.clip != null) life = Mathf.Max(life, audio.clip.length / Mathf.Max(0.01f, Mathf.Abs(audio.pitch)));
         Destroy(gameObject, life + 0.1f);
     }

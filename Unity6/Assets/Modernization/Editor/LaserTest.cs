@@ -117,7 +117,11 @@ public static class LaserTest
         string what = Physics.Raycast(start, r.transform.position - start, out RaycastHit h, Vector3.Distance(start, r.transform.position) + 0.5f, -1, QueryTriggerInteraction.Collide)
             ? h.collider.name + " layer " + h.collider.gameObject.layer + (h.collider.isTrigger ? " trigger" : "") : "nothing";
         foreach (AudioSource a in Object.FindObjectsByType<AudioSource>(FindObjectsSortMode.None))
-            if (a.transform.parent == null && a.name.StartsWith("PlasmaSparks")) Line($"  sparks audio playing={a.isPlaying} clip={a.clip} state={(a.clip ? a.clip.loadState.ToString() : "-")}");
+            if (a.transform.parent == null && a.name.StartsWith("PlasmaSparks")) {
+                var c = a.GetCustomCurve(AudioSourceCurveType.CustomRolloff);
+                float d = Vector3.Distance(a.transform.position, Camera.main.transform.position);
+                Line($"  sparks audio playing={a.isPlaying} spatial={a.spatialBlend} curveEnd={c[c.length - 1].time:F3} distance={d:F1} m gain={c.Evaluate(d / a.maxDistance):F3}");
+            }
         Line("  editor audio muted=" + EditorUtility.audioMasterMute);
         Line($"{label}: hit {what}, stopped at {r.transform.position} ({Vector3.Distance(start, r.transform.position):F1} m) after {Time.time - t0:F2} s, sparks {sparksBefore} -> {CountSparks()}");
     }

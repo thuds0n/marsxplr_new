@@ -68,9 +68,8 @@ public class CombatSystemModern : MonoBehaviour
         r.maskOpt = RocketMaskOpt;
         GameObject sparks = snipe ? Game.Controller.objectRocketSnipeExplosion : Game.Controller.objectRocketExplosion;
         r.explosion = sparks != null ? sparks.transform : null;
-        // LaserShot.mp3 was a 3D sound; the snipe bolt's source was left 2D on import.
         var shot = go.GetComponent<AudioSource>();
-        if (shot != null) shot.spatialBlend = 1f;
+        if (shot != null) PlasmaSparksModern.Make3D(shot);
         // The bolt's trail uses the same plasma material as its sparks.
         var trail = go.GetComponent<TrailRenderer>();
         r.sparksMaterial = trail != null ? trail.sharedMaterial : null;
