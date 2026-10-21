@@ -49,3 +49,12 @@ The legacy image effects (`Pro Standard Assets/Image Based/` and the Unity Islan
 
 - the fixed-function shaders render correctly under Metal;
 - glow, colour correction, and motion blur match the original look in `Game`.
+
+## Milestone 0 checks (2026-10-21)
+
+Unity `6000.3.26f1`, macOS `27.0.1`, Apple silicon.
+
+- `Prepare Game Scene Baseline`, run with `Game.unity` open: no missing scripts, and every replacement component was already in place. Saving produced no intended changes, only Unity 6 re-serialisation: newer `RenderSettings` and `LightmapSettings` versions, `Settings` gaining its newer serialised fields and dropping the removed `baseCamOffset`, and the guidance `Arrow` (an instance of `Martian Assets/GUI/Objects/Arrow.jas`) collapsed from an expanded Unity 2-era copy into a plain model reference with no overrides. That last change would drop the arrow mesh's stored rotation (90° about X), position (z −0.003) and material, so the save was reverted. Re-serialising `Game.unity` should be a dedicated change that keeps those values and checks the arrow on screen.
+- Interactive `Validate Project Baseline`: passed ("Project baseline looks healthy").
+- Direct Play mode entry from `Game.unity`: Fort Boxy loads, the buggy spawns, no exceptions or missing-script warnings.
+- Clean clone: a fresh `git clone` of commit `6dcaaec`, opened with `-batchmode` and `MarsXPLRProjectTools.ValidateProjectBaselineBatchMode`, rebuilt the Library from nothing (1,010 assets imported), compiled with no errors, found no missing `.meta` files and passed the batch validation. Known import errors only: Blender and Maya are not installed (six `.blend`/`.mb` source models), and the unported legacy prefabs (jet, hovercraft, tank, `Sea`, `JumpPoint`, lasers) cannot be upgraded because of their UnityScript components. `MarsXPLRBuild.BuildMacArm64DevelopmentBatchMode` then built an arm64 development player from the clone (164 MB, the 6 known Metal shader errors in `Hidden/SSAO` and the island water shaders). A fresh launch went through `Init -> InitGame -> Game` to Fort Boxy at 1512 × 949 with no exceptions and no missing scripts.

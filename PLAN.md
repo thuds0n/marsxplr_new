@@ -77,13 +77,13 @@ The current working tree has not been compiled or played in Unity since its newe
 - [x] Open the project in Unity `6000.3.26f1`, let the API updater run, and complete a clean script compile.
 - [x] Review scene, prefab, and project-setting re-serialisation against `pre-unity6-upgrade` before committing it (binary assets reviewed by file list only).
 - [x] Remove the `com.unity.multiplayer.center` package Unity 6 added during import.
-- [ ] Run `Prepare Game Scene Baseline` with `Game.unity` open and review all changes before saving.
+- [x] Run `Prepare Game Scene Baseline` with `Game.unity` open and review all changes before saving (2026-10-21: no intended changes; the save only re-serialised the scene and was reverted, see [docs/validation.md](docs/validation.md#milestone-0-checks-2026-10-21)).
 - [x] Run the batch `Validate Project Baseline` check.
-- [ ] Run the interactive `Validate Project Baseline` check.
-- [ ] Verify direct Play mode entry from `Game.unity`.
+- [x] Run the interactive `Validate Project Baseline` check.
+- [x] Verify direct Play mode entry from `Game.unity`.
 - [x] Verify the complete `Init -> InitGame -> Game` flow (Unity `6000.3.26f1` editor, 2026-10-13: reaches `Game`, spawns the buggy on fallback ground, no exceptions; required driving later scene hops from `SceneManager.sceneLoaded`).
 - [x] Create and launch an arm64 development player on Apple silicon (see [docs/release.md](docs/release.md#arm64-development-player)).
-- [ ] Repeat the import and smoke test from a clean checkout or clean clone.
+- [x] Repeat the import and smoke test from a clean checkout or clean clone.
 - [x] Record the Unity version, macOS version, scripting backend, architecture, and known warnings.
 
 ## Milestone 1: Original buggy ground model
@@ -154,10 +154,9 @@ Status: an arm64 Mono development player builds and launches into Fort Boxy. Acc
 
 ## Immediate next actions
 
-1. Verify direct `Game` Play mode entry and buggy controls in the editor.
+1. Re-serialise `Game.unity` in a dedicated change, keeping the `Arrow` model instance's transform and material (see [docs/validation.md](docs/validation.md#milestone-0-checks-2026-10-21)).
 2. Check the image effects render correctly under Metal.
-3. Save and review only intentional scene changes.
-4. Lock that evidence-backed baseline in version control.
+3. Lock the evidence-backed baseline in version control (tag it).
 
 ## Definition of done for the single-player milestone
 
