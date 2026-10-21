@@ -135,12 +135,15 @@ public class Settings : MonoBehaviour
             worldFog = Mathf.Lerp(0.007f, 0.0003f, Camera.main.farClipPlane / 6000f);
 
             // Settings.js rendering effects: contrast stretch at Beautiful and
-            // Fantastic only. Fantastic also enabled SSAO, but its Hidden/SSAO
-            // shader does not compile on Metal, so SSAO stays off.
+            // Fantastic, plus SSAO (downsampling 2) at Fantastic.
             var contrast = Camera.main.GetComponent<ContrastStretchEffect>();
             if (contrast != null) contrast.enabled = renderLevel > 4;
             var ssao = Camera.main.GetComponent<SSAOEffect>();
-            if (ssao != null) ssao.enabled = false;
+            if (ssao != null)
+            {
+                ssao.enabled = renderLevel > 5;
+                if (ssao.enabled) ssao.m_Downsampling = 2;
+            }
         }
 
         if (renderLevel > 4) World.lodDist = 1000;

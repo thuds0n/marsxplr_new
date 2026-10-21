@@ -154,8 +154,7 @@ Status: an arm64 Mono development player builds and launches into Fort Boxy. Acc
 
 ## Immediate next actions
 
-1. Check the image effects render correctly under Metal.
-2. Lock the evidence-backed baseline in version control (tag it).
+1. Lock the evidence-backed baseline in version control (tag it).
 
 ## Definition of done for the single-player milestone
 

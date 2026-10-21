@@ -53,14 +53,6 @@ public class SSAOEffect : MonoBehaviour
 	
 	void Start()
 	{
-		// Legacy SSAO shader is not compatible with modern Metal compilation.
-		if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Metal)
-		{
-			m_Supported = false;
-			enabled = false;
-			return;
-		}
-
 		if (!SystemInfo.supportsImageEffects || !SystemInfo.SupportsRenderTextureFormat (RenderTextureFormat.Depth))
 		{
 			m_Supported = false;

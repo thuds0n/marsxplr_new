@@ -493,6 +493,7 @@ public static class RenderLevelProbe
 {
     [MenuItem("Tools/MarsXPLR/Render Level/Simple (3)")] private static void Simple() => Set(3);
     [MenuItem("Tools/MarsXPLR/Render Level/Good (4)")] private static void Good() => Set(4);
+    [MenuItem("Tools/MarsXPLR/Render Level/Beautiful (5)")] private static void Beautiful() => Set(5);
     [MenuItem("Tools/MarsXPLR/Render Level/Fantastic (6)")] private static void Fantastic() => Set(6);
 
     private static void Set(int level)

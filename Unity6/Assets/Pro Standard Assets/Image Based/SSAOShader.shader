@@ -44,7 +44,10 @@ sampler2D _CameraDepthNormalsTexture;
 sampler2D _RandomTexture;
 float4 _Params; // x=radius, y=minz, z=attenuation power, w=SSAO power
 
-half frag_ao (v2f_ao i, int sampleCount, float3[] samples)
+// HLSL has no unsized array parameters (the Unity 2 source used float3[]),
+// so each pass copies its samples into an array sized for the largest pass.
+#define MAX_SAMPLE_COUNT 26
+half frag_ao (v2f_ao i, int sampleCount, float3 samples[MAX_SAMPLE_COUNT])
 {
 	// read random normal from noise texture
     half3 randN = tex2D (_RandomTexture, i.uvr).xyz * 2.0 - 1.0;    
@@ -121,7 +124,9 @@ half4 frag (v2f_ao i) : COLOR
 		float3(0.1871898,-0.702764,-0.2317479),
 		float3(0.8849149,0.2842076,0.368524),
 	};
-    return frag_ao (i, SAMPLE_COUNT, RAND_SAMPLES);
+    float3 samples[MAX_SAMPLE_COUNT];
+    for (int k = 0; k < MAX_SAMPLE_COUNT; ++k) samples[k] = k < SAMPLE_COUNT ? RAND_SAMPLES[min(k, SAMPLE_COUNT - 1)] : float3(0, 0, 0);
+    return frag_ao (i, SAMPLE_COUNT, samples);
 }
 ENDCG
 
@@ -157,7 +162,9 @@ half4 frag (v2f_ao i) : COLOR
 		float3(0.03704464,-0.939131,0.1358765),
 		float3(-0.6984446,-0.6003422,-0.04016943),
 	};
-    return frag_ao (i, SAMPLE_COUNT, RAND_SAMPLES);
+    float3 samples[MAX_SAMPLE_COUNT];
+    for (int k = 0; k < MAX_SAMPLE_COUNT; ++k) samples[k] = k < SAMPLE_COUNT ? RAND_SAMPLES[min(k, SAMPLE_COUNT - 1)] : float3(0, 0, 0);
+    return frag_ao (i, SAMPLE_COUNT, samples);
 }
 ENDCG
 
@@ -205,7 +212,9 @@ half4 frag (v2f_ao i) : COLOR
 		float3(-0.3465451,-0.1654651,-0.6746758),
 		float3(0.2448421,-0.1610962,0.1289366),
 	};
-    return frag_ao (i, SAMPLE_COUNT, RAND_SAMPLES);
+    float3 samples[MAX_SAMPLE_COUNT];
+    for (int k = 0; k < MAX_SAMPLE_COUNT; ++k) samples[k] = k < SAMPLE_COUNT ? RAND_SAMPLES[min(k, SAMPLE_COUNT - 1)] : float3(0, 0, 0);
+    return frag_ao (i, SAMPLE_COUNT, samples);
 }
 ENDCG
 
