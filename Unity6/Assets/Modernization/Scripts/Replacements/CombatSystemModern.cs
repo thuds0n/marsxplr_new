@@ -18,6 +18,7 @@ public class CombatSystemModern : MonoBehaviour
     private Transform _ridePos;
     private float _rocketFireTime;
     private int _shotCount;
+    private bool _warnedMissingPrefab;
 
     private void Awake()
     {
@@ -57,7 +58,15 @@ public class CombatSystemModern : MonoBehaviour
     public RocketModern Fire(bool snipe, Vector3 pos, Quaternion rot)
     {
         GameObject prefab = snipe ? Game.Controller.objectRocketSnipe : Game.Controller.objectRocket;
-        if (prefab == null) return null;
+        if (prefab == null)
+        {
+            if (!_warnedMissingPrefab)
+            {
+                Debug.LogWarning("[CombatSystemModern] Game has no laser prefab assigned; run Prepare Game Scene Baseline and save Game.unity.");
+                _warnedMissingPrefab = true;
+            }
+            return null;
+        }
 
         GameObject go = Instantiate(prefab, pos, rot);
         RocketModern r = go.AddComponent<RocketModern>();

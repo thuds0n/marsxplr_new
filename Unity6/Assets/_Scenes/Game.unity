@@ -817,6 +817,12 @@ MonoBehaviour:
     m_IsSDF: 0
   objectMarkerMe: {fileID: 100000, guid: d3a343c463a4e4ab985ce577bb34f9e1, type: 3}
   quarryDist: 0
+  objectRocket: {fileID: 100002, guid: 4ba56de3764ae4ffda192c3a237327bd, type: 3}
+  objectRocketSnipe: {fileID: 100002, guid: e125b336ae4a84ff3859753a7ec7bc59, type: 3}
+  objectRocketExplosion: {fileID: 100000, guid: ba361886d461c4661adc293a3c8cce5e,
+    type: 3}
+  objectRocketSnipeExplosion: {fileID: 100000, guid: d5e24922b9fbc4e2abfec2950e7a5c53,
+    type: 3}
 --- !u!114 &70
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -861,11 +867,11 @@ MonoBehaviour:
   - 0.4
   - 0.4
   - 0.4
-  laserCooldown: 0.16
-  laserRange: 1200
-  laserImpactForce: 18
-  laserProjectileSpeed: 240
-  laserProjectileGravity: 0
+  laserSpeed: 180
+  laserGrav: 0
+  laserRico: 0
+  lasersFatal: 0
+  lasersOptHit: 0
   zorbSpeed: 7
   zorbEnabled: 0
   firepower: 02000000020000000300000002000000
@@ -879,8 +885,6 @@ MonoBehaviour:
   buggyCG: -0.4
   buggyTr: 1
   buggySh: 70
-  autoSelectQuarry: 1
-  quarryScore: 0
   lavaAlt: -300
   lavaFog: 0.005
   worldFog: 0.0004

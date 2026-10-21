@@ -154,7 +154,7 @@ Shader and material findings so far are in [docs/world-and-rendering.md](docs/wo
 
 ## Milestone 6: Release path
 
-Status: an arm64 Mono development player builds and launches into Fort Boxy. Acceptance criteria, later steps and build records: [docs/release.md](docs/release.md). Validation strategy and import results: [docs/validation.md](docs/validation.md).
+Status: an arm64 Mono development player of `master` (2026-10-21, late) builds and launches into Fort Boxy with no exceptions or missing scripts; driving, flight, cameras, the guidance arrow and the floor and vehicle alpha fixes are confirmed in the player. Laser fire by hand is unconfirmed in the player, and hits and scoring untested. Acceptance criteria, later steps and build records: [docs/release.md](docs/release.md). Validation strategy and import results: [docs/validation.md](docs/validation.md).
 
 ## Immediate next actions
 

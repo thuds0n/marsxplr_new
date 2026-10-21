@@ -75,11 +75,27 @@ public static class ReplaceMissingCoreScripts
             changed = true;
         }
 
+        // The laser bolts and their sparks must be saved in the scene: the
+        // player has no AssetDatabase to fill them in at runtime.
+        const string lasers = "Assets/Martian Assets/Vehicles/Lasers/";
+        changed |= AssignIfDifferent(ref game.objectRocket, lasers + "LaserAuto.prefab");
+        changed |= AssignIfDifferent(ref game.objectRocketSnipe, lasers + "LaserSnipe.prefab");
+        changed |= AssignIfDifferent(ref game.objectRocketExplosion, lasers + "Components/PlasmaSparks.prefab");
+        changed |= AssignIfDifferent(ref game.objectRocketSnipeExplosion, lasers + "Components/PlasmaSparksSnipe.prefab");
+
         if (changed)
         {
             EditorUtility.SetDirty(game);
-            Debug.Log("[ReplaceMissingCoreScripts] Assigned HUD cursor/style assets to Game.");
+            Debug.Log("[ReplaceMissingCoreScripts] Assigned HUD and laser assets to Game.");
         }
+    }
+
+    private static bool AssignIfDifferent(ref GameObject field, string path)
+    {
+        var asset = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        if (asset == null || field == asset) return false;
+        field = asset;
+        return true;
     }
 
     private static void AssignBuggyPrefab()
