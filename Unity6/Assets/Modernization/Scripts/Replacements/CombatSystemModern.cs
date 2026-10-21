@@ -32,13 +32,11 @@ public class CombatSystemModern : MonoBehaviour
 
         Settings s = Game.Settings;
         int firepower = s.firepower != null && s.firepower.Length > _vehicle.vehicleId ? s.firepower[_vehicle.vehicleId] : 0;
-        bool chatting = Game.Messaging != null && Game.Messaging.chatting;
         if (
             _ridePos != null &&
             s.lasersAllowed &&
             _rocketFireTime < Time.time &&
             firepower > 0 &&
-            !chatting &&
             ((Input.GetButton("Fire1") && !Input.GetMouseButton(0)) ||
              (Input.GetButton("Fire1") && (Input.GetButton("Fire2") || Input.GetButton("Snipe") || s.camMode == 0)) ||
              (Input.GetButton("Fire1") && Input.mousePosition.x > Screen.width * 0.25f && Input.mousePosition.x < Screen.width - 200))

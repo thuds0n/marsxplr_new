@@ -21,14 +21,15 @@ public class RocketModern : MonoBehaviour
     private Vector3 _strtPos;
     private int _stage = -1;
     private float _velocity;
-    private readonly RaycastHit[] _hits = new RaycastHit[16];
 
     private IEnumerator Start()
     {
         name = "lsr#" + laserID;
         _body = GetComponent<Rigidbody>();
-        Rigidbody launchBody = launchVehicle != null ? launchVehicle.GetComponent<Rigidbody>() : null;
-        Vector3 launchVelocity = launchBody != null ? launchBody.linearVelocity : Vector3.zero;
+        // Rocket.js adds launchVehicle.velocity, which only VehicleNet.js sets
+        // (for remote vehicles). The local firer's is always zero, so its own
+        // bolts never inherit its speed.
+        Vector3 launchVelocity = Vector3.zero;
         Transform launch = launchVehicle != null ? launchVehicle.transform : transform;
         _velocity = Game.Settings.laserSpeed * speedX + Mathf.Max(0f,
             launch.InverseTransformDirection(launchVelocity).z *
@@ -53,13 +54,14 @@ public class RocketModern : MonoBehaviour
         }
 
         Vector3 vector = _body.position - _strtPos;
-        int count = Physics.RaycastNonAlloc(_strtPos, vector, _hits, vector.magnitude,
+        RaycastHit[] hits = Physics.RaycastAll(_strtPos, vector, vector.magnitude,
             Game.Settings.lasersOptHit ? maskOpt : mask, QueryTriggerInteraction.Collide);
-        // Rocket.js walks RaycastAll's hits unsorted; take them nearest first.
-        System.Array.Sort(_hits, 0, count, HitDistanceComparer.Instance);
-        for (int i = 0; i < count && _stage == 0; i++)
+        // Rocket.js walks RaycastAll's hits in PhysX's order and handles every
+        // one, even after a hit; take them nearest first so the order is stable.
+        System.Array.Sort(hits, HitDistanceComparer.Instance);
+        for (int i = 0; i < hits.Length; i++)
         {
-            RaycastHit collision = _hits[i];
+            RaycastHit collision = hits[i];
 
             // Launch vehicle is immune to hits.
             if (collision.collider.transform.root.gameObject == launchVehicle.gameObject) continue;

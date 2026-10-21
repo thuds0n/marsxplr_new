@@ -9,7 +9,7 @@ Replaced the placeholders: the hitscan `PlayerLaserModern` with its debug-line l
 Ported:
 
 - `CombatSystemModern` (`VehicleMe.js`): the Fire1 conditions, auto (`fR`) and snipe (`fS`) shots from the buggy's `RideCam` (the original `ridePos`) 0.1 m below, aimed by the camera in first person or with Fire2/Snipe held, else by `ridePos`. Snipe when Snipe is held with firepower above 1, or always with firepower above 2. Cooldowns 0.25 s auto, 2 s snipe, 0.5 s snipe at firepower 3.
-- `RocketModern` (`Rocket.js`): launch speed `laserSpeed × speedX` plus the vehicle's forward speed, lifetime `lerp(13, 5, laserSpeed × speedX × 0.003)` s, a ray swept from the last position each physics step, gravity, ricochet, launch-vehicle immunity, `OnLaserHit` broadcast, explosion force `350 + 300 × speedX` within 10 m, and the sparks prefab at the hit. Hits are processed nearest first; `RaycastAll` returned them unsorted.
+- `RocketModern` (`Rocket.js`): launch speed `laserSpeed × speedX` (see the snipe audit below for the vehicle-speed term), lifetime `lerp(13, 5, laserSpeed × speedX × 0.003)` s, a ray swept from the last position each physics step, gravity, ricochet, launch-vehicle immunity, `OnLaserHit` broadcast, explosion force `350 + 300 × speedX` within 10 m, and the sparks prefab at the hit. Hits are processed nearest first; `RaycastAll` returned them unsorted.
 - `GameModeSinglePlayerModern` (`Game.js` `eSI`, `Vehicle.js` `sQ`, `iS`, `dS`): someone is always quarry, so the player alone "Defaulted to Quarry"; a quarry's tag scores +1 with a 3 s guard per target; tagging the quarry makes the shooter quarry; tagging a non-quarry as a non-quarry scores −1. Quarry state (`isIt`, `lastTag`, `score`, `isResponding`) is on `VehicleStateModern`. The HUD shows DST only when the player is not quarry, as in `Vehicle.js`.
 - Settings: `laserSpeed` 180, `laserGrav` 0, `laserRico` 0, `lasersFatal` and `lasersOptHit` off (`Settings.js` defaults).
 
@@ -49,3 +49,35 @@ Buggy shadows, checked in code (Unity `6000.3.26f1`):
 
 - Wings: no shadow, as in the original (see above).
 - Axles: `Buggy Axel.prefab` casts and receives shadows in both `unity/` and Unity 6, and `BuggyPresentationModern` instantiates it without changing that. Its `Vehicle Chrome` material uses `Legacy Shaders/Reflective/Parallax Specular`, the same shader as the body, which gets its shadow-caster pass from its fallback chain. Nothing in the port disables the axle shadows, and they were confirmed visible by eye on 2026-10-21.
+
+## Snipe shot audit against the source (2026-10-22)
+
+Line-by-line comparison of `VehicleMe.js` firing, `Vehicle.js` `fS()`, `Rocket.js`, the `LaserSnipe` and `PlasmaSparksSnipe` prefabs and `Settings.js`/`Game.js` with `CombatSystemModern` and `RocketModern`.
+
+Matches the source: spawn at `ridePos.position − 0.1 × vehicle up`; aim from the main camera in ride mode or with Fire2/Snipe held, else `ridePos.rotation` (the source sends `rang.eulerAngles` and rebuilds it with `Quaternion.Euler`, the same rotation); snipe when Snipe is held with firepower above 1, or always above 2; cooldown 2 s, or 0.5 s at firepower 3; speed `laserSpeed × 10` = 1800 m/s; gravity `laserGrav × speedX × dt × 20` off the vertical velocity each physics step (`Time.deltaTime` is the fixed step inside `FixedUpdate`); ricochet formula; lifetime `lerp(13, 5, 5.4)` = 5 s; a ray from the previous position to the current one each physics step, masks `0x1001` / `0x3001`; launch-vehicle immunity; explosion force and sparks at the hit. The bolt prefab's rigidbody has no gravity, no damping and no collider, so only `Rocket.js` moves it.
+
+Differences found and fixed:
+
+- Inherited speed: `Rocket.js` adds `launchVehicle.velocity` (forward component), a `Vehicle.js` field that only `VehicleNet.js` writes, for remote vehicles. The firer's own vehicle has no `VehicleNet`, so on the firing (authoritative) instance the term was always 0. The port used the rigidbody's velocity, making the player's bolts up to the buggy's speed faster. Now 0.
+- Several hits on one step: `Rocket.js` handles every `RaycastAll` hit on the step's ray, even after one stops the bolt (at 36 m a step, a snipe can spark on two objects at once). The port stopped at the first. It now handles all of them, nearest first.
+- Hit count: the port's 16-hit `RaycastNonAlloc` buffer could drop hits; it is now `RaycastAll`.
+- Chat: the port would not fire while chatting; the source's fire condition has no such check. Removed.
+
+Engine differences, with their Unity 6 equivalents:
+
+- `RaycastAll` order: undefined in Unity 2.x's PhysX; the port sorts by distance so the result is repeatable.
+- Triggers: Unity 2.x rays hit triggers; the port passes `QueryTriggerInteraction.Collide` (the project's `queriesHitTriggers` is also on).
+- `rigidbody.velocity` is `linearVelocity`.
+- Fixed step: the original `TimeManager` stores 0.002 s, and `Settings.js` sets 0.02 s (or 0.025 s at low render levels) at run time, as `Settings.cs` does; the test ran at 0.02 s.
+- `laserSpeed` is an `int` in `Settings.js` and a `float` in `Settings.cs`; equal for the default 180, and only a server setting could differ.
+
+Not ported (out of scope here): lock-on firing (`fSl`) and lead targeting, and lag extrapolation (`lag`), which only applied on remote instances.
+
+Verification (Unity `6000.3.26f1` editor, macOS `27.0.1`, Play mode from `Init` into Fort Boxy): `tools/compile-check.sh` passes. `Tools -> MarsXPLR -> Run Snipe Trajectory Test` (`Editor/SnipeTrajectoryTest.cs`, log `Unity6/Logs/snipe-trajectory-test.txt`) passed:
+
+- launch speed 1800.00 m/s;
+- a level shot at boxes with faces 298 m and 310 m away, both within step 9 (288–324 m): the bolt stops at 310.00 m and spawns 2 sparks, as `Rocket.js` would;
+- a 45° shot with `laserGrav` 1: 548 samples on whole physics steps, worst height error 0.001 m against `y = v0·dt·k − 4·dt·k(k+1)/2`;
+- destroyed after 5.01 s (source 5 s).
+
+The editor must be in front for the test to run. Not compared by eye with the Wine version.
