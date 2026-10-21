@@ -77,6 +77,11 @@ public class World : MonoBehaviour
             GiveRenderersOwnMaterials(worldScene);
         }
 
+        // WhirldIn.js told every object the world was built before Game.js
+        // added the standard components (FloorController.js, WhirldObject.js).
+        foreach (GameObject go in FindObjectsByType<GameObject>(FindObjectsSortMode.None))
+            go.SendMessage("OnSceneGenerated", SendMessageOptions.DontRequireReceiver);
+
         FinishWorld();
         if (Game.Settings != null) Game.Settings.fogColor = RenderSettings.fogColor;
         // Restart the camera's world entry effect from the moment the world is ready.
@@ -126,7 +131,8 @@ public class World : MonoBehaviour
             if (basePrefab != null) @base = Instantiate(basePrefab, Vector3.up * 5f, Quaternion.identity).transform;
         }
 
-        // The base prefab's BaseSimple.js and WhirldLOD.js components are missing scripts; restore them.
+        // Resources/Base carries BaseSimpleModern and BaseMarkerModern; add them to
+        // any older Base instance that still lacks them.
         if (@base != null)
         {
             foreach (string part in new[] { "Outer", "Inner" })
