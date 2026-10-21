@@ -1,6 +1,6 @@
 # World and rendering
 
-Detail for Milestones 3 and 5 in [PLAN.md](../PLAN.md). Summary: `Game` loads Fort Boxy offline. Its sky, fog, ambient light, floor brightness, base marker and castle textures now match the Wine version. Open: the floor's slightly lower saturation, `renderLevel` not yet applied to `QualitySettings`, and the laser aimer colour close up.
+Detail for Milestones 3 and 5 in [PLAN.md](../PLAN.md). Summary: `Game` loads Fort Boxy offline. Its sky, fog, ambient light, floor brightness, base marker and castle textures now match the Wine version. Open: the floor's slightly lower saturation, real-time shadows not yet compared with the original, and the laser aimer colour close up.
 
 ## Fort Boxy loading
 
@@ -87,3 +87,7 @@ SSAO did not compile on Metal: `frag_ao` took a C#-style unsized array (`float3[
 Verified in the editor at Fantastic: the camera reports SSAO enabled, and the same frame rendered with SSAO on and off differs only by soft contact darkening under the buggy's wheels, at the base of pillars and pyramids and along castle edges (0.6% of pixels darker by more than 8 levels, none brighter), with no noise or banding. Image effects run after transparent objects, as in Unity 2, which had no way to run them before, so SSAO also darkens the base glow where geometry lies behind it. `Tools -> MarsXPLR -> Render Level` now includes Beautiful (5), which differs from Fantastic only by SSAO.
 
 The remaining Metal shader errors are the island water and `FX/Water` shaders, used only by worlds with water; they will be fixed when the sea is ported.
+
+## Render level and quality level
+
+Fixed 2026-10-21 (Unity `6000.3.26f1`, macOS `27.0.1`): `Settings.updatePrefs()` now sets the quality level to `renderLevel − 1`, as `Settings.js` did (`QualitySettings.currentLevel = renderLevel - 1`), applying expensive changes immediately. Before this the editor and player stayed on Fantastic, so real-time shadows drew at every render level. The project's six quality levels match the archived 2.22 build's `mainData`: no shadows from Fastest to Good; soft shadows with 4 cascades at Beautiful (250 m) and Fantastic (400 m); pixel light counts 0, 0, 0, 1, 2, 3. Verified in the editor: Fantastic draws shadows and switching to Good removes them. Not yet checked: how Unity 6 draws those soft shadows (filtering, bias, cascade splits) against the Wine version, and whether the spawn slab casts a shadow there. Entering Play mode may also leave the editor's own quality level changed in `QualitySettings.asset` (`m_CurrentQuality`); that change need not be committed.

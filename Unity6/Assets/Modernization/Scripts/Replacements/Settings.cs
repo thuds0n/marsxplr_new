@@ -125,6 +125,11 @@ public class Settings : MonoBehaviour
 
     public void updatePrefs()
     {
+        // Settings.js: QualitySettings.currentLevel = renderLevel - 1, so render
+        // levels 1-6 select Fastest to Fantastic, including their shadows (none
+        // below Beautiful) and pixel light counts.
+        QualitySettings.SetQualityLevel(Mathf.Clamp(renderLevel - 1, 0, QualitySettings.names.Length - 1), true);
+
         // Settings.js ran physics at 50 Hz, or 40 Hz at lower render levels.
         Time.fixedDeltaTime = renderLevel > 3 ? 0.02f : 0.025f;
 
