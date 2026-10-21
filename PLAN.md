@@ -154,9 +154,8 @@ Status: an arm64 Mono development player builds and launches into Fort Boxy. Acc
 
 ## Immediate next actions
 
-1. Re-serialise `Game.unity` in a dedicated change, keeping the `Arrow` model instance's transform and material (see [docs/validation.md](docs/validation.md#milestone-0-checks-2026-10-21)).
-2. Check the image effects render correctly under Metal.
-3. Lock the evidence-backed baseline in version control (tag it).
+1. Check the image effects render correctly under Metal.
+2. Lock the evidence-backed baseline in version control (tag it).
 
 ## Definition of done for the single-player milestone
 

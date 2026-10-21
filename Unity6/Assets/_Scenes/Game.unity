@@ -37,7 +37,7 @@ NavMeshSettings:
 --- !u!104 &13
 RenderSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 9
+  serializedVersion: 10
   m_Fog: 1
   m_FogColor: {r: 0.040635727, g: 0, b: 0.11764706, a: 1}
   m_FogMode: 3
@@ -66,8 +66,8 @@ RenderSettings:
 --- !u!157 &17
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 12
-  m_GIWorkflowMode: 1
+  serializedVersion: 13
+  m_BakeOnSceneLoad: 0
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -90,9 +90,6 @@ LightmapSettings:
     m_LightmapParameters: {fileID: 0}
     m_LightmapsBakeMode: 1
     m_TextureCompression: 1
-    m_FinalGather: 0
-    m_FinalGatherFiltering: 1
-    m_FinalGatherRayCount: 256
     m_ReflectionCompression: 2
     m_MixedBakeMode: 2
     m_BakeBackend: 1
@@ -167,68 +164,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Lobby: {fileID: 0}
---- !u!1 &31
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 100000, guid: 2ad6dcf095c2243d9a641ad2ccdf34de,
-    type: 3}
-  m_PrefabInstance: {fileID: 34}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 37}
-  - component: {fileID: 35}
-  - component: {fileID: 32}
-  m_Layer: 0
-  m_Name: Arrow
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!23 &32
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 2300000, guid: 2ad6dcf095c2243d9a641ad2ccdf34de,
-    type: 3}
-  m_PrefabInstance: {fileID: 34}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 31}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 649c12b5354004c149522134de91f412, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1001 &34
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -236,37 +171,52 @@ PrefabInstance:
   m_Modification:
     serializedVersion: 3
     m_TransformParent: {fileID: 38}
-    m_Modifications: []
+    m_Modifications:
+    - target: {fileID: -4216859302048453862, guid: 2ad6dcf095c2243d9a641ad2ccdf34de,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -4216859302048453862, guid: 2ad6dcf095c2243d9a641ad2ccdf34de,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -4216859302048453862, guid: 2ad6dcf095c2243d9a641ad2ccdf34de,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.003
+      objectReference: {fileID: 0}
+    - target: {fileID: -4216859302048453862, guid: 2ad6dcf095c2243d9a641ad2ccdf34de,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -4216859302048453862, guid: 2ad6dcf095c2243d9a641ad2ccdf34de,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: -4216859302048453862, guid: 2ad6dcf095c2243d9a641ad2ccdf34de,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -4216859302048453862, guid: 2ad6dcf095c2243d9a641ad2ccdf34de,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -1504981713932161579, guid: 2ad6dcf095c2243d9a641ad2ccdf34de,
+        type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 649c12b5354004c149522134de91f412, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2ad6dcf095c2243d9a641ad2ccdf34de, type: 3}
---- !u!33 &35
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 3300000, guid: 2ad6dcf095c2243d9a641ad2ccdf34de,
-    type: 3}
-  m_PrefabInstance: {fileID: 34}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 31}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!4 &37
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 400000, guid: 2ad6dcf095c2243d9a641ad2ccdf34de,
-    type: 3}
-  m_PrefabInstance: {fileID: 34}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 31}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0, z: -0.003}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 38}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &38
 Transform:
   m_ObjectHideFlags: 0
@@ -280,7 +230,7 @@ Transform:
   m_LocalScale: {x: 1, y: 0.99999994, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 37}
+  - {fileID: 126206566}
   m_Father: {fileID: 39}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &39
@@ -458,6 +408,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
   m_Volume: 0.5
   m_Pitch: 1
@@ -754,11 +705,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c51b9fd9de7754baaa182c3c66200214, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  arrow: {fileID: 0}
+  arrow: {fileID: 38}
   mb: {fileID: 0}
   glowEffect: {fileID: 0}
   colorEffect: {fileID: 0}
-  baseCamOffset: 2
 --- !u!1 &68
 GameObject:
   m_ObjectHideFlags: 0
@@ -864,6 +814,8 @@ MonoBehaviour:
     m_FixedHeight: 0
     m_StretchWidth: 1
     m_StretchHeight: 0
+    m_IsSDF: 0
+  objectMarkerMe: {fileID: 100000, guid: d3a343c463a4e4ab985ce577bb34f9e1, type: 3}
   quarryDist: 0
 --- !u!114 &70
 MonoBehaviour:
@@ -917,15 +869,28 @@ MonoBehaviour:
   zorbSpeed: 7
   zorbEnabled: 0
   firepower: 02000000020000000300000002000000
+  buggyPower: 1
+  buggySpeed: 30
+  buggyFlightDrag: 300
+  buggyFlightAgility: 1
+  buggyFlightSlip: 0
+  buggyFlightLooPower: 0
+  buggySmartSuspension: 1
+  buggyCG: -0.4
+  buggyTr: 1
+  buggySh: 70
   autoSelectQuarry: 1
   quarryScore: 0
   lavaAlt: -300
   lavaFog: 0.005
   worldFog: 0.0004
+  renderViewCap: 1000
+  worldViewDist: 5000
   fogColor: {r: 0, g: 0, b: 0, a: 0}
   renderLevel: 4
   resetTime: -10
   enteredfullscreen: 0
+  colorCustom: 0
 --- !u!114 &72
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -938,6 +903,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06b44a45525dc4472be5d7f1b9c35934, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  worldSceneName: Fort Boxy
   autoCreateFallbackGround: 1
   fallbackGroundSize: 2000
   fallbackGroundThickness: 8
@@ -954,16 +920,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enabledForSinglePlayer: 1
-  spawnOffset: {x: 0, y: 4, z: 0}
   playerVehiclePrefab: {fileID: 100048, guid: 570aa6399745d423c9e4e4649367f63e, type: 3}
-  playerVehicleModelFallbackPrefab: {fileID: 5453216519748142819, guid: e1510aee2f0be4d26845b21393d8bf73,
-    type: 3}
   legacyVehicleRigPrefab: {fileID: 100000, guid: 19380c6f2fba84bbc88a8e8681cbf813,
     type: 3}
   buggyWheelPrefab: {fileID: 100002, guid: 14459f71663af4a2984aa6faaae8a894, type: 3}
   buggyAxelPrefab: {fileID: 100002, guid: 410596e6f6a1945019ececefdad14a03, type: 3}
-  buggySkidmarkMaterial: {fileID: 2100000, guid: 0a6743a22a3874c7f8c658fdd338530e, type: 2}
-  tryLegacyBuggyPrefab: 0
+  buggySkidmarkMaterial: {fileID: 2100000, guid: 0a6743a22a3874c7f8c658fdd338530e,
+    type: 2}
+  useModernBuggyController: 1
 --- !u!1 &76
 GameObject:
   m_ObjectHideFlags: 0
@@ -1046,6 +1010,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   camHeight: 650
+--- !u!4 &126206566 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -4216859302048453862, guid: 2ad6dcf095c2243d9a641ad2ccdf34de,
+    type: 3}
+  m_PrefabInstance: {fileID: 34}
+  m_PrefabAsset: {fileID: 0}
 --- !u!850595691 &209072890
 LightingSettings:
   m_ObjectHideFlags: 0
@@ -1053,8 +1023,7 @@ LightingSettings:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Settings.lighting
-  serializedVersion: 6
-  m_GIWorkflowMode: 1
+  serializedVersion: 10
   m_EnableBakedLightmaps: 1
   m_EnableRealtimeLightmaps: 0
   m_RealtimeEnvironmentLighting: 1
@@ -1064,9 +1033,17 @@ LightingSettings:
   m_UsingShadowmask: 1
   m_BakeBackend: 1
   m_LightmapMaxSize: 1024
+  m_LightmapSizeFixed: 0
+  m_UseMipmapLimits: 1
   m_BakeResolution: 40
   m_Padding: 2
   m_LightmapCompression: 3
+  m_LightmapPackingMode: 1
+  m_LightmapPackingMethod: 0
+  m_XAtlasPackingAttempts: 16384
+  m_XAtlasBruteForce: 0
+  m_XAtlasBlockAlign: 0
+  m_XAtlasRepackUnderutilizedLightmaps: 1
   m_AO: 0
   m_AOMaxDistance: 1
   m_CompAOExponent: 1
@@ -1077,13 +1054,11 @@ LightingSettings:
   m_FilterMode: 1
   m_LightmapParameters: {fileID: 15204, guid: 0000000000000000f000000000000000, type: 0}
   m_ExportTrainingData: 0
+  m_EnableWorkerProcessBaking: 1
   m_TrainingDataDestination: TrainingData
   m_RealtimeResolution: 1
   m_ForceWhiteAlbedo: 0
   m_ForceUpdates: 0
-  m_FinalGather: 0
-  m_FinalGatherRayCount: 256
-  m_FinalGatherFiltering: 1
   m_PVRCulling: 1
   m_PVRSampling: 1
   m_PVRDirectSampleCount: 32
@@ -1107,8 +1082,6 @@ LightingSettings:
   m_PVRFilteringAtrousPositionSigmaDirect: 0.5
   m_PVRFilteringAtrousPositionSigmaIndirect: 2
   m_PVRFilteringAtrousPositionSigmaAO: 1
-  m_PVRTiledBaking: 0
-  m_NumRaysToShootPerTexel: -1
   m_RespectSceneVisibilityWhenBakingGI: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

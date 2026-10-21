@@ -17,6 +17,8 @@ public class Game : MonoBehaviour
     public Texture2D cursorLook;
     public Vector2 cursorOffset = Vector2.zero; // kept for inspector compatibility; not used for centering.
     public GUIStyle hudTextStyle;
+    // Game.js objectMarkerMe: the player's own minimap marker.
+    public GameObject objectMarkerMe;
     public float quarryDist;
 
     private float _nextQuarryUpdateAt;
@@ -51,6 +53,12 @@ public class Game : MonoBehaviour
         {
             cursor = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Martian Assets/GUI/Cursors/Crosshairs.png");
             changed |= cursor != null;
+        }
+
+        if (objectMarkerMe == null)
+        {
+            objectMarkerMe = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Martian Assets/Vehicles/Prefabs/Marker Me.prefab");
+            changed |= objectMarkerMe != null;
         }
 
         if (cursorLook == null)

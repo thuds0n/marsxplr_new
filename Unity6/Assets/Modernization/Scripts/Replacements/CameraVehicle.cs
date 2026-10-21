@@ -22,6 +22,9 @@ public class CameraVehicle : MonoBehaviour
     private void Start()
     {
         Time.timeScale = 1f;
+        // The Game scene keeps the green arrow under the camera but never
+        // assigned it here.
+        if (arrow == null) arrow = transform.Find("Arrow");
     }
 
     private void LateUpdate()
@@ -187,6 +190,11 @@ public class CameraVehicle : MonoBehaviour
 
         if (arrow != null)
         {
+            // CameraVehicle.js green arrow: held just past the near clip plane,
+            // 95 px from the right and 30 px from the bottom of the screen.
+            Vector3 targetPos = transform.InverseTransformPoint(cam.ScreenToWorldPoint(new Vector3(cam.pixelWidth - 30f - 65f, 30f, cam.nearClipPlane + 0.05f)));
+            if (Vector3.Distance(targetPos, arrow.localPosition) < 0.002f) arrow.localPosition = Vector3.Lerp(arrow.localPosition, targetPos, Time.deltaTime * 0.005f);
+            else arrow.localPosition = targetPos;
             var quarry = Game.QuarryVeh != null ? Game.QuarryVeh.transform : (World.@base != null ? World.@base : Game.Player.transform);
             arrow.rotation = Quaternion.Lerp(arrow.rotation, Quaternion.LookRotation(quarry.position - Game.Player.transform.position), Time.deltaTime * 15f);
             arrow.localScale = Vector3.one * Mathf.Lerp(0.03f, 1f, Camera.main != null ? Camera.main.fieldOfView / 60f : 1f);

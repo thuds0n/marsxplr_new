@@ -22,6 +22,7 @@ public static class ReplaceMissingCoreScripts
         ReplaceOn("Game", typeof(SinglePlayerPlayableBootstrap));
         AssignBuggyPrefab();
         AssignGameHudAssets();
+        RestoreGuidanceArrow();
 
         ReplaceOn("Game/Camera", typeof(CameraVehicle));
         ReplaceOn("Game/MiniMap", typeof(MiniMap));
@@ -65,6 +66,13 @@ public static class ReplaceMissingCoreScripts
                 game.hudTextStyle = hud;
                 changed = true;
             }
+        }
+
+        var markerMe = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Martian Assets/Vehicles/Prefabs/Marker Me.prefab");
+        if (markerMe != null && game.objectMarkerMe != markerMe)
+        {
+            game.objectMarkerMe = markerMe;
+            changed = true;
         }
 
         if (changed)
@@ -121,6 +129,44 @@ public static class ReplaceMissingCoreScripts
             go.AddComponent(componentType);
             Debug.Log("[ReplaceMissingCoreScripts] Added " + componentType.Name + " -> " + path);
         }
+    }
+
+    // The green guidance arrow (Game/Camera/Arrow) holds an instance of the
+    // Arrow.jas model. The Unity 2 scene stored the model's child expanded, with
+    // the GUIArrow material, a 90 degree turn about X and z -0.003; Unity 6 loads
+    // the instance from the model's defaults instead (Default-Material, no turn),
+    // so those values are reapplied as prefab-instance overrides. Also links the
+    // arrow to CameraVehicle, whose serialised reference was never set.
+    private static void RestoreGuidanceArrow()
+    {
+        var cameraGo = FindByPath("Game/Camera");
+        Transform outer = cameraGo != null ? cameraGo.transform.Find("Arrow") : null;
+        Transform inner = outer != null ? outer.Find("Arrow") : null;
+        if (inner == null)
+        {
+            Debug.LogWarning("[ReplaceMissingCoreScripts] Game/Camera/Arrow/Arrow not found.");
+            return;
+        }
+
+        var cameraVehicle = cameraGo.GetComponent<CameraVehicle>();
+        if (cameraVehicle != null && cameraVehicle.arrow != outer)
+        {
+            cameraVehicle.arrow = outer;
+            EditorUtility.SetDirty(cameraVehicle);
+        }
+
+        inner.localRotation = new Quaternion(0.7071068f, 0f, 0f, 0.7071068f);
+        inner.localPosition = new Vector3(0f, 0f, -0.003f);
+        PrefabUtility.RecordPrefabInstancePropertyModifications(inner);
+
+        var material = AssetDatabase.LoadAssetAtPath<Material>("Assets/Martian Assets/GUI/Objects/Materials/GUIArrow.mat");
+        var renderer = inner.GetComponent<Renderer>();
+        if (renderer != null && material != null && renderer.sharedMaterial != material)
+        {
+            renderer.sharedMaterial = material;
+            PrefabUtility.RecordPrefabInstancePropertyModifications(renderer);
+        }
+        Debug.Log("[ReplaceMissingCoreScripts] Restored the guidance arrow's material and orientation.");
     }
 
     private static GameObject FindByPath(string path)

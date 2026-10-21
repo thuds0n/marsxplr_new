@@ -139,6 +139,13 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
 
         AttachLegacyLaserSight(go);
 
+        // Vehicle.js: the player's own vehicle carries the Marker Me minimap marker.
+        if (Game.Controller != null && Game.Controller.objectMarkerMe != null)
+        {
+            GameObject marker = Instantiate(Game.Controller.objectMarkerMe, go.transform.position, go.transform.rotation);
+            marker.transform.parent = go.transform;
+        }
+
         if (vehicleState != null)
         {
             vehicleState.vehicleId = 0;
