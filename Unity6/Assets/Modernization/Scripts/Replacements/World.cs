@@ -74,6 +74,7 @@ public class World : MonoBehaviour
         if (worldScene.IsValid())
         {
             RestoreWhirldPrimitiveTextures(worldScene);
+            UseUniformVertexLayout(worldScene);
             GiveRenderersOwnMaterials(worldScene);
         }
 
@@ -192,22 +193,25 @@ public class World : MonoBehaviour
             {
                 string n = r.gameObject.name;
                 if (n != "cube" && n != "pyramid" && n != "cone" && n != "mesh") continue;
-                Material m = r.sharedMaterial;
-                if (m != null && !m.name.StartsWith("Default-")) continue;
                 MeshFilter mf = r.GetComponent<MeshFilter>();
                 if (mf == null) continue;
-                // Fort Boxy's captured pyramids also lost their mesh, so they
-                // were neither drawn nor solid.
-                if (mf.sharedMesh == null && n == "pyramid")
+                // Fort Boxy's captured pyramids lost their mesh (Castle) or carry
+                // a cube in its place (AirCastle), with an empty mesh collider, so
+                // they were drawn as boxes or not at all, and were not solid.
+                bool pyramidRestored = false;
+                if (n == "pyramid" && (mf.sharedMesh == null || mf.sharedMesh.name.StartsWith("Cube")))
                 {
                     mf.sharedMesh = PyramidMesh();
                     MeshCollider mc = r.GetComponent<MeshCollider>();
-                    if (mc != null && mc.sharedMesh == null)
+                    if (mc != null && (mc.sharedMesh == null || mc.sharedMesh.name.StartsWith("Cube")))
                     {
                         mc.convex = false;
                         mc.sharedMesh = mf.sharedMesh;
                     }
+                    pyramidRestored = true;
                 }
+                Material m = r.sharedMaterial;
+                if (m != null && !m.name.StartsWith("Default-") && !pyramidRestored) continue;
                 if (mf.sharedMesh == null) continue;
                 r.sharedMaterial = objectMaterial;
                 if (mf.sharedMesh.isReadable) ApplyWorldSpaceUVs(mf);
@@ -294,6 +298,34 @@ public class World : MonoBehaviour
     // share one material (Fort Boxy's AirCastle) draw with the wrong texture or
     // not at all, depending on draw order. A material per renderer renders them
     // correctly.
+    // Compatibility workaround: Fort Boxy's legacy meshes come in four vertex
+    // layouts (with or without tangents, a second UV set or colours). On Metal,
+    // Unity 6's shadow-caster pass drew the minority layouts wrongly, so the
+    // castle and the spawn slab cast missing or misplaced shadows. Each readable
+    // world mesh is replaced by a copy with positions, normals and one UV set
+    // only (the Whirld shaders use nothing else). Measured with a ray-traced
+    // shadow map under the spawn slab: 47 of 113 points disagreed before, 28 after.
+    private static void UseUniformVertexLayout(Scene scene)
+    {
+        foreach (GameObject root in scene.GetRootGameObjects())
+        {
+            foreach (MeshFilter mf in root.GetComponentsInChildren<MeshFilter>(true))
+            {
+                Mesh src = mf.sharedMesh;
+                if (src == null || !src.isReadable) continue;
+                var clean = new Mesh { name = src.name };
+                if (src.vertexCount > 65535) clean.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+                clean.vertices = src.vertices;
+                clean.normals = src.normals;
+                clean.uv = src.uv;
+                clean.subMeshCount = src.subMeshCount;
+                for (int i = 0; i < src.subMeshCount; i++) clean.SetTriangles(src.GetTriangles(i), i);
+                clean.RecalculateBounds();
+                mf.sharedMesh = clean;
+            }
+        }
+    }
+
     private static void GiveRenderersOwnMaterials(Scene scene)
     {
         foreach (GameObject root in scene.GetRootGameObjects())
