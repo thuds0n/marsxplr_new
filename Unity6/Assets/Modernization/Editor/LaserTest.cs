@@ -100,14 +100,25 @@ public static class LaserTest
         int sparksBefore = CountSparks();
         float t0 = Time.time;
         Rigidbody rb = r.GetComponent<Rigidbody>();
+        TrailRenderer trail = r.GetComponent<TrailRenderer>();
+        AudioSource shot = r.GetComponent<AudioSource>();
+        bool logged = false;
         while (r != null && Time.time - t0 < 3f)
         {
+            if (!logged && Time.time - t0 > 0.03f)
+            {
+                logged = true;
+                Line($"{label}: in flight trail points={(trail ? trail.positionCount : -1)} visible={(trail ? trail.isVisible : false)} bounds={(trail ? trail.bounds.size : Vector3.zero)} shot playing={(shot ? shot.isPlaying : false)} time={(shot ? shot.time : 0)} active={r.gameObject.activeInHierarchy} pos={r.transform.position}");
+            }
             if (Time.time - t0 > 0.05f && rb != null && rb.linearVelocity == Vector3.zero) break;
             yield return 0f;
         }
         if (r == null) { Line(label + ": rocket destroyed without a hit"); yield break; }
         string what = Physics.Raycast(start, r.transform.position - start, out RaycastHit h, Vector3.Distance(start, r.transform.position) + 0.5f, -1, QueryTriggerInteraction.Collide)
             ? h.collider.name + " layer " + h.collider.gameObject.layer + (h.collider.isTrigger ? " trigger" : "") : "nothing";
+        foreach (AudioSource a in Object.FindObjectsByType<AudioSource>(FindObjectsSortMode.None))
+            if (a.transform.parent == null && a.name.StartsWith("PlasmaSparks")) Line($"  sparks audio playing={a.isPlaying} clip={a.clip} state={(a.clip ? a.clip.loadState.ToString() : "-")}");
+        Line("  editor audio muted=" + EditorUtility.audioMasterMute);
         Line($"{label}: hit {what}, stopped at {r.transform.position} ({Vector3.Distance(start, r.transform.position):F1} m) after {Time.time - t0:F2} s, sparks {sparksBefore} -> {CountSparks()}");
     }
 

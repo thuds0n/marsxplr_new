@@ -137,6 +137,7 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
             EnsureSpawnVisuals(go);
         }
 
+        AttachRidePos(go.transform);
         AttachLegacyLaserSight(go);
 
         // Vehicle.js: the player's own vehicle carries the Marker Me minimap marker.
@@ -271,6 +272,17 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
     // Buggy.prefab at their original transforms. The prefab itself is not
     // instantiated because it still carries missing UnityScript components. Wings
     // and trails stay out while the wings are closed (see Buggy.js).
+    // Buggy.prefab's RideCam (the original Vehicle.ridePos, 0.375 m above the
+    // root): the first-person camera position and the laser launch point.
+    private void AttachRidePos(Transform vehicle)
+    {
+        Transform source = playerVehiclePrefab != null ? playerVehiclePrefab.transform.Find("RideCam") : null;
+        var ridePos = new GameObject("RideCam").transform;
+        ridePos.SetParent(vehicle, false);
+        ridePos.localPosition = source != null ? source.localPosition : new Vector3(0f, 0.375f, 0f);
+        ridePos.localRotation = source != null ? source.localRotation : Quaternion.identity;
+    }
+
     private bool AttachOriginalBody(Transform parent)
     {
         if (playerVehiclePrefab == null) return false;

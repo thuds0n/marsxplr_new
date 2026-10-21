@@ -9,6 +9,8 @@ using UnityEngine;
 public class RocketModern : MonoBehaviour
 {
     public Transform explosion;
+    // The sparks' particle material (Plasma Green or Plasma Red).
+    public Material sparksMaterial;
     public VehicleStateModern launchVehicle;
     public int speedX = 1;
     public string laserID;
@@ -101,7 +103,13 @@ public class RocketModern : MonoBehaviour
                 hit.attachedRigidbody.AddExplosionForce(350 + speedX * 300, pos, 1f, 2f);
             }
         }
-        if (explosion != null) Instantiate(explosion, pos, Quaternion.FromToRotation(Vector3.up, norm));
+        if (explosion != null)
+        {
+            Transform sparks = Instantiate(explosion, pos, Quaternion.FromToRotation(Vector3.up, norm));
+            var effect = sparks.gameObject.AddComponent<PlasmaSparksModern>();
+            effect.snipe = speedX > 1;
+            effect.material = sparksMaterial;
+        }
     }
 
     private sealed class HitDistanceComparer : System.Collections.Generic.IComparer<RaycastHit>

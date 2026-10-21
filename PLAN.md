@@ -140,7 +140,7 @@ Replace scaffolding with dedicated systems:
 
 Do not make placeholder cylinders, debug-line lasers, or impact stubs part of the permanent architecture.
 
-Status: in progress. First slice (2026-10-21): auto and snipe fire, `Rocket.js` projectiles, hits, the player defaulting to quarry and tag scoring, with the placeholders removed. Verified by a scripted Play-mode test from `Init`; not yet fired by hand or compared with the Wine version. Open: impact and bolt visuals (legacy particles), weapons lock, bots, ramming, fatal hits. Detail: [docs/combat.md](docs/combat.md).
+Status: in progress. First slice (2026-10-21): auto and snipe fire, `Rocket.js` projectiles, hits, the player defaulting to quarry and tag scoring, with the placeholders removed. Verified by a scripted Play-mode test and by firing by hand from `Init` (the buggy now has the original `RideCam`, and the impact sparks are rebuilt as a `ParticleSystem`). Not yet compared with the Wine version; sound not confirmed by ear. Open: weapons lock, bots, ramming, fatal hits. Detail: [docs/combat.md](docs/combat.md).
 
 ## Milestone 5: Rendering and asset compatibility
 
@@ -160,7 +160,7 @@ Status: an arm64 Mono development player builds and launches into Fort Boxy. Acc
 
 The evidence-backed baseline is tagged `unity6-baseline-2026-10-21` (Milestone 0 complete; buggy ground handling, Fort Boxy, HUD, image effects and shadows checked against the Wine version).
 
-1. Continue Milestone 4: fire by hand and compare the bolt and sparks with the Wine version, replace the legacy particle effects, then weapons lock and bots.
+1. Continue Milestone 4: compare the bolt, sparks and sounds with the Wine version, then weapons lock and bots.
 2. Smaller open items: the shadow strip east of the spawn slab, the `Arrow.jas` mesh offset, and the floor's slightly lower saturation (see [docs/world-and-rendering.md](docs/world-and-rendering.md)).
 
 ## Definition of done for the single-player milestone

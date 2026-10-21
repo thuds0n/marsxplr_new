@@ -24,7 +24,19 @@ Verification (Unity `6000.3.26f1` editor, macOS `27.0.1`, Play mode from `Init` 
 
 Not verified or not ported:
 
-- Firing by hand with the mouse in the editor, and how the bolt and sparks look. `PlasmaSparks` and the aimers use legacy particle components, which Unity 6 does not support, so the sparks are probably invisible; Unity also warns about the missing `Rocket.js` and `SoundEffect.js` scripts on each instance.
+- Unity warns about the missing `Rocket.js` and `SoundEffect.js` scripts on each bolt and sparks instance.
 - No comparison with the Wine version yet (bolt speed and look, impact effect, sound).
 - Weapons lock and lock-on firing (`fRl`, `fSl`, lead targeting). Offline there is no other vehicle to lock on to, as in the original single player without bots.
 - Bots, ramming (`OnRam`), fatal laser hits (`lR`), score display in name tags, and `scoreTime`.
+
+## Manual firing, sparks and RideCam (2026-10-21)
+
+Firing by hand did nothing: no bolt, sparks or sound. `CombatSystemModern` fires only when the vehicle has a `ridePos` (as `VehicleMe.js` did), and the spawned buggy had none. The scripted test called `Fire` directly, so it missed this. Decoding the original `unity/` `Buggy.prefab` (binary) shows `VehicleData.ridePos` is the `RideCam` child of the prefab root at (0, 0.375, 0). `SinglePlayerPlayableBootstrap` now adds a `RideCam` child at that offset. This also moves the first-person camera, which had fallen back to 1.5 m above the root, down to the original eye point, with the buggy's nose in view.
+
+The sparks' legacy `EllipsoidParticleEmitter`, `ParticleAnimator` and `ParticleRenderer` were dropped on import, so they drew nothing. `PlasmaSparksModern` rebuilds them as a `ParticleSystem` from the decoded values: a one-shot burst of 4 (auto) or 8 (snipe) particles, size 0.4–0.7, random velocity in a ±1.5 m/s horizontal box, 0.8 s or 1.3 s life, a 1 m/s² downward force, size growing as 3^t or 5^t, alpha 10, 180, 255, 180, 10 over life, stretched rendering (length scale 1.5, maximum size 1 or 2), with the Plasma Green or Plasma Red material. Each instance is destroyed after its particles and hit sound end, replacing the missing `SoundEffect.js` and the animator's autodestruct.
+
+Other values decoded from the binary prefabs (all match the Unity 6 imports): the bolts' trails (Plasma Green, 0.5 → 0.2 m; Plasma Red, 2 → 1 m; 1 s) and their `LaserShot` sources (pitch 1.3 auto, 0.5 snipe), the sparks' `LaserHit` sources, and `Rocket.js` `explosion`, which is the matching sparks prefab (now confirmed, no longer an inference).
+
+Verified (Unity `6000.3.26f1` editor, macOS `27.0.1`, Play mode from `Init`): holding the left mouse button in first person fires; a green glow shows at the crosshair; bolts and sparks exist in the scene; no exceptions. The bolt and sparks sources were reported playing in the scripted test. The sound has not been confirmed by ear, and the look has not been compared with the Wine version.
+
+Wing shadows: the wings do not cast shadows, and the original's did not either. `Buggy.prefab` enables shadow casting on the wing renderer, but its `GlassGlowing` shader (same in `unity/`) is transparent with no shadow-caster pass and no fallback, so no shadow was drawn.
