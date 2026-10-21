@@ -102,6 +102,10 @@ Measurements taken before this fix (the Fort Boxy handling comparison and the sp
 
 Also fixed: `BaseMarkerModern.LateUpdate` threw an `ArgumentNullException` every frame after the `Base` prefab began carrying the component; it now allocates its particle buffer if it is missing.
 
+## Guidance arrow mesh
+
+Checked 2026-10-21 (Unity `6000.3.26f1`, macOS `27.0.1`). `Martian Assets/GUI/Objects/Arrow.jas` is a Cheetah3D file holding one 32-vertex cone, `Cone`: a 0.2-radius base ring at y = 0, a base centre raised to 0.07 and the tip at y = 1, with the object's pivot at y = 0.389. The 4.0.2 player data (`sharedassets3.assets`, built with Unity 2.6.1f3) holds the same cone scaled by 0.01 and moved down by the pivot: the base ring at y = −3.9 × 10⁻⁵ and the tip at 0.0099611. Unity 6 imports the cone at the same 0.004 × 0.010 × 0.004 size, so the mesh differs from the original by at most the 39 µm pivot shift, which is invisible at the arrow's size. The scene's z −0.003 override, after the 90° turn about X, centres the cone on its parent. No change made. The arrow's on-screen position and orientation still need comparing with the Wine version.
+
 ## Shadows under the spawn slab
 
 Investigated 2026-10-21 (Unity `6000.3.26f1`, macOS `27.0.1`, Beautiful). The sun is the `Resources/Light` directional light; its rotation (quaternion (−0.183, 0.683, −0.183, −0.683), so 30° above the horizon from +x) is identical in `unity/`, the 2.22 player data, the 4.0.2 Wine build and the port, and neither original `Game` scene has a light of its own. A temporary probe compared a ray-traced shadow map (a ray from each floor point towards the sun) with the drawn shadows (top-down render with the light's shadows on and off). Geometrically almost the whole area under the slab is shaded, by the slab and by the castle's ramps, which rise to about y = 10 near the centre. The port drew large lit areas there instead.
