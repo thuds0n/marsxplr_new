@@ -30,7 +30,19 @@ Deliberate deviations: wheel raycasts skip the vehicle's own colliders and ignor
 
 Verified in the Unity `6000.3.26f1` editor on fallback ground: the buggy spawns on its wheels, accelerates to about 49 MPH, steers while coasting, and logs no errors. Not yet verified: braking, reversing, side slip, landing, uneven terrain, and handling feel against the original.
 
-## Wheels and tracks
+## Uneven ground
+
+Uneven ground (2026-10-21, Unity `6000.3.26f1` editor, macOS `27.0.1`, Play mode entered directly from `Game.unity`): `Tools -> MarsXPLR -> Run Buggy Ramp Test` finds the nearest tilted box collider on the floor, which in Fort Boxy is the castle's `Castle/cube` base slope (8.1°), places the buggy 8 m below its lowest edge yawed 35° off the slope line, drives at half throttle for 2.5 s and coasts for 2.5 s. It logs each wheel's ray hit distance (0.7 m means full extension) and the body's roll and pitch every 0.1 s to `Unity6/Logs/ramp-test.txt`. No code change was needed: each wheel already casts its own ray and applies its own spring and friction force (`BuggyControllerModern`, ported from `Buggy.js`).
+
+| Time | FL | FR | RL | RR | Roll | Pitch |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2.3 s (flat) | 0.57 | 0.57 | 0.59 | 0.59 | 0.1° | 0.7° |
+| 2.5 s (FL meets the slope) | 0.50 | 0.57 | 0.59 | 0.58 | −0.8° | 0.2° |
+| 2.7 s (FR follows, RL unloads) | 0.47 | 0.53 | 0.60 | 0.57 | −2.8° | −1.8° |
+| 3.5 s (all four on the slope) | 0.55 | 0.55 | 0.60 | 0.59 | −5.6° | −4.6° |
+
+The front-left wheel compresses first while the other three hold, then the front-right, while the rear-left briefly extends; the body rolls and pitches with the slope, and the four distances stay distinct once it is on the slope. So the wheels respond independently. The buggy did not reach one of the castle's smaller ramps, and no matched Wine run was made: the Wine version shows no suspension telemetry, and the earlier Fort Boxy handling comparison already crossed its ramps and bumps without a visible difference. The editor stopped advancing Play mode while it was in the background; the run completed once Unity was frontmost.
+
 
 Wheel presentation (2026-10-19): `BuggyPresentationModern` instantiates the original `Buggy Wheel` and `Buggy Axel` prefabs, with `axelPos` (0.375, −0.1, 0.75) from `Buggy.prefab`. It places each wheel at the suspension contact distance, applies the controller's steering rotation, spins the wheel graphic from `motorSpeed`, and points each axle at its wheel, as `Buggy.js` `Update()` did. Only the detailed wheel LOD is shown. `SkidmarksModern` ports `Skidmarks.js` and is fed per-wheel contact points and the original track intensity from the controller. The prefab and material references are serialised on `SinglePlayerPlayableBootstrap` in `Game.unity` so player builds include them.
 
@@ -50,7 +62,7 @@ Verified: editor-free compile check, and an arm64 development build that launche
 
 Body (2026-10-19): `SinglePlayerPlayableBootstrap` copies the meshes and materials of `Lod0`, `Cockpit`, and `Headlights` from the original `Buggy.prefab`. It does not instantiate the prefab, which still carries missing UnityScript components. This replaces the generated `BuggyVisual` prefab, its generator, and the bounds-based fitting. In the original, the body mesh is already at vehicle scale: 1.96 m long, bottom at −0.19, centred at z −0.02. Wings and trails stay out until the wing port. Verified in the Unity `6000.3.26f1` editor on Fort Boxy: the body sits on the wheels and axles at the original size, the cockpit and headlights render, and no new errors are logged. The body shows the material's default blue rather than the player colour, because `Vehicle.js` `setColor()` (player colour from `vehColR/G/B` preferences) is not ported yet. The Wine version drew the buggy magenta.
 
-Vehicle colour (2026-10-19): `VehicleColourModern` ports the colouring from `Vehicle.js`, and `Settings` ports the colour preferences from `Settings.js`. The body material fades to `vehicleColor`, and the wheel beadlocks fade to `vehicleAccent`. Both colours are stored in `VehicleStateModern`. As in `Game.js`, each game starts with a random colour unless `vehColCustom` is set: red and blue up to 0.7, green limited relative to them, and the accent 0.25 darker. Verified in the Unity `6000.3.26f1` editor: two runs gave the buggy two different random colours. Not ported: the green "it" colours, which belong to the quarry rules; wing tinting, which waits for the wing port; and the colour sliders in the settings window.
+Vehicle colour (2026-10-19): `VehicleColourModern` ports the colouring from `Vehicle.js`, and `Settings` ports the colour preferences from `Settings.js`. The body material fades to `vehicleColor`, and the wheel beadlocks fade to `vehicleAccent`. Both colours are stored in `VehicleStateModern`. As in `Game.js`, each game starts with a random colour unless `vehColCustom` is set: red and blue up to 0.7, green limited relative to them, and the accent 0.25 darker. Verified in the Unity `6000.3.26f1` editor: two runs gave the buggy two different random colours. Rechecked (2026-10-21, Unity `6000.3.26f1`, macOS `27.0.1`, ramp test log): `VehicleStateModern` held `vehicleColor` (0.52, 0.25, 0.59) and `vehicleAccent` (0.27, 0.00, 0.34); 1.5 s after spawn the `Body` material was (0.47, 0.24, 0.55) and the four `Beadlock` materials (0.24, 0.00, 0.36), still fading towards them at alpha 0.5 as in `Vehicle.js`. Not ported: the green "it" colours, which belong to the quarry rules; wing tinting, which waits for the wing port; and the colour sliders in the settings window.
 
 ## Tyre tracks
 

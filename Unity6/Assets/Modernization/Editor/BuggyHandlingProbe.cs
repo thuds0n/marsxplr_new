@@ -66,6 +66,17 @@ public static class BuggyHandlingProbe
         if (buggy == null) { Debug.LogWarning("[HandlingProbe] No BuggyControllerModern found."); return; }
         buggy.gameObject.AddComponent<BuggyTrackTestRunner>();
     }
+
+    // Drives diagonally onto one of Fort Boxy's tilted CenterRamp cubes so the
+    // wheels meet the slope one at a time, and logs each wheel's suspension.
+    [MenuItem("Tools/MarsXPLR/Run Buggy Ramp Test")]
+    private static void RunRampTest()
+    {
+        if (!Application.isPlaying) { Debug.LogWarning("[HandlingProbe] Enter Play mode first."); return; }
+        BuggyControllerModern buggy = Object.FindAnyObjectByType<BuggyControllerModern>();
+        if (buggy == null) { Debug.LogWarning("[HandlingProbe] No BuggyControllerModern found."); return; }
+        buggy.gameObject.AddComponent<BuggyRampTestRunner>();
+    }
 }
 
 public class BuggyTrackTestRunner : MonoBehaviour
@@ -94,6 +105,69 @@ public class BuggyTrackTestRunner : MonoBehaviour
                 yield return new WaitForFixedUpdate();
             }
         }
+        if (input != null) input.enabled = true;
+        Destroy(this);
+    }
+}
+
+public class BuggyRampTestRunner : MonoBehaviour
+{
+    private IEnumerator Start()
+    {
+        var state = GetComponent<VehicleStateModern>();
+        var buggy = GetComponent<BuggyControllerModern>();
+        var rb = GetComponent<Rigidbody>();
+        var input = GetComponent<PlayerVehicleInputModern>();
+        if (input != null) input.enabled = false;
+        var log = new StringBuilder();
+
+        // The lowest world box collider, nearest the castle, whose top face is tilted
+        // between 5 and 45 degrees and which starts on the floor.
+        Collider ramp = null;
+        foreach (Collider c in Object.FindObjectsByType<Collider>(FindObjectsSortMode.None))
+        {
+            if (c.isTrigger || !(c is BoxCollider) || c.transform.IsChildOf(transform)) continue;
+            float tilt = Vector3.Angle(c.transform.up, Vector3.up);
+            if (tilt < 5f || tilt > 45f || c.bounds.min.y > 3f || c.bounds.size.x < 3f || c.bounds.size.z < 3f) continue;
+            if (ramp == null || c.bounds.center.sqrMagnitude < ramp.bounds.center.sqrMagnitude) ramp = c;
+        }
+        if (ramp == null) { Debug.LogWarning("[RampTest] No tilted ramp collider found."); Destroy(this); yield break; }
+        Vector3 uphill = Vector3.ProjectOnPlane(ramp.transform.up, Vector3.up).normalized * -1f;
+        if (uphill == Vector3.zero) uphill = Vector3.forward;
+        log.AppendLine("ramp '" + ramp.transform.parent?.name + "/" + ramp.name + "' centre " + ramp.bounds.center.ToString("F1") + " size " + ramp.bounds.size.ToString("F1")
+            + " tilt " + Vector3.Angle(ramp.transform.up, Vector3.up).ToString("F1") + " uphill " + uphill.ToString("F2"));
+
+        // Start 8 m downhill of the ramp's lowest edge, yawed 35 degrees off the slope line.
+        Vector3 foot = ramp.ClosestPoint(ramp.bounds.center - uphill * 100f);
+        Quaternion heading = Quaternion.LookRotation(uphill) * Quaternion.Euler(0f, 35f, 0f);
+        Vector3 start = foot - (heading * Vector3.forward) * 8f;
+        if (Physics.Raycast(start + Vector3.up * 50f, Vector3.down, out RaycastHit ground, 100f)) start = ground.point;
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+        rb.position = start + Vector3.up * 0.6f;
+        rb.rotation = heading;
+        transform.SetPositionAndRotation(rb.position, rb.rotation);
+        for (float t = 0f; t < 1.5f; t += Time.fixedDeltaTime) { state.input = Vector4.zero; yield return new WaitForFixedUpdate(); }
+
+        log.AppendLine("colour state " + state.vehicleColor + " accent " + state.vehicleAccent);
+        foreach (Renderer r in GetComponentsInChildren<Renderer>())
+            if (r.name == "Body" || r.name == "Beadlock") log.AppendLine("renderer '" + r.name + "' colour " + r.material.color);
+
+        log.AppendLine("t  speed  hitDistance[FL FR RL RR] (suspension range " + buggy.suspensionRange.ToString("F2") + ")  roll pitch");
+        int steps = 0;
+        for (float t = 0f; t < 5f; t += Time.fixedDeltaTime)
+        {
+            state.input = new Vector4(0f, t < 2.5f ? 0.5f : 0f, 0f, 0f);
+            yield return new WaitForFixedUpdate();
+            if (steps++ % 5 != 0) continue;
+            Vector3 e = transform.eulerAngles;
+            log.AppendLine(t.ToString("F2") + " " + (rb.linearVelocity.magnitude * 2.237f).ToString("F0") + "  "
+                + buggy.hitDistance[0].ToString("F2") + " " + buggy.hitDistance[1].ToString("F2") + " "
+                + buggy.hitDistance[2].ToString("F2") + " " + buggy.hitDistance[3].ToString("F2")
+                + "  " + Mathf.DeltaAngle(0f, e.z).ToString("F1") + " " + Mathf.DeltaAngle(0f, e.x).ToString("F1"));
+        }
+        File.WriteAllText(Path.Combine(Application.dataPath, "../Logs/ramp-test.txt"), log.ToString());
+        Debug.Log("[RampTest] Wrote Logs/ramp-test.txt");
         if (input != null) input.enabled = true;
         Destroy(this);
     }

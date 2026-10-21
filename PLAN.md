@@ -90,12 +90,13 @@ The current working tree has not been compiled or played in Unity since its newe
 
 Create `BuggyControllerModern` without folding new physics into `SimplePlayerController`.
 
-Status: steps 1–8 are ported and match the Wine version on a flat pad; tyre tracks match the original's darkness (2026-10-20). Open: the `Buggy Skidmarks` track width, lava floating and diving, the optional "new physics" motor. Detail: [docs/buggy.md](docs/buggy.md).
+Status: complete (2026-10-21). Steps 1–8 are ported and match the Wine version on a flat pad and on Fort Boxy; the wheels respond independently on uneven ground and the body uses the player colour. Open: the `Buggy Skidmarks` track width, lava floating and diving, the optional "new physics" motor. Detail: [docs/buggy.md](docs/buggy.md).
 
 Acceptance criteria:
 
 - [x] The buggy rests on its wheel contacts rather than a capsule approximation.
-- [ ] All four wheels respond independently to uneven ground.
+- [x] All four wheels respond independently to uneven ground (Fort Boxy ramp test, 2026-10-21; see [docs/buggy.md](docs/buggy.md#uneven-ground)).
+- [x] The body and wheel beadlocks use the player colour from `VehicleStateModern` (`Vehicle.js` `setColor()`, rechecked 2026-10-21).
 - [x] Acceleration, reversing, steering, braking, side slip, and landing are controllable (flat-pad probe compared with the Wine version, 2026-10-19).
 - [x] Camera and HUD telemetry continue to consume `VehicleStateModern`.
 - [x] `SimplePlayerController` can still be selected temporarily for recovery (`useModernBuggyController` on `SinglePlayerPlayableBootstrap`).
@@ -156,9 +157,8 @@ Status: an arm64 Mono development player builds and launches into Fort Boxy. Acc
 
 The evidence-backed baseline is tagged `unity6-baseline-2026-10-21` (Milestone 0 complete; buggy ground handling, Fort Boxy, HUD, image effects and shadows checked against the Wine version).
 
-1. Close Milestone 1: check that all four wheels respond independently on Fort Boxy's ramps, and port `Vehicle.js` `setColor()` so the buggy uses the player colour.
-2. Start Milestone 4: replace the quarry, laser and score placeholders with `GameModeSinglePlayerModern` and `CombatSystemModern`, ported from `Game.js`, `Vehicle.js` and the laser scripts.
-3. Smaller open items: the shadow strip east of the spawn slab, the `Arrow.jas` mesh offset, and the floor's slightly lower saturation (see [docs/world-and-rendering.md](docs/world-and-rendering.md)).
+1. Start Milestone 4: replace the quarry, laser and score placeholders with `GameModeSinglePlayerModern` and `CombatSystemModern`, ported from `Game.js`, `Vehicle.js` and the laser scripts.
+2. Smaller open items: the shadow strip east of the spawn slab, the `Arrow.jas` mesh offset, and the floor's slightly lower saturation (see [docs/world-and-rendering.md](docs/world-and-rendering.md)).
 
 ## Definition of done for the single-player milestone
 
