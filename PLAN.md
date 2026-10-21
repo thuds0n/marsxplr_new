@@ -154,7 +154,11 @@ Status: an arm64 Mono development player builds and launches into Fort Boxy. Acc
 
 ## Immediate next actions
 
-1. Lock the evidence-backed baseline in version control (tag it).
+The evidence-backed baseline is tagged `unity6-baseline-2026-10-21` (Milestone 0 complete; buggy ground handling, Fort Boxy, HUD, image effects and shadows checked against the Wine version).
+
+1. Close Milestone 1: check that all four wheels respond independently on Fort Boxy's ramps, and port `Vehicle.js` `setColor()` so the buggy uses the player colour.
+2. Start Milestone 4: replace the quarry, laser and score placeholders with `GameModeSinglePlayerModern` and `CombatSystemModern`, ported from `Game.js`, `Vehicle.js` and the laser scripts.
+3. Smaller open items: the shadow strip east of the spawn slab, the `Arrow.jas` mesh offset, and the floor's slightly lower saturation (see [docs/world-and-rendering.md](docs/world-and-rendering.md)).
 
 ## Definition of done for the single-player milestone
 
