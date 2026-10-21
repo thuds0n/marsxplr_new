@@ -19,6 +19,32 @@ public static class RebuildWhirldResourcePrefabs
         Debug.Log("[RebuildWhirldResourcePrefabs] Rebuilt " + BasePath + " and " + FloorPath);
     }
 
+    // Buggy.prefab and Vehicle.prefab are read only as sources of meshes,
+    // materials, trails and the laser aimer's child objects; their UnityScript
+    // components (Buggy.js, VehicleData.js, VehicleTrigger.js, WhirldLOD.js,
+    // Vehicle.js) are ported elsewhere, and the originals in unity/ keep their
+    // values. Removing the missing components stops the warnings logged when
+    // the Game scene loads them.
+    [MenuItem("Tools/MarsXPLR/Remove Missing Scripts From Buggy and Vehicle Prefabs")]
+    public static void StripVehiclePrefabs()
+    {
+        foreach (string path in new[] { "Assets/Martian Assets/Vehicles/Buggy/Buggy.prefab", "Assets/Martian Assets/Vehicles/Prefabs/Vehicle.prefab" })
+        {
+            GameObject root = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                int removed = RemoveMissing(root);
+                PrefabUtility.SaveAsPrefabAsset(root, path);
+                Debug.Log("[RebuildWhirldResourcePrefabs] " + path + ": removed " + removed + " missing scripts");
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+        AssetDatabase.SaveAssets();
+    }
+
     private static void RebuildBase()
     {
         GameObject root = PrefabUtility.LoadPrefabContents(BasePath);

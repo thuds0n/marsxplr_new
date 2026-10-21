@@ -166,14 +166,12 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
         if (playerRoot == null || legacyVehicleRigPrefab == null) return;
         if (playerRoot.transform.Find("LaserAim") != null) return;
 
-        GameObject temp = Instantiate(legacyVehicleRigPrefab);
-        temp.name = "__LegacyVehicleRigTemp";
-        temp.SetActive(false);
-
-        GameObject aimer = CloneNamedChild(temp.transform, "LaserAim", playerRoot.transform);
-        GameObject aimerLocked = CloneNamedChild(temp.transform, "LaserAimLocked", playerRoot.transform);
-        GameObject lockMarker = CloneNamedChild(temp.transform, "LaserLock", playerRoot.transform);
-        Destroy(temp);
+        // Clone the children straight from the prefab asset: instantiating the
+        // whole rig would also create its root's missing Vehicle.js component.
+        Transform rig = legacyVehicleRigPrefab.transform;
+        GameObject aimer = CloneNamedChild(rig, "LaserAim", playerRoot.transform);
+        GameObject aimerLocked = CloneNamedChild(rig, "LaserAimLocked", playerRoot.transform);
+        GameObject lockMarker = CloneNamedChild(rig, "LaserLock", playerRoot.transform);
 
         if (aimer == null)
         {
