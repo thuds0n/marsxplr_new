@@ -195,8 +195,12 @@ public class CameraVehicle : MonoBehaviour
             Vector3 targetPos = transform.InverseTransformPoint(cam.ScreenToWorldPoint(new Vector3(cam.pixelWidth - 30f - 65f, 30f, cam.nearClipPlane + 0.05f)));
             if (Vector3.Distance(targetPos, arrow.localPosition) < 0.002f) arrow.localPosition = Vector3.Lerp(arrow.localPosition, targetPos, Time.deltaTime * 0.005f);
             else arrow.localPosition = targetPos;
-            var quarry = Game.QuarryVeh != null ? Game.QuarryVeh.transform : (World.@base != null ? World.@base : Game.Player.transform);
-            arrow.rotation = Quaternion.Lerp(arrow.rotation, Quaternion.LookRotation(quarry.position - Game.Player.transform.position), Time.deltaTime * 15f);
+            // Points at the base while the player is the quarry or there is none, else at the quarry.
+            var state = Game.Player.GetComponent<VehicleStateModern>();
+            bool playerIsIt = state != null && state.isIt == 1;
+            Transform target = playerIsIt || Game.QuarryVeh == null ? World.@base : Game.QuarryVeh.transform;
+            Vector3 toTarget = target != null ? target.position - Game.Player.transform.position : Vector3.zero;
+            if (toTarget != Vector3.zero) arrow.rotation = Quaternion.Lerp(arrow.rotation, Quaternion.LookRotation(toTarget), Time.deltaTime * 15f);
             arrow.localScale = Vector3.one * Mathf.Lerp(0.03f, 1f, Camera.main != null ? Camera.main.fieldOfView / 60f : 1f);
         }
 

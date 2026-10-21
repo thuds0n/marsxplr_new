@@ -128,7 +128,7 @@ Status: ported and verified on the probe pad. Judged comparable to the Wine vers
 - Audit missing scripts and incompatible shaders within the selected environment only.
 - Validate suspension feel, scale, speed perception, altitude, minimap, arrow, and camera obstruction behaviour.
 
-Status: Fort Boxy loads offline and its sky, fog, lighting, base marker and textures match the Wine version. Open: compare the floor saturation fix with the Wine version, laser aimer colour. Detail: [docs/world-and-rendering.md](docs/world-and-rendering.md).
+Status: Fort Boxy loads offline and its sky, fog, lighting, base marker and textures match the Wine version. Open: floor saturation (engine alpha writes), laser aimer colour. Detail: [docs/world-and-rendering.md](docs/world-and-rendering.md).
 
 ## Milestone 4: Gameplay loop parity
 
@@ -161,7 +161,7 @@ Status: an arm64 Mono development player builds and launches into Fort Boxy. Acc
 The evidence-backed baseline is tagged `unity6-baseline-2026-10-21` (Milestone 0 complete; buggy ground handling, Fort Boxy, HUD, image effects and shadows checked against the Wine version).
 
 1. Continue Milestone 4: compare the bolt, sparks and sounds with the Wine version, then weapons lock and bots.
-2. Fort Boxy rendering (2026-10-21): the shadow strip east of the spawn slab no longer reproduces and the `Arrow.jas` mesh matches the original cone. The contrast-stretch shaders are fixed for the floor saturation. Still to do: compare the floor colour and the arrow on screen with the Wine version (see [docs/world-and-rendering.md](docs/world-and-rendering.md)).
+2. Fort Boxy rendering (2026-10-21): the shadow strip east of the spawn slab no longer reproduces and the `Arrow.jas` mesh matches the original cone. The arrow now points at the base as the original did. The floor's lower saturation comes from Unity 6 writing alpha 1 on opaque surfaces, which weakens the contrast stretch; the faithful fix (per-material alpha) is not done (see [docs/world-and-rendering.md](docs/world-and-rendering.md)).
 
 ## Definition of done for the single-player milestone
 
