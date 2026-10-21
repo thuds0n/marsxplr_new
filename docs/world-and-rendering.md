@@ -1,6 +1,6 @@
 # World and rendering
 
-Detail for Milestones 3 and 5 in [PLAN.md](../PLAN.md). Summary: `Game` loads Fort Boxy offline. Its sky, fog, ambient light, floor brightness, base marker and castle textures now match the Wine version. Open: the floor's slightly lower saturation, real-time shadows not yet compared with the original, and the laser aimer colour close up.
+Detail for Milestones 3 and 5 in [PLAN.md](../PLAN.md). Summary: `Game` loads Fort Boxy offline. Its sky, fog, ambient light, floor brightness, base marker and castle textures now match the Wine version. Open: the floor saturation fix (2026-10-21) still needs a side-by-side check with the Wine version, and the laser aimer colour close up.
 
 ## Fort Boxy loading
 
@@ -49,7 +49,7 @@ Open, low priority (2026-10-20): check the scene lighting settings that the Unit
   | Port | doubled | original (0.66) | 138–139 |
   | Port | original | original (0.66) | 114–118 |
 
-  With the original fog and ambient, the port needs no lighting compensation. `World` no longer doubles lights or ambient light. The darkness that the doubling corrected came from the captured scene's 0.2 ambient. Remaining difference: the floor's mean colour is (255, 77, 28) in the Wine version and (227, 78, 41) in the port, so the port's orange is slightly less saturated. Not yet investigated. Readings from first-person or low camera angles were not comparable, so this table only uses far chase views. Fog is now on, dark purple, as in the original. In both versions the horizon meets the starfield sharply. `Tools -> MarsXPLR -> Log Scene Look` also logs the screen brightness.
+  With the original fog and ambient, the port needs no lighting compensation. `World` no longer doubles lights or ambient light. The darkness that the doubling corrected came from the captured scene's 0.2 ambient. Remaining difference: the floor's mean colour is (255, 77, 28) in the Wine version and (227, 78, 41) in the port, so the port's orange is slightly less saturated. Investigated 2026-10-21 (see Floor saturation below). Readings from first-person or low camera angles were not comparable, so this table only uses far chase views. Fog is now on, dark purple, as in the original. In both versions the horizon meets the starfield sharply. `Tools -> MarsXPLR -> Log Scene Look` also logs the screen brightness.
 
   Rendering effects (2026-10-20): the port never applied the "Rendering Effects" block of `Settings.js` `updatePrefs()`, so the camera's `ContrastStretchEffect` stayed on at every quality level. That effect keeps re-measuring the picture and adjusts its contrast over time, which showed as brightness and saturation shifting during play. In the original it is on only at Beautiful and Fantastic (`renderLevel > 4`), and Fantastic adds SSAO. `Settings.updatePrefs()` now enables contrast stretch only above Good and sets `World.lodDist` as the original did. SSAO stayed off at the time, because its `Hidden/SSAO` shader did not compile on Metal (fixed 2026-10-21; see Image effects on Metal below). Verified in the editor at the default Good level: `Tools -> MarsXPLR -> Log Lighting Over Time` shows contrast stretch off and steady screen brightness (121–124) over 30 s of driving. The Wine floor reference above was taken at Fantastic, with contrast stretch on in both versions. The port does not yet apply `renderLevel` to `QualitySettings`.
 
@@ -101,6 +101,17 @@ The original mesh was decoded from the player data (vertices, triangles and firs
 Measurements taken before this fix (the Fort Boxy handling comparison and the spawn notes in [buggy.md](buggy.md), which give the floor as y = 2.4 and the resting height on the floor as 3 ALT) were made on the raised floor. The handling figures are unaffected, since the floor was flat where they were measured; heights should be read 2.4 m lower.
 
 Also fixed: `BaseMarkerModern.LateUpdate` threw an `ArgumentNullException` every frame after the `Base` prefab began carrying the component; it now allocates its particle buffer if it is missing.
+
+## Floor saturation
+
+Investigated 2026-10-21 (Unity `6000.3.26f1`, macOS `27.0.1`). The floor texture's mean colour is (197, 78, 44). The Wine reading (255, 77, 28) is the port's reading (227, 78, 41) after a linear stretch, `(c − 19.6) × 1.32`, with red clipped at 255. This is what `ContrastStretchEffect` does at Beautiful and Fantastic: it outputs `c / (max − min) − min / (max − min)` from the adapted screen luminance range, here a maximum of about 0.83. Lighting does not explain it: ambient is neutral grey and the sun is slightly pink, so neither lowers blue relative to green.
+
+The port's stretch was nearly inert, for two reasons:
+
+- `MinMaxReduction.shader` sampled its 2 × 2 block at offsets of 0 and 1. These were pixel offsets for the RECT textures of Unity 2; with normalised UVs they land on the same texel, so the reduction point-sampled instead of finding the minimum and maximum. The offsets are now half a texel either side of the centre.
+- `Luminance.shader` weighted luminance by `1 + 2 × alpha`. Unity 5 and later write alpha 1 for opaque surfaces, which tripled the floor's luminance and pinned the maximum at 1. The weighting is removed. This is an inference: the original's alpha came from each legacy shader and material (the floor's colour has alpha 0, but 60 of 91 Whirld material colours have alpha 1), and was not reproduced exactly.
+
+Measured with `ContrastStretchEffect`'s adapted values at Fantastic, standing beside the spawn with the castle wall in view: before, maximum 0.996 and minimum 0.078 (output = input × 1.08 − 0.09); with only the reduction fixed, the same; with both fixes, maximum 0.898 and minimum 0.055 (× 1.17 − 0.06). The stretch depends on what is in view, so the floor colour still needs measuring from the Wine reference view (far Agile chase over the open floor south of the castle). Not yet compared side by side with the Wine version.
 
 ## Guidance arrow mesh
 

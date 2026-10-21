@@ -31,17 +31,20 @@ struct v2f {
 }; 
 
 uniform sampler2D _MainTex;
+uniform float4 _MainTex_TexelSize;
 
 v2f vert (appdata_img v) {
 	v2f o;
 	o.position = UnityObjectToClipPos (v.vertex);
 	float2 uv = MultiplyUV (UNITY_MATRIX_TEXTURE0, v.texcoord);
 	
-	// Compute UVs to sample 2x2 pixel block.
-	o.uv[0] = uv + float2(0,0);
-	o.uv[1] = uv + float2(0,1);
-	o.uv[2] = uv + float2(1,0);
-	o.uv[3] = uv + float2(1,1);
+	// Compute UVs to sample 2x2 pixel block. The original offsets were in
+	// pixels (RECT textures); normalised UVs need them in texel units.
+	float2 t = _MainTex_TexelSize.xy * 0.5;
+	o.uv[0] = uv + float2(-t.x,-t.y);
+	o.uv[1] = uv + float2(-t.x, t.y);
+	o.uv[2] = uv + float2( t.x,-t.y);
+	o.uv[3] = uv + float2( t.x, t.y);
 	return o;
 }
 
