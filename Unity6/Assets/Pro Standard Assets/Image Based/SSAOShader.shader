@@ -314,12 +314,20 @@ struct v2f {
 	float2 uv[2] : TEXCOORD0;
 };
 
+float4 _MainTex_TexelSize;
+
 v2f vert (appdata_img v)
 {
 	v2f o;
 	o.pos = UnityObjectToClipPos (v.vertex);
 	o.uv[0] = MultiplyUV (UNITY_MATRIX_TEXTURE0, v.texcoord);
 	o.uv[1] = MultiplyUV (UNITY_MATRIX_TEXTURE1, v.texcoord);
+	// With MSAA on a top-origin API (Metal), the source arrives upside down
+	// relative to the depth-derived _SSAO, so flip the AO lookup to match.
+	#if UNITY_UV_STARTS_AT_TOP
+	if (_MainTex_TexelSize.y < 0)
+		o.uv[1].y = 1 - o.uv[1].y;
+	#endif
 	return o;
 }
 

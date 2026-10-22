@@ -86,6 +86,8 @@ SSAO did not compile on Metal: `frag_ao` took a C#-style unsized array (`float3[
 
 Verified in the editor at Fantastic: the camera reports SSAO enabled, and the same frame rendered with SSAO on and off differs only by soft contact darkening under the buggy's wheels, at the base of pillars and pyramids and along castle edges (0.6% of pixels darker by more than 8 levels, none brighter), with no noise or banding. Image effects run after transparent objects, as in Unity 2, which had no way to run them before, so SSAO also darkens the base glow where geometry lies behind it. `Tools -> MarsXPLR -> Render Level` now includes Beautiful (5), which differs from Fantastic only by SSAO.
 
+SSAO artefact in the arm64 player (2026-10-22, Unity `6000.3.26f1`, macOS `27.0.1`): at Fantastic, dark blotches showed on the floor when looking above the horizon, and on the wings in first person. Fantastic is the only quality level with MSAA (4×). With MSAA on a top-origin API such as Metal, the image effect source arrives upside down relative to the depth-normals texture, which Unity signals with a negative `_MainTex_TexelSize.y`. The composite pass sampled `_SSAO` (built from depth-normals) with unflipped coordinates, so the occlusion was likely drawn vertically mirrored over the scene. The composite now flips the `_SSAO` lookup in that case, as Unity's own image effects do. The original targeted OpenGL, which has a bottom origin and never needed the flip. Verified in a rebuilt arm64 player at Fantastic (2026-10-23): the blotches are gone.
+
 The remaining Metal shader errors are the island water and `FX/Water` shaders, used only by worlds with water; they will be fixed when the sea is ported.
 
 ## Render level and quality level
