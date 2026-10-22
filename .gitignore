@@ -29,3 +29,6 @@ Logs/
 
 #Unity3D Generated File On Crash Reports
 sysinfo.txt
+
+# Per-user editor package settings
+/Unity6/ProjectSettings/Packages/
