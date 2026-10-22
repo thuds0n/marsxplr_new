@@ -189,12 +189,10 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
         {
             aimerLocked = CreateLaserAnchor(playerRoot.transform, "LaserAimLocked", new Vector3(0f, 0.8f, 1.5f));
         }
-        if (lockMarker == null)
-        {
-            lockMarker = CreateLaserAnchor(playerRoot.transform, "LaserLock", new Vector3(0f, 0.8f, 6f));
-        }
+        // Vehicle.js laserLock: the cloned LaserLock trigger, or a new one.
+        if (playerRoot.GetComponent<LaserLockModern>() == null) playerRoot.AddComponent<LaserLockModern>();
 
-        if (aimer == null && aimerLocked == null && lockMarker == null) return;
+        if (aimer == null && aimerLocked == null) return;
 
         var controller = playerRoot.GetComponent<LegacyLaserSightController>();
         if (controller == null)
@@ -204,7 +202,6 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
 
         controller.laserAimer = aimer;
         controller.laserAimerLocked = aimerLocked;
-        controller.laserLockMarker = lockMarker;
         controller.vehicleId = 0;
         controller.camOffset = 2f;
     }

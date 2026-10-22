@@ -4,13 +4,11 @@ public class LegacyLaserSightController : MonoBehaviour
 {
     public GameObject laserAimer;
     public GameObject laserAimerLocked;
-    public GameObject laserLockMarker;
     public int vehicleId = 0;
     public float camOffset = 2f;
 
     private GameObject _fallbackAim;
     private GameObject _fallbackAimLocked;
-    private GameObject _fallbackLockMarker;
 
     private void Awake()
     {
@@ -24,16 +22,10 @@ public class LegacyLaserSightController : MonoBehaviour
             var t = transform.Find("LaserAimLocked");
             if (t != null) laserAimerLocked = t.gameObject;
         }
-        if (laserLockMarker == null)
-        {
-            var t = transform.Find("LaserLock");
-            if (t != null) laserLockMarker = t.gameObject;
-        }
 
         var materials = Resources.Load<LaserSightMaterials>("LaserSightMaterials");
         _fallbackAim = EnsureFallbackVisual(laserAimer, materials != null ? materials.aim : null, new Color(0.25f, 1f, 0.35f, 1f), LegacyAimer.Aim);
         _fallbackAimLocked = EnsureFallbackVisual(laserAimerLocked, materials != null ? materials.aimLocked : null, new Color(1f, 0.25f, 0.15f, 1f), LegacyAimer.Locked);
-        _fallbackLockMarker = EnsureFallbackMarker(laserLockMarker);
     }
 
     private void Update()
@@ -49,7 +41,6 @@ public class LegacyLaserSightController : MonoBehaviour
         {
             SetActive(laserAimer, false);
             SetActive(laserAimerLocked, false);
-            SetActive(laserLockMarker, false);
             return;
         }
 
@@ -57,24 +48,9 @@ public class LegacyLaserSightController : MonoBehaviour
         bool lasersEnabled = Game.Settings.lasersAllowed && hasFirepower;
         bool lockingEnabled = lasersEnabled && Game.Settings.laserLocking;
 
-        float lockScale = 0f;
-        if (Game.Settings.laserLock != null && Game.Settings.laserLock.Length > vehicleId)
-        {
-            lockScale = Mathf.Max(0f, Game.Settings.laserLock[vehicleId]);
-        }
-
-        bool locked = lockingEnabled && HasQuarryLock(lockScale);
-        bool markerEnabled = locked;
-        SetActive(laserLockMarker, markerEnabled);
-        if (markerEnabled && laserLockMarker != null)
-        {
-            float size = 0.45f;
-            laserLockMarker.transform.localScale = Vector3.one * size;
-        }
-        if (_fallbackLockMarker != null)
-        {
-            _fallbackLockMarker.SetActive(markerEnabled);
-        }
+        // VehicleMe.js: the aimers swap on CombatSystemModern's weapons lock.
+        var combat = GetComponent<CombatSystemModern>();
+        bool locked = lockingEnabled && combat != null && combat.laserLock != null;
 
         if (!lockingEnabled)
         {
@@ -85,22 +61,6 @@ public class LegacyLaserSightController : MonoBehaviour
 
         SetActive(laserAimer, !locked);
         SetActive(laserAimerLocked, locked);
-    }
-
-    private bool HasQuarryLock(float lockScale)
-    {
-        if (Game.QuarryVeh == null) return false;
-
-        float rayStart = ((lockScale + camOffset * 0.1f) * 15f);
-        Vector3 origin = transform.position + transform.forward * rayStart;
-        if (Game.RaycastIgnoringPlayer(new Ray(origin, transform.forward), Mathf.Infinity, out RaycastHit hit))
-        {
-            Transform t = hit.transform;
-            Transform q = Game.QuarryVeh.transform;
-            return t == q || t.IsChildOf(q) || q.IsChildOf(t);
-        }
-
-        return false;
     }
 
     private void SetActive(GameObject go, bool active)
@@ -238,40 +198,6 @@ public class LegacyLaserSightController : MonoBehaviour
 
         ps.Play(true);
 
-        return fallback;
-    }
-
-    private GameObject EnsureFallbackMarker(GameObject root)
-    {
-        if (root == null) return null;
-        Transform existing = root.transform.Find("FallbackLockMarker");
-        if (existing != null) return existing.gameObject;
-        if (HasAnyVisibleComponent(root)) return null;
-
-        var fallback = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        fallback.name = "FallbackLockMarker";
-        fallback.transform.SetParent(root.transform, false);
-        fallback.transform.localPosition = Vector3.zero;
-        fallback.transform.localRotation = Quaternion.identity;
-        fallback.transform.localScale = Vector3.one * 0.25f;
-
-        var col = fallback.GetComponent<Collider>();
-        if (col != null) Destroy(col);
-
-        var r = fallback.GetComponent<Renderer>();
-        if (r != null)
-        {
-            var mat = new Material(Shader.Find("Standard"));
-            mat.color = new Color(0.25f, 1f, 0.3f, 0.9f);
-            if (mat.HasProperty("_EmissionColor"))
-            {
-                mat.EnableKeyword("_EMISSION");
-                mat.SetColor("_EmissionColor", new Color(0.18f, 0.7f, 0.22f, 1f));
-            }
-            r.sharedMaterial = mat;
-        }
-
-        fallback.SetActive(false);
         return fallback;
     }
 

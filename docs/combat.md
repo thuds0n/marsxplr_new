@@ -26,7 +26,7 @@ Not verified or not ported:
 
 - Unity warns about the missing `Rocket.js` and `SoundEffect.js` scripts on each bolt and sparks instance.
 - No comparison with the Wine version yet (bolt speed and look, impact effect, sound).
-- Weapons lock and lock-on firing (`fRl`, `fSl`, lead targeting). Offline there is no other vehicle to lock on to, as in the original single player without bots.
+- Weapons lock and lock-on firing: ported on 2026-10-23 (see below).
 - Bots, ramming (`OnRam`), fatal laser hits (`lR`), score display in name tags, and `scoreTime`.
 
 ## Manual firing, sparks and RideCam (2026-10-21)
@@ -71,7 +71,7 @@ Engine differences, with their Unity 6 equivalents:
 - Fixed step: the original `TimeManager` stores 0.002 s, and `Settings.js` sets 0.02 s (or 0.025 s at low render levels) at run time, as `Settings.cs` does; the test ran at 0.02 s.
 - `laserSpeed` is an `int` in `Settings.js` and a `float` in `Settings.cs`; equal for the default 180, and only a server setting could differ.
 
-Not ported (out of scope here): lock-on firing (`fSl`) and lead targeting, and lag extrapolation (`lag`), which only applied on remote instances.
+Not ported: lag extrapolation (`lag`), which only applied on remote instances.
 
 Verification (Unity `6000.3.26f1` editor, macOS `27.0.1`, Play mode from `Init` into Fort Boxy): `tools/compile-check.sh` passes. `Tools -> MarsXPLR -> Run Snipe Trajectory Test` (`Editor/SnipeTrajectoryTest.cs`, log `Unity6/Logs/snipe-trajectory-test.txt`) passed:
 
@@ -89,3 +89,16 @@ Crosshair offset (2026-10-23, Unity `6000.3.26f1`, macOS 27.0 / Darwin 27.0.0): 
 Snipe trail look (2026-10-23, Unity `6000.3.26f1`, macOS 27.0 / Darwin 27.0.0): the bolt's only visual is the prefab's `TrailRenderer`, and its settings carry over from the original: 1 s, 2 → 1 m wide, 3 m minimum vertex distance, no caps, a 5-key alpha fade, no shadows, Stretch UVs, Plasma Red on `Legacy Shaders/Particles/Additive` (64 px soft round glow, `_TintColor` 0.5 grey). Unity 6 builds it camera-facing (`View`). From the eye 0.1 m above the bolt's line, a camera-facing ribbon is a wide horizontal band, which matches the flat look reported. How Unity 2.x oriented trail ribbons is not documented and cannot be read from `unity/`, so the reported twist in Wine is not explained yet. Rendering a test frame through the Unity MCP failed: Play mode does not advance while the editor is in the background, and a hand-built trail draws nothing until its own update runs. Next step: a Wine reference (screenshot or clip from first person and from the side) to compare with.
 
 Snipe trail frames (2026-10-23, Unity `6000.3.26f1`, macOS 27.0 / Darwin 27.0.0): captured through the Unity MCP by pausing straight after a snipe shot, stepping five frames and rendering cameras placed around the trail's own points. Play mode only advances with the editor in front. From the side, the trail is a soft red glowing band about 1–2 m thick that reads as a cylinder. From behind and above, the part near the shooter has faded out (the alpha gradient is near zero at the old end), and only the far part shows as a thin streak. From the firing eye, 0.1 m above the line, the camera-facing strip is seen almost edge-on. So the flat look is specific to looking along the bolt. Accepted as it is (2026-10-23); no Wine comparison planned.
+
+## Weapons lock and lock-on shots (2026-10-23)
+
+Ported from `VehicleMe.js` (weapons locking and firing), `Vehicle.js` (`fRl`, `fSl`, `laserLock` in `OnPrefsUpdated`) and `Rocket.js` (auto-targeting):
+
+- `LaserLockModern`: every vehicle's invisible `LaserLock` trigger sphere (from `Vehicle.prefab`: radius 0.5, layer 14 `LaserLock`), scaled to `(laserLock + camOffset × 0.1) × 10` (6, a 3 m radius, at the default 0.4) and off when the setting is 0. The port's visible green placeholder sphere for it is removed; the original drew nothing.
+- `CombatSystemModern`: each frame, when `laserLocking` is on, a ray along the vehicle's nose from `(laserLock + camOffset × 0.1) × 15` m ahead (9 m by default), layer 14 only, infinite range; it locks on when the shooter or the vehicle hit is quarry. While locked the gun fires on its own, with no button, from the usual muzzle. A lock-on shot is a snipe at firepower 3, or at firepower 2 when the target is over 500 m away or faster than √500 ≈ 22.4 m/s. Cooldowns are unchanged.
+- `RocketModern`: a lock-on bolt waits at the muzzle for 5 physics steps, samples the target's velocity before and after, then steps the target's position forward (with that acceleration) until the bolt could reach it within the elapsed time, or 10 s, and aims there. This is `Rocket.js`'s local-vehicle branch, the only one offline.
+- `LegacyLaserSightController` swaps the green and red aimers on that lock instead of its own placeholder quarry ray.
+
+The aimer and the lock follow the vehicle's nose, not the crosshair. In first person the camera turns with the mouse (`CameraVehicle.js` adds mouse rotation to `ridePos`), but nothing turns `ridePos`, `LaserAim` or the lock ray, and the aimer particles are pushed forwards in the vehicle's local space. Only manual shots follow the crosshair.
+
+Verified (Unity `6000.3.26f1` editor, macOS `27.0.1`, Play mode from `Init`): `tools/compile-check.sh` passes. `Tools -> MarsXPLR -> Run Lock-on Test` (`Editor/LockOnTest.cs`, log `Unity6/Logs/lock-on-test.txt`) holds the player 200 m up and puts a target vehicle on its nose line 150 m ahead, moving sideways at 10 m/s. It passed: no lock with nothing ahead; lock and an automatic auto shot 0.02 s after the target appeared; the bolt led the target by 3.20° (about 0.83 s × 10 m/s across 150 m) and hit it, scoring 0 → 1; at 30 m/s the lock-on shot was a snipe. `Run Snipe Trajectory Test` still passes. `Run Laser Test` still scores tags correctly; its floor shots went elsewhere because the earlier tests had left the buggy moved and tilted. Offline there is still nothing to lock on to until bots are ported, as in the original single player without bots.

@@ -4,14 +4,15 @@ using UnityEngine;
 // Port of Rocket.js for single player: a laser bolt that sweeps a ray along
 // its path each physics step. Added at runtime to the original LaserAuto and
 // LaserSnipe prefabs, whose serialised Rocket.js values are copied in by
-// CombatSystemModern. Network lag compensation and lock-on lead targeting are
-// not ported yet.
+// CombatSystemModern. Network lag compensation is not ported: offline every
+// shot is fired on its authoritative instance.
 public class RocketModern : MonoBehaviour
 {
     public Transform explosion;
     // The sparks' particle material (Plasma Green or Plasma Red).
     public Material sparksMaterial;
     public VehicleStateModern launchVehicle;
+    public VehicleStateModern targetVehicle;
     public int speedX = 1;
     public string laserID;
     public LayerMask mask = -1;
@@ -33,7 +34,34 @@ public class RocketModern : MonoBehaviour
         Transform launch = launchVehicle != null ? launchVehicle.transform : transform;
         _velocity = Game.Settings.laserSpeed * speedX + Mathf.Max(0f,
             launch.InverseTransformDirection(launchVelocity).z *
-            Vector3.Dot(transform.forward, launch.forward));
+            (targetVehicle != null ? 1f : Vector3.Dot(transform.forward, launch.forward)));
+
+        // Rocket.js auto-targeting for lock-on shots (fRl, fSl), local-vehicle
+        // branch: sample the target's velocity twice 5 physics steps apart,
+        // then step its position forward until the bolt could reach it and
+        // aim there. The bolt waits at the muzzle meanwhile.
+        if (targetVehicle != null)
+        {
+            Vector3 bgn = transform.position;
+            Rigidbody targetBody = targetVehicle.GetComponent<Rigidbody>();
+            Vector3 refvel = targetBody != null ? targetBody.linearVelocity : Vector3.zero;
+            float reftme = Time.time;
+            yield return new WaitForSeconds(Time.fixedDeltaTime * 5f);
+            if (targetVehicle == null) { Destroy(gameObject); yield break; }
+            Vector3 pos = targetVehicle.transform.position;
+            Vector3 vel = targetBody != null ? targetBody.linearVelocity : Vector3.zero;
+            Vector3 accel = (vel - refvel) * 1f / (Time.time - reftme);
+
+            float dur = 0f;
+            while (true)
+            {
+                pos += vel * Time.fixedDeltaTime;
+                vel += accel * Time.fixedDeltaTime;
+                dur += Time.fixedDeltaTime;
+                if (dur > 10f || Vector3.Distance(bgn, pos) < dur * _velocity) break;
+            }
+            transform.LookAt(pos);
+        }
 
         _body.linearVelocity = transform.TransformDirection(0f, 0f, _velocity);
         _strtPos = _body.position;

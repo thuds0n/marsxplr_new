@@ -29,7 +29,7 @@ The repository contains a promising but incomplete modernisation foundation:
 - `SimplePlayerController` provides temporary drive and flight behaviour;
 - `VehicleStateModern` provides a shared vehicle-state seam;
 - the runtime bootstrap spawns the buggy with the original body, wheel, and axle models;
-- laser fire, hits and quarry scoring are ported in a first slice (Milestone 4); weapons lock, bots and impact visuals are not;
+- laser fire, hits and quarry scoring are ported in a first slice (Milestone 4); weapons lock and lock-on shots are ported (2026-10-23); bots and impact visuals are not;
 - editor tooling can rebuild and inspect the `Game` scene baseline;
 - the intended offline flow is now `Init -> InitGame -> Game`, with `Lobby` retained outside the active vertical slice.
 
@@ -140,7 +140,7 @@ Replace scaffolding with dedicated systems:
 
 Do not make placeholder cylinders, debug-line lasers, or impact stubs part of the permanent architecture.
 
-Status: in progress. First slice (2026-10-21): auto and snipe fire, `Rocket.js` projectiles, hits, the player defaulting to quarry and tag scoring, with the placeholders removed. Verified by a scripted Play-mode test and by firing by hand from `Init` (the buggy now has the original `RideCam`, and the impact sparks are rebuilt as a `ParticleSystem`). Not yet compared with the Wine version; sound not confirmed by ear. Open: weapons lock, bots, ramming, fatal hits. Detail: [docs/combat.md](docs/combat.md).
+Status: in progress. First slice (2026-10-21): auto and snipe fire, `Rocket.js` projectiles, hits, the player defaulting to quarry and tag scoring, with the placeholders removed. Verified by a scripted Play-mode test and by firing by hand from `Init` (the buggy now has the original `RideCam`, and the impact sparks are rebuilt as a `ParticleSystem`). Not yet compared with the Wine version; sound not confirmed by ear. Weapons lock and lock-on shots ported and tested 2026-10-23. Open: bots, ramming, fatal hits. Detail: [docs/combat.md](docs/combat.md).
 
 ## Milestone 5: Rendering and asset compatibility
 
@@ -160,7 +160,7 @@ Status: an arm64 Mono development player of `master` (2026-10-21, late) builds a
 
 The evidence-backed baseline is tagged `unity6-baseline-2026-10-21` (Milestone 0 complete; buggy ground handling, Fort Boxy, HUD, image effects and shadows checked against the Wine version).
 
-1. Continue Milestone 4: compare the bolt, sparks and sounds with the Wine version, then weapons lock and bots.
+1. Continue Milestone 4: compare the sparks and sounds with the Wine version, then bots (the only lock-on targets offline).
 2. Fort Boxy rendering (2026-10-21): the shadow strip east of the spawn slab no longer reproduces and the `Arrow.jas` mesh matches the original cone. The arrow now points at the base as the original did. The floor writes its original alpha again, so the contrast stretch saturates it as the original code did (see [docs/world-and-rendering.md](docs/world-and-rendering.md)).
 
 ## Definition of done for the single-player milestone
