@@ -19,6 +19,12 @@ public class Game : MonoBehaviour
     public GUIStyle hudTextStyle;
     // Game.js objectMarkerMe: the player's own minimap marker.
     public GameObject objectMarkerMe;
+    // Game.js objectMarker and objectMarkerQuarry: other vehicles' minimap
+    // markers, swapped while that vehicle is quarry.
+    public GameObject objectMarker;
+    public GameObject objectMarkerQuarry;
+    // Game.js botsInGame.
+    public int botsInGame;
     public float quarryDist;
     // Game.js objectRocket and objectRocketSnipe, with the explosions their
     // Rocket.js components reference.
@@ -61,6 +67,13 @@ public class Game : MonoBehaviour
         {
             objectMarkerMe = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Martian Assets/Vehicles/Prefabs/Marker Me.prefab");
             changed |= objectMarkerMe != null;
+        }
+
+        if (objectMarker == null || objectMarkerQuarry == null)
+        {
+            objectMarker = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Martian Assets/Vehicles/Prefabs/Marker.prefab");
+            objectMarkerQuarry = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Martian Assets/Vehicles/Prefabs/Marker Quarry.prefab");
+            changed = true;
         }
 
         const string lasers = "Assets/Martian Assets/Vehicles/Lasers/";
@@ -146,6 +159,39 @@ public class Game : MonoBehaviour
     private static readonly RaycastHit[] _laserHits = new RaycastHit[32];
 
     // Nearest hit along the ray that does not belong to the player's own vehicle.
+    // Game.js addBot(): announce, wait 2 s, then spawn "<name>'s bot[ n]"
+    // at the base like any vehicle (iV). The materialisation effect is not
+    // ported yet.
+    public void addBot()
+    {
+        if (Player == null || botsInGame >= 10) return;
+        StartCoroutine(AddBotRoutine());
+    }
+
+    private System.Collections.IEnumerator AddBotRoutine()
+    {
+        botsInGame += 1;
+        int n = botsInGame;
+        msg(Player.name + " added " + (n == 1 ? "a bot" : "bot " + n), 2);
+        string botName = Player.name + "'s bot" + (n == 1 ? "" : " " + n);
+        yield return new WaitForSeconds(2f);
+        var spawner = FindFirstObjectByType<SinglePlayerPlayableBootstrap>();
+        if (spawner != null) spawner.SpawnBot(botName);
+    }
+
+    // Game.js axeBot(): remove the newest bot, then make sure someone is quarry.
+    public void axeBot()
+    {
+        if (Player == null) return;
+        GameObject bot = GameObject.Find(Player.name + "'s bot" + (botsInGame != 1 ? " " + botsInGame : ""));
+        if (bot == null) return;
+        msg(Player.name + " removed " + (botsInGame == 1 ? "the last bot" : "bot " + botsInGame), 2);
+        botsInGame -= 1;
+        Rigidbody body = bot.GetComponent<Rigidbody>();
+        if (body != null) body.isKinematic = true;
+        Destroy(bot);
+    }
+
     public static bool RaycastIgnoringPlayer(Ray ray, float range, out RaycastHit hit)
     {
         int count = Physics.RaycastNonAlloc(ray, _laserHits, range, ~0, QueryTriggerInteraction.Ignore);

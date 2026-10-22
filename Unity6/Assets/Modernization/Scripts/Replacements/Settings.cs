@@ -24,6 +24,9 @@ public class Settings : MonoBehaviour
     public float zorbSpeed = 7f;
     public bool zorbEnabled;
     public int[] firepower = { 2, 2, 3, 2 };
+    // Settings.js bot defaults.
+    public bool botsCanFire = true;
+    public bool botsCanDrive = true;
     public float buggyPower = 1f;
     public float buggySpeed = 30f;
     public float buggyFlightDrag = 300f;

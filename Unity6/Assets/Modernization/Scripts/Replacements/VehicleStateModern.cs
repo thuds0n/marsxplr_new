@@ -24,6 +24,8 @@ public class VehicleStateModern : MonoBehaviour
     // Vehicle.js quarry state: isIt is 1 for the quarry; lastTag guards the
     // three seconds after a tag; isResponding is set for local vehicles.
     public int isIt;
+    // Vehicle.js isBot.
+    public bool isBot;
     public float lastTag;
     public int score;
     public bool isResponding = true;

@@ -30,7 +30,8 @@ public class CombatSystemModern : MonoBehaviour
 
     private void Update()
     {
-        if (Game.Settings == null || Game.Controller == null) return;
+        // VehicleMe.js runs only on the local player's vehicle.
+        if (Game.Settings == null || Game.Controller == null || Game.Player != gameObject) return;
         if (_ridePos == null) _ridePos = FindRidePos();
 
         Settings s = Game.Settings;

@@ -816,6 +816,9 @@ MonoBehaviour:
     m_StretchHeight: 0
     m_IsSDF: 0
   objectMarkerMe: {fileID: 100000, guid: d3a343c463a4e4ab985ce577bb34f9e1, type: 3}
+  objectMarker: {fileID: 100000, guid: ea5b9aecbf51f49c5adeff19b8a54db8, type: 3}
+  objectMarkerQuarry: {fileID: 100000, guid: 6af347fe2821e4df0ad84ffb60f13769, type: 3}
+  botsInGame: 0
   quarryDist: 0
   objectRocket: {fileID: 100002, guid: 4ba56de3764ae4ffda192c3a237327bd, type: 3}
   objectRocketSnipe: {fileID: 100002, guid: e125b336ae4a84ff3859753a7ec7bc59, type: 3}

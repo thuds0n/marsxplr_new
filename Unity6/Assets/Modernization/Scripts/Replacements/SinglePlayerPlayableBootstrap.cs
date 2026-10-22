@@ -63,6 +63,48 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
 
     private void SpawnPlayer()
     {
+        GameObject go = SpawnVehicle("Player", false);
+        Rigidbody rb = go.GetComponent<Rigidbody>();
+        var vehicleState = go.GetComponent<VehicleStateModern>();
+        bool usingBuggyVisual = go.GetComponent<VehicleColourModern>() != null;
+
+        AttachLegacyLaserSight(go);
+
+        // Vehicle.js: the player's own vehicle carries the Marker Me minimap marker.
+        if (Game.Controller != null && Game.Controller.objectMarkerMe != null)
+        {
+            GameObject marker = Instantiate(Game.Controller.objectMarkerMe, go.transform.position, go.transform.rotation);
+            marker.transform.parent = go.transform;
+        }
+
+        Game.Player = go;
+        if (Game.Settings != null)
+        {
+            Game.Settings.simplified = false;
+            Game.Settings.updatePrefs();
+        }
+
+        if (Game.Controller != null)
+        {
+            Game.Controller.msg(usingBuggyVisual ? "Single-player buggy spawned." : "Single-player fallback pawn spawned.", 2);
+        }
+    }
+
+    // Game.js iV() and Vehicle.js Start() for a bot: the same buggy, driven by
+    // VehicleBotModern, with the other-vehicle minimap markers, the player's
+    // colours and the LaserLock sphere, but no aimers.
+    public GameObject SpawnBot(string botName)
+    {
+        GameObject go = SpawnVehicle(botName, true);
+        go.AddComponent<VehicleBotModern>();
+        go.AddComponent<LaserLockModern>();
+        go.AddComponent<VehicleMarkersModern>();
+        return go;
+    }
+
+    // Shared by the player and bots (Game.js iV()).
+    private GameObject SpawnVehicle(string vehicleName, bool isBot)
+    {
         // Game.js iV(): spawn at the base with identity rotation, raised a metre
         // at a time until a 3 m sphere there is clear.
         Vector3 spawn = World.@base != null ? World.@base.position : Vector3.up * 8f;
@@ -91,8 +133,8 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
             }
         }
 
-        go.name = "Player";
-        go.tag = "Player";
+        go.name = vehicleName;
+        if (!isBot) go.tag = "Player";
         go.transform.position = spawn;
         go.transform.rotation = spawnRot;
 
@@ -106,7 +148,7 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
         if (useModernBuggyController)
         {
             go.AddComponent<BuggyControllerModern>();
-            go.AddComponent<PlayerVehicleInputModern>();
+            if (!isBot) go.AddComponent<PlayerVehicleInputModern>();
             var presentation = go.AddComponent<BuggyPresentationModern>();
             presentation.wheelPrefab = buggyWheelPrefab;
             presentation.axelPrefab = buggyAxelPrefab;
@@ -120,7 +162,8 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
         }
         go.AddComponent<CombatSystemModern>();
         var vehicleState = go.GetComponent<VehicleStateModern>();
-        if (go.GetComponent<FallReset>() == null)
+        // VehicleBot.js does its own bounds check.
+        if (!isBot && go.GetComponent<FallReset>() == null)
         {
             go.AddComponent<FallReset>();
         }
@@ -138,14 +181,6 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
         }
 
         AttachRidePos(go.transform);
-        AttachLegacyLaserSight(go);
-
-        // Vehicle.js: the player's own vehicle carries the Marker Me minimap marker.
-        if (Game.Controller != null && Game.Controller.objectMarkerMe != null)
-        {
-            GameObject marker = Instantiate(Game.Controller.objectMarkerMe, go.transform.position, go.transform.rotation);
-            marker.transform.parent = go.transform;
-        }
 
         if (vehicleState != null)
         {
@@ -154,19 +189,11 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
             vehicleState.rideTarget = go.transform;
             vehicleState.SetFlightMode(false);
             vehicleState.SyncFromRigidbody(rb);
+            vehicleState.isBot = isBot;
+            // Vehicle.js Start(): a new vehicle starts with a fresh tag guard.
+            vehicleState.lastTag = Time.time;
         }
-
-        Game.Player = go;
-        if (Game.Settings != null)
-        {
-            Game.Settings.simplified = false;
-            Game.Settings.updatePrefs();
-        }
-
-        if (Game.Controller != null)
-        {
-            Game.Controller.msg(usingBuggyVisual ? "Single-player buggy spawned." : "Single-player fallback pawn spawned.", 2);
-        }
+        return go;
     }
 
     private void AttachLegacyLaserSight(GameObject playerRoot)
