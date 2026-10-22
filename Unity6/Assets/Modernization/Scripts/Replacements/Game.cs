@@ -185,7 +185,10 @@ public class Game : MonoBehaviour
             float y = (Screen.height * 0.5f) - (tex.height * 0.5f);
             Rect rect = new Rect(x, y, tex.width, tex.height);
             GUI.depth = -999;
-            GUI.Label(rect, tex);
+            // DrawTexture, not Label: Unity 6's label pads 3 px top and bottom,
+            // which shrank the 64 px crosshair to 58 px pinned to the top-left,
+            // 3 px left of the screen centre the lasers fly to.
+            GUI.DrawTexture(rect, tex);
             return;
         }
 
