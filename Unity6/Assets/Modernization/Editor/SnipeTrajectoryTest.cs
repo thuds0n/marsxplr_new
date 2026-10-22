@@ -71,8 +71,9 @@ public static class SnipeTrajectoryTest
         float speed = s.laserSpeed * SnipeSpeedX;
         Line($"Unity {Application.unityVersion}, {SystemInfo.operatingSystem}; fixedDeltaTime {dt}, laserSpeed {s.laserSpeed}, laserGrav {s.laserGrav}, laserRico {s.laserRico}");
 
-        // 1. Level shot at two static boxes 298 m and 310 m away, 60 m up.
-        Vector3 origin = player.transform.position + Vector3.up * 60f;
+        // 1. Level shot at two static boxes 298 m and 310 m away, 250 m up
+        // (clear of Fort Boxy whichever way the buggy faces).
+        Vector3 origin = player.transform.position + Vector3.up * 250f;
         Vector3 dir = Vector3.ProjectOnPlane(player.transform.forward, Vector3.up).normalized;
         GameObject near = Box("SnipeTestNear", origin + dir * 300f);
         GameObject far = Box("SnipeTestFar", origin + dir * 312f);
@@ -129,6 +130,28 @@ public static class SnipeTrajectoryTest
         float sourceLife = Mathf.Lerp(13f, 5f, s.laserSpeed * SnipeSpeedX * 0.003f);
         Check(samples > 10 && maxError < 0.05f, $"{samples} samples on whole steps, worst height error {maxError:F3} m against y = v0·dt·k − {c:F2}·dt·k(k+1)/2");
         Check(r == null && Mathf.Abs(life - sourceLife) < 0.1f, $"destroyed after {life:F2} s, source {sourceLife} s");
+
+        // 3. A first-person shot fired as CombatSystemModern.Update does:
+        // where the bolt and its trail sit on screen against the centre.
+        int savedCam = s.camMode;
+        s.camMode = 0;
+        yield return 0.3f;
+        Camera cam = Camera.main;
+        Transform ride = null;
+        foreach (Transform t in player.GetComponentsInChildren<Transform>(true)) if (t.name == "RideCam") ride = t;
+        r = combat.Fire(true, ride.position + player.transform.up * -0.1f, cam.transform.rotation);
+        var trail = r.GetComponent<TrailRenderer>();
+        Line($"camera {cam.transform.position:F3} ridePos {ride.position:F3} (camera − ridePos {cam.transform.position - ride.position:F3}); trail alignment {trail.alignment}, width {trail.startWidth}→{trail.endWidth}, textureMode {trail.textureMode}");
+        foreach (Component part in r.GetComponentsInChildren<Component>(true))
+            if (part != null) Line($"  bolt part {part.transform.name}: {part.GetType().Name}{(part is Renderer rr ? " enabled=" + rr.enabled + " material=" + (rr.sharedMaterial ? rr.sharedMaterial.name : "none") : "")}{(part is MeshFilter mf ? " mesh=" + (mf.sharedMesh ? mf.sharedMesh.name : "none") : "")}");
+        for (int i = 0; i < 3; i++)
+        {
+            yield return 0f;
+            if (r == null) break;
+            Vector3 sp = cam.WorldToScreenPoint(r.transform.position);
+            Line($"bolt on screen {sp.x - cam.pixelWidth * 0.5f:F1}, {sp.y - cam.pixelHeight * 0.5f:F1} px from centre at {sp.z:F1} m");
+        }
+        s.camMode = savedCam;
         Line("done");
     }
 
