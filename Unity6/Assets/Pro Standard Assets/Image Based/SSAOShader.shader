@@ -40,7 +40,13 @@ v2f_ao vert_ao (appdata_img v)
 	return o;
 }
 
-sampler2D _CameraDepthNormalsTexture;
+// Unity 2 sampled the camera's depth-normals texture bilinearly; Unity 6 makes it
+// point filtered. With point sampling, distant samples smaller than a texel read
+// the pixel's own depth and a floor seen from below the horizon occludes itself,
+// so the AO term samples it bilinearly as the original did. The blur keeps point.
+Texture2D _CameraDepthNormalsTexture;
+SamplerState sampler_linear_clamp;
+SamplerState sampler_point_clamp;
 sampler2D _RandomTexture;
 float4 _Params; // x=radius, y=minz, z=attenuation power, w=SSAO power
 
@@ -53,7 +59,7 @@ half frag_ao (v2f_ao i, int sampleCount, float3 samples[MAX_SAMPLE_COUNT])
     half3 randN = tex2D (_RandomTexture, i.uvr).xyz * 2.0 - 1.0;    
     
     // read scene depth/normal
-    float4 depthnormal = tex2D (_CameraDepthNormalsTexture, i.uv);
+    float4 depthnormal = _CameraDepthNormalsTexture.Sample(sampler_linear_clamp, i.uv);
     float3 viewNorm;
     float depth;
     DecodeDepthNormal (depthnormal, depth, viewNorm);
@@ -81,7 +87,7 @@ half frag_ao (v2f_ao i, int sampleCount, float3 samples[MAX_SAMPLE_COUNT])
         float sD = depth - (randomDir.z * _Params.x);
 
 		// Sample depth at offset location
-        float4 sampleND = tex2D (_CameraDepthNormalsTexture, i.uv + offset);
+        float4 sampleND = _CameraDepthNormalsTexture.Sample(sampler_linear_clamp, i.uv + offset);
         float sampleD;
         float3 sampleN;
         DecodeDepthNormal (sampleND, sampleD, sampleN);
@@ -278,12 +284,12 @@ half4 frag( v2f i ) : COLOR
     half sum = tex2D(_SSAO, AO_UV(i.uv)).r * (NUM_BLUR_SAMPLES + 1);
     half denom = NUM_BLUR_SAMPLES + 1;
     
-    half4 geom = tex2D (_CameraDepthNormalsTexture, i.uv);
+    half4 geom = _CameraDepthNormalsTexture.Sample(sampler_point_clamp, i.uv);
     
     for (int s = 0; s < NUM_BLUR_SAMPLES; ++s)
     {
         float2 nuv = i.uv + o * (s+1);
-        half4 ngeom = tex2D (_CameraDepthNormalsTexture, nuv.xy);
+        half4 ngeom = _CameraDepthNormalsTexture.Sample(sampler_point_clamp, nuv.xy);
         half coef = (NUM_BLUR_SAMPLES - s) * CheckSame (geom, ngeom);
         sum += tex2D (_SSAO, AO_UV(nuv.xy)).r * coef;
         denom += coef;
@@ -291,7 +297,7 @@ half4 frag( v2f i ) : COLOR
     for (int s = 0; s < NUM_BLUR_SAMPLES; ++s)
     {
         float2 nuv = i.uv - o * (s+1);
-        half4 ngeom = tex2D (_CameraDepthNormalsTexture, nuv.xy);
+        half4 ngeom = _CameraDepthNormalsTexture.Sample(sampler_point_clamp, nuv.xy);
         half coef = (NUM_BLUR_SAMPLES - s) * CheckSame (geom, ngeom);
         sum += tex2D (_SSAO, AO_UV(nuv.xy)).r * coef;
         denom += coef;
