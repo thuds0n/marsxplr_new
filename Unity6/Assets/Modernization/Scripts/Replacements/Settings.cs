@@ -168,6 +168,14 @@ public class Settings : MonoBehaviour
             World.sea.position = seaPos;
         }
 
+        // Settings.js switched off every vehicle's spot light (Vehicle.prefab's
+        // VehicleLight) whenever the preferences were applied.
+        foreach (var light in FindObjectsByType<Light>(FindObjectsSortMode.None))
+        {
+            if (light.name != "VehicleLight") continue;
+            light.enabled = false;
+        }
+
         laserLocking = false;
         if (laserLock != null)
         {

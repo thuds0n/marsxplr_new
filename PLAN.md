@@ -129,7 +129,7 @@ Status: ported and verified on the probe pad. Judged comparable to the Wine vers
 - Audit missing scripts and incompatible shaders within the selected environment only.
 - Validate suspension feel, scale, speed perception, altitude, minimap, arrow, and camera obstruction behaviour.
 
-Status: Fort Boxy loads offline and its sky, fog, lighting, base marker and textures match the Wine version. Open: laser aimer colour. Detail: [docs/world-and-rendering.md](docs/world-and-rendering.md).
+Status: Fort Boxy loads offline and its sky, fog, lighting, base marker and textures match the Wine version. Open: laser aimer colour. Spawn light and horizon traced from source on 2026-10-23: light matches (engine differences only), `VehicleLight` now disabled as in `updatePrefs()`, horizon settings match; the horizon pattern is not yet compared by eye. Detail: [docs/world-and-rendering.md](docs/world-and-rendering.md).
 
 ## Milestone 4: Gameplay loop parity
 

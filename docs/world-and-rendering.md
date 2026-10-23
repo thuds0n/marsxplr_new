@@ -132,3 +132,30 @@ Also fixed: `AirCastle`'s six pyramids (four hanging spikes and the two roof pyr
 Earlier note: a strip on the east side (x 9–18, z ±3–6) is drawn in shadow where the rays find a clear path to the sun, so the small sunlit gaps there appear a few metres east of where the geometry puts them. Possible causes are shadow-map resolution and bias at Beautiful, or a remaining geometry difference; not investigated further.
 
 Rechecked 2026-10-21 (Unity `6000.3.26f1`, macOS `27.0.1`, Beautiful: 4 cascades, 250 m, light bias 0.05, normal bias 0.4): no offset found. A temporary probe rendered the floor top-down (35 × 35 m around the slab, 256 × 256, 0.14 m a pixel) with every other renderer set to shadows only, and compared each floor pixel with a ray towards the sun. With the current settings 62 of the 2,904 strip pixels differ, all on the edges of the two sunlit triangles and all drawn lit where the ray is blocked; the triangles sit where the geometry puts them, within one pixel. Normal bias 0 reduces this to 12 pixels, and the light bias (0 to 1) makes no difference. The earlier strip was probably measured before the vertex-layout and pyramid fixes above. The light's settings are unchanged; the original engine had no normal bias, but the difference is a fraction of a pixel.
+
+## Spawn light and horizon, traced from source (2026-10-23)
+
+Checked against `unity/` on 2026-10-23 (Unity `6000.3.26f1`, macOS `27.0.1`). Values come from the original binary prefabs' type trees, read directly. A Play-mode check of the scene's lights ran, but the editor was not advancing frames, so the player vehicle never spawned and nothing was compared by eye.
+
+Spawn light. Neither original `Game` scene nor `FortBoxy.utw` has a light. `Game.js` `Init()` instantiates `Resources/Light` at the origin if no light other than a `VehicleLight` exists; `World.FinishWorld()` does the same. `WhirldIn.js` keeps world objects named `Light` at the top level, and `Base.prefab` and `BaseSimple.js`/`WhirldLOD.js` hold or create no light. `Resources/Light` in `unity/` (Unity 2.x binary, identical bytes at the `pre-unity6-upgrade` tag):
+
+| Field | Original | Port (`Light.prefab`) |
+| --- | --- | --- |
+| Type, position, rotation | directional, origin, (−0.183, 0.683, −0.183, −0.683) | same |
+| Colour | (1, 0.8791, 0.8792, 0) | same |
+| Intensity | 0.5 | 1 |
+| Shadows | soft, resolution High, strength 0.9 | same |
+| Shadow bias | constant 0.07, object-size 0.01, projection 1 | bias 0.05, normal bias 0.4 |
+| Flare, halo, culling | `Sun.flare`, no halo, everything | same |
+
+Engine differences only: Unity 2–4 legacy shaders doubled lighting, so intensity 0.5 there equals 1 now (the floor brightness table above confirms the port at 1 matches the Wine version). Unity 5 replaced constant and object-size bias with bias and normal bias, and shadow projection became a quality setting; there is no exact mapping, and the current values were checked against ray-traced shadows (see Shadows under the spawn slab). Range, spot angle and `m_Attenuate` do not apply to a directional light.
+
+Behavioural difference fixed: `Vehicle.prefab` carries a spot light, `VehicleLight` (colour (0.745, 0.853, 1), intensity 2, range 100, angle 60), and `Settings.js` `updatePrefs()` disables every light with that name; `Game.js` calls it right after the local player spawns. The port did not have this loop. It now does, in `Settings.updatePrefs()`. The port's player currently clones only the laser children from `Vehicle.prefab`, so no `VehicleLight` exists today; the loop matters once the full rig is used.
+
+Horizon. The port's settings match the source:
+- far clip `worldViewDist` 5000 (capped by `viewCap`); `worldFog = lerp(0.007, 0.0003, far / 6000)` = 0.001417 at 5000; `CameraVehicle` `OnPreRender` applies it each frame and clears to the skybox beyond 2000 m. Read in Play mode: far 5000, clear Skybox, fog on, density 0.001417.
+- fog: the `Game` scene's exponential squared, colour (0.041, 0, 0.118); `FortBoxy.utw` sets none.
+- floor: `Resources/Floor`, the original `CircularPlane` (2,500 m radius) at y = 0; `FloorController.js` only replaces the texture when the world gives one, and Fort Boxy gives none. `Floor.mat` tiling (1, 1) and colour (1, 1, 1, 0) match the binary original; `Floor.png`'s importer settings (mipmaps on, bilinear, aniso 2, mip bias −1, repeat, 1024) are identical to `unity/`.
+- image effects: contrast stretch above Good, SSAO at Fantastic, glow and colour correction only underwater (see Image effects on Metal).
+
+At 0.001417 exp² fog the floor is 37% visible at 700 m and fully fogged long before its 2,500 m edge, so the floor's edge cannot show. Any repeating pattern near the horizon is the floor texture tiled once per texture repeat at a grazing angle; the original asks for the same thing with mip bias −1 (sharper, more aliasing-prone mip choice) and aniso 2. Conclusion from the code: the pattern follows from the original's settings, not from the port. Not yet confirmed by eye: a capture of the port at the user's render level beside the Wine version, which would show whether Metal's anisotropic filtering differs from the original renderer's.
