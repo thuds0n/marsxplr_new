@@ -1,0 +1,19 @@
+# In-game menu
+
+The side-panel menu at the top right: `Game.js` `OnGUI` from "Basic Setup", `GUIPanel()`, and `Settings.js` `showDialogServer()`. The `Settings.js` `OnGUI` that drew an older `showBox` menu is commented out in the source and is not ported.
+
+## Side panels and Server Settings (2026-10-23)
+
+Ported into `Game.cs` and `Settings.cs`:
+
+- `GUIPanels`, with the values decoded from the original binary `Game.unity`: Server Settings, Game Settings, Player Settings and Active Players (active, closed, minimum height 250), Switch Vehicle (inactive, open, bold, 250–350) and Settings Advisor (inactive, open, bold, 155–160).
+- The layout: closed panels are 25 px buttons in a 170 px column 180 px from the right edge; open panels share the remaining height (Screen.height − 60) between their minimum and maximum, easing at 3 × dt; the oldest open panel closes after 1.5 s of overflow. Game Settings' button shows the frame rate. Each panel window has the skin's `close_button` and a scroll view.
+- The `<<` / `>>` button at the bottom right toggles `Settings.simplified`, which hides the panels.
+- `Game.Skin` is the original `Mars GUI` skin, now bound in `Game.unity`.
+- `Settings.showDialogServer()`: the host branch, in the original order and with the original ranges and labels, limited to what the port honours: Minimap enabled; Lasers enabled, L Hits Rematerialize, Lsr Spd (an `int`, as in the source), Lsr Gvt, Lsr Rco; Gravity (now applied to `Physics.gravity` in `updatePrefs`); Visibility; Sea Vis and Sea Alt when the world has a sea (Sea Alt now moves `World.sea`); Bots: Can Fire, Can Drive, Add Bot, Axe Bot; Buggy: Stall Blending, Powered Loops, Smart Suspension, Fl Speed, Fl Agility, Stability, Power, Speed, Traction, Shocks, Firepower, Lsr Lck. `updateServerPrefs()` applies the settings locally; there is no server offline.
+
+Left out: the online settings (Default All, server name, listing, password, welcome message, networking, settings I/O, nTime), Camouflage Badges (name tags are not ported), RORBs and XORBs, and the hovercraft, tank and jet sections. The other panels show a temporary "{Not ported yet}" label. Switch Vehicle and Settings Advisor are never switched on yet. The Exit Game button, the HUD hint lines and the GUI fade (`GUIAlpha`) are not ported.
+
+Engine difference: the skin's default font, Arial Rounded Bold, was imported as a static character set (`Unicode`). Unity 6 draws IMGUI text through TextCore, which cannot load a font face from a static font, so every Mars-skin string failed to generate. It logged "Unable to find a font file with the specified Family Name [Arial Rounded Bold]" every frame, and each button showed the last string drawn, the HUD readout. The font is now imported as Dynamic, as Ethnocentric already was. The importer rewrote the `.meta` in its current format, which reset character spacing and padding; those settings only affect static font textures.
+
+Verified (Unity `6000.3.26f1` editor, macOS `27.0.1`, Play mode from `Init`): `tools/compile-check.sh` passes. On screen, the four panel buttons read Server Settings, Game Settings (with the frame rate), Player Settings and Active Players, and the `>>` button shows. Opened through the Unity MCP, Server Settings showed its window with Game Features, the laser rows, Gravity, Visibility and the start of Bots. The rest of the panel, and clicking Add Bot or any control by hand, were not checked: clicks into the editor were refused by the screen tool, and the editor then closed (no crash report). Add Bot itself is covered by `Run Bot Test`, which calls the same `Game.addBot()`.

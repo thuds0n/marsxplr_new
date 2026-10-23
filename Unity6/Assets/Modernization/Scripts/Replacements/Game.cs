@@ -25,6 +25,36 @@ public class Game : MonoBehaviour
     public GameObject objectMarkerQuarry;
     // Game.js botsInGame.
     public int botsInGame;
+    // Game.js Skin: the Mars GUI skin for the menus.
+    public GUISkin Skin;
+
+    // Game.js GUIPanel: one side panel of the menu at the top right.
+    public class GUIPanel
+    {
+        public string name;
+        public bool active = true;
+        public bool open;
+        public bool important;
+        public int minHeight = 300;
+        public int maxHeight;
+        public float curHeight;
+        public float desHeight;
+        public Vector2 scrollPos;
+        public float openTime;
+    }
+
+    // Game.js GUIPanels, with the values serialised in the original Game.unity.
+    [System.NonSerialized]
+    public GUIPanel[] GUIPanels =
+    {
+        new GUIPanel { name = "Server Settings", active = true, minHeight = 250 },
+        new GUIPanel { name = "Game Settings", active = true, minHeight = 250 },
+        new GUIPanel { name = "Player Settings", active = true, minHeight = 250 },
+        new GUIPanel { name = "Active Players", active = true, minHeight = 250 },
+        new GUIPanel { name = "Switch Vehicle", active = false, open = true, important = true, minHeight = 250, maxHeight = 350 },
+        new GUIPanel { name = "Settings Advisor", active = false, open = true, important = true, minHeight = 155, maxHeight = 160 },
+    };
+    private float closePanel;
     public float quarryDist;
     // Game.js objectRocket and objectRocketSnipe, with the explosions their
     // Rocket.js components reference.
@@ -67,6 +97,12 @@ public class Game : MonoBehaviour
         {
             objectMarkerMe = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Martian Assets/Vehicles/Prefabs/Marker Me.prefab");
             changed |= objectMarkerMe != null;
+        }
+
+        if (Skin == null)
+        {
+            Skin = AssetDatabase.LoadAssetAtPath<GUISkin>("Assets/Martian Assets/GUI/Mars GUI.guiskin");
+            changed |= Skin != null;
         }
 
         if (objectMarker == null || objectMarkerQuarry == null)
@@ -216,6 +252,118 @@ public class Game : MonoBehaviour
 
         DrawCrosshair();
         DrawHudReadout();
+        DrawMenu();
+    }
+
+    // Game.js OnGUI from "Basic Setup": the hide button and the side panels.
+    // Not ported: the GUI fade (GUIAlpha), the Exit Game button, the HUD hint
+    // lines, and switching the Switch Vehicle and Settings Advisor panels on.
+    private void DrawMenu()
+    {
+        GUI.skin = Skin;
+        GUI.depth = 1;
+        if (loadingWorld) return;
+
+        // Hide GUI button.
+        if (GUI.Button(new Rect(Screen.width - 50, Screen.height - 50, 40, 40), !Settings.simplified ? ">>" : "<<"))
+        {
+            Settings.simplified = !Settings.simplified;
+        }
+
+        if (Player == null || Settings.simplified) return;
+
+        // Build side panels.
+        int liquidPanels = 0;
+        int solidPanels = 0;
+        int buttonHeight = 25;
+        int panelSpacing = 5;
+        float areaHeight = Screen.height - 60;
+        float areaOffset = panelSpacing * 2;
+        float areaOffsetDes = areaOffset;
+
+        // Calculate side panel heights.
+        for (int i = 0; i < GUIPanels.Length; i++)
+        {
+            if (!GUIPanels[i].active) continue;
+            if (GUIPanels[i].open) liquidPanels++;
+            else solidPanels++;
+        }
+
+        // Area to fill.
+        for (int i = 0; i < GUIPanels.Length; i++)
+        {
+            GUIPanel panel = GUIPanels[i];
+            if (!panel.active && panel.curHeight <= buttonHeight) continue;
+            if (panel.open && panel.active)
+            {
+                panel.desHeight = (areaHeight - ((solidPanels + liquidPanels) * panelSpacing + solidPanels * buttonHeight)) / liquidPanels;
+                if (panel.maxHeight > 0 && panel.desHeight > panel.maxHeight) panel.desHeight = panel.maxHeight;
+                else if (panel.minHeight > 0 && panel.desHeight < panel.minHeight) panel.desHeight = panel.minHeight;
+            }
+            else
+            {
+                panel.desHeight = buttonHeight;
+            }
+            if (panel.curHeight > panel.desHeight - 1 && panel.curHeight < panel.desHeight + 1) panel.curHeight = panel.desHeight;
+            else panel.curHeight = Mathf.Lerp(panel.curHeight, panel.desHeight, Time.deltaTime * 3);
+
+            // We are a button.
+            if (panel.curHeight < buttonHeight * 1.5f)
+            {
+                string txt = panel.name;
+                if (i == 1) txt += " (" + (1f / Mathf.Max(Time.smoothDeltaTime, 0.0001f)).ToString("f0") + " FPS)";
+                if (Event.current.type != EventType.Layout && GUI.Button(new Rect(Screen.width - 180, areaOffset, 170, panel.curHeight), txt))
+                {
+                    panel.open = !panel.open;
+                    panel.openTime = Time.time;
+                    GUI.FocusWindow(20 + i);
+                }
+            }
+            // We are a panel.
+            else
+            {
+                GUI.Window(20 + i, new Rect(Screen.width - 180, areaOffset, 170, panel.curHeight), DrawPanel, panel.name + ":", panel.important ? "boldWindow" : "window");
+            }
+
+            areaOffset += panel.curHeight + panelSpacing;
+            areaOffsetDes += panel.desHeight + panelSpacing;
+        }
+
+        // Close the oldest panel if we are flowing out of the area.
+        if (Event.current.type != EventType.Layout)
+        {
+            if (areaOffsetDes > areaHeight + panelSpacing * 4)
+            {
+                closePanel += Time.deltaTime;
+                if (closePanel > 1.5f)
+                {
+                    int oldestI = -1;
+                    for (int i = 0; i < GUIPanels.Length; i++)
+                    {
+                        if (GUIPanels[i].open && GUIPanels[i].openTime > 0 && GUIPanels[i].openTime < Time.time - 0.5f && (oldestI == -1 || GUIPanels[i].openTime < GUIPanels[oldestI].openTime)) oldestI = i;
+                    }
+                    if (oldestI != -1) GUIPanels[oldestI].open = false;
+                }
+            }
+            else closePanel = 0;
+        }
+    }
+
+    // Game.js GUIPanel(): close button, scroll view and the panel's contents.
+    private void DrawPanel(int id)
+    {
+        int i = id - 20;
+        GUIStyle closeButtonStyle = GUI.skin.GetStyle("close_button");
+        if (GUI.Button(new Rect(closeButtonStyle.padding.left, closeButtonStyle.padding.top, closeButtonStyle.normal.background.width, closeButtonStyle.normal.background.height), "", "close_button")) GUIPanels[i].open = false;
+        GUILayout.Space(5);
+        GUIPanels[i].scrollPos = GUILayout.BeginScrollView(GUIPanels[i].scrollPos);
+
+        if (i == 0) Settings.showDialogServer();
+        // Temporary: the other panels are not ported yet.
+        else GUILayout.Label("{Not ported yet}");
+
+        GUILayout.Space(5);
+        GUILayout.EndScrollView();
     }
 
     private void DrawCrosshair()

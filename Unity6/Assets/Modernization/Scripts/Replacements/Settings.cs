@@ -24,6 +24,8 @@ public class Settings : MonoBehaviour
     public float zorbSpeed = 7f;
     public bool zorbEnabled;
     public int[] firepower = { 2, 2, 3, 2 };
+    // Settings.js world default.
+    public float worldGrav = -9.81f;
     // Settings.js bot defaults.
     public bool botsCanFire = true;
     public bool botsCanDrive = true;
@@ -158,6 +160,14 @@ public class Settings : MonoBehaviour
         else if (renderLevel > 2) World.lodDist = 75;
         else World.lodDist = 0;
 
+        Physics.gravity = new Vector3(0f, worldGrav, 0f);
+        if (World.sea != null)
+        {
+            Vector3 seaPos = World.sea.position;
+            seaPos.y = lavaAlt;
+            World.sea.position = seaPos;
+        }
+
         laserLocking = false;
         if (laserLock != null)
         {
@@ -170,5 +180,151 @@ public class Settings : MonoBehaviour
                 }
             }
         }
+    }
+
+    // Settings.js updateServerPrefs(): offline there is no server to update,
+    // so only the local settings are applied.
+    public void updateServerPrefs()
+    {
+        updatePrefs();
+    }
+
+    // Settings.js showDialogServer(), the host branch, limited to what the
+    // single-player port honours. Left out: the online settings (Default All,
+    // server name, listing, password, welcome message, networking, settings
+    // I/O and nTime), Camouflage Badges (name tags are not ported), RORBs and
+    // XORBs, and the hovercraft, tank and jet sections.
+    public void showDialogServer()
+    {
+        GUILayout.Space(20);
+        GUILayout.Label("Game Features:");
+
+        if (GUILayout.Toggle(minimapAllowed, "Minimap enabled") != minimapAllowed)
+        {
+            minimapAllowed = !minimapAllowed;
+            updateServerPrefs();
+        }
+
+        if (GUILayout.Toggle(lasersAllowed, "Lasers enabled") != lasersAllowed)
+        {
+            lasersAllowed = !lasersAllowed;
+            updateServerPrefs();
+        }
+
+        if (lasersAllowed)
+        {
+            if (GUILayout.Toggle(lasersFatal, "L Hits Rematerialize") != lasersFatal)
+            {
+                lasersFatal = !lasersFatal;
+                updateServerPrefs();
+            }
+            // laserSpeed is an int in Settings.js; the slider value truncates.
+            GUILayout.BeginHorizontal();
+            int lsr = (int)GUILayout.HorizontalSlider(laserSpeed, 20f, 340f);
+            if (laserSpeed != lsr)
+            {
+                laserSpeed = lsr;
+                updateServerPrefs();
+            }
+            GUILayout.Label("Lsr Spd", GUILayout.Width(65));
+            GUILayout.EndHorizontal();
+            Slider(ref laserGrav, 0f, 1f, "Lsr Gvt");
+            Slider(ref laserRico, 0f, 1f, "Lsr Rco");
+            GUILayout.Space(10);
+        }
+
+        Slider(ref worldGrav, -0.81f, -18.81f, "Gravity");
+        Slider(ref worldViewDist, 300f, 9700f, "Visibility");
+
+        if (World.sea != null)
+        {
+            Slider(ref lavaFog, 0.015f, -0.01f, "Sea Vis");
+            Slider(ref lavaAlt, -100f, 100f, "Sea Alt");
+        }
+
+        GUILayout.Space(20);
+        GUILayout.Label("Bots:");
+
+        if (GUILayout.Toggle(botsCanFire, "Can Fire") != botsCanFire)
+        {
+            botsCanFire = !botsCanFire;
+            updateServerPrefs();
+        }
+
+        if (GUILayout.Toggle(botsCanDrive, "Can Drive") != botsCanDrive)
+        {
+            botsCanDrive = !botsCanDrive;
+            updateServerPrefs();
+        }
+
+        GUILayout.Space(10);
+
+        GUILayout.BeginHorizontal();
+        if (Game.Controller.botsInGame < 10)
+        {
+            if (GUILayout.Button("Add Bot")) Game.Controller.addBot();
+        }
+        if (Game.Controller.botsInGame > 0)
+        {
+            if (Game.Controller.botsInGame != 10) GUILayout.Space(5);
+            if (GUILayout.Button("Axe Bot")) Game.Controller.axeBot();
+        }
+        GUILayout.EndHorizontal();
+
+        GUILayout.Space(20);
+        GUILayout.Label("Buggy:");
+
+        if (GUILayout.Toggle(buggyFlightSlip, "Stall Blending") != buggyFlightSlip)
+        {
+            buggyFlightSlip = !buggyFlightSlip;
+            updateServerPrefs();
+        }
+        if (GUILayout.Toggle(buggyFlightLooPower, "Powered Loops") != buggyFlightLooPower)
+        {
+            buggyFlightLooPower = !buggyFlightLooPower;
+            updateServerPrefs();
+        }
+        if (GUILayout.Toggle(buggySmartSuspension, "Smart Suspension") != buggySmartSuspension)
+        {
+            buggySmartSuspension = !buggySmartSuspension;
+            updateServerPrefs();
+        }
+        Slider(ref buggyFlightDrag, 50f, 550f, "Fl Speed");
+        Slider(ref buggyFlightAgility, 0.5f, 1.5f, "Fl Agility");
+        Slider(ref buggyCG, -0.1f, -0.7f, "Stability");
+        Slider(ref buggyPower, 0.5f, 1.5f, "Power");
+        Slider(ref buggySpeed, 5f, 55f, "Speed");
+        Slider(ref buggyTr, 0.1f, 1.9f, "Traction");
+        Slider(ref buggySh, 20f, 120f, "Shocks");
+
+        if (lasersAllowed)
+        {
+            // firepower is an int[] in Settings.js; the slider value truncates.
+            GUILayout.BeginHorizontal();
+            int fp = (int)GUILayout.HorizontalSlider(firepower[0], 0f, 3f);
+            if (firepower[0] != fp)
+            {
+                firepower[0] = fp;
+                updateServerPrefs();
+            }
+            GUILayout.Label("Firepower", GUILayout.Width(65));
+            GUILayout.EndHorizontal();
+
+            Slider(ref laserLock[0], 0f, 1f, "Lsr Lck");
+        }
+    }
+
+    // One Settings.js slider row: a horizontal slider and a 65 px label.
+    private void Slider(ref float value, float left, float right, string label)
+    {
+        GUILayout.BeginHorizontal();
+        float cg = GUILayout.HorizontalSlider(value, left, right);
+        if (value != cg)
+        {
+            value = cg;
+            updateServerPrefs();
+        }
+        GUILayout.Label(label, GUILayout.Width(65));
+        GUILayout.EndHorizontal();
     }
 }
