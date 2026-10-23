@@ -40,13 +40,28 @@ v2f_ao vert_ao (appdata_img v)
 	return o;
 }
 
-// Unity 2 sampled the camera's depth-normals texture bilinearly; Unity 6 makes it
-// point filtered. With point sampling, distant samples smaller than a texel read
-// the pixel's own depth and a floor seen from below the horizon occludes itself,
-// so the AO term samples it bilinearly as the original did. The blur keeps point.
+// Unity 6 point-filters the camera's depth-normals texture. With point sampling,
+// distant samples smaller than a texel read the pixel's own depth, and a floor
+// seen while looking above the horizon occludes itself (Wine shows no such band).
+// The AO term therefore reads offset samples as depth interpolated between the
+// four nearest texels. It decodes each texel first: filtering the two-byte
+// encoding directly breaks wherever the low byte wraps, which draws lines.
 Texture2D _CameraDepthNormalsTexture;
-SamplerState sampler_linear_clamp;
 SamplerState sampler_point_clamp;
+float4 _CameraDepthNormalsTexture_TexelSize;
+
+float SampleDepth01 (float2 uv)
+{
+	float2 t = uv * _CameraDepthNormalsTexture_TexelSize.zw - 0.5;
+	float2 f = frac(t);
+	float2 c = (floor(t) + 0.5) * _CameraDepthNormalsTexture_TexelSize.xy;
+	float2 d = _CameraDepthNormalsTexture_TexelSize.xy;
+	float d00 = DecodeFloatRG(_CameraDepthNormalsTexture.Sample(sampler_point_clamp, c).zw);
+	float d10 = DecodeFloatRG(_CameraDepthNormalsTexture.Sample(sampler_point_clamp, c + float2(d.x, 0)).zw);
+	float d01 = DecodeFloatRG(_CameraDepthNormalsTexture.Sample(sampler_point_clamp, c + float2(0, d.y)).zw);
+	float d11 = DecodeFloatRG(_CameraDepthNormalsTexture.Sample(sampler_point_clamp, c + d).zw);
+	return lerp(lerp(d00, d10, f.x), lerp(d01, d11, f.x), f.y);
+}
 sampler2D _RandomTexture;
 float4 _Params; // x=radius, y=minz, z=attenuation power, w=SSAO power
 
@@ -59,7 +74,7 @@ half frag_ao (v2f_ao i, int sampleCount, float3 samples[MAX_SAMPLE_COUNT])
     half3 randN = tex2D (_RandomTexture, i.uvr).xyz * 2.0 - 1.0;    
     
     // read scene depth/normal
-    float4 depthnormal = _CameraDepthNormalsTexture.Sample(sampler_linear_clamp, i.uv);
+    float4 depthnormal = _CameraDepthNormalsTexture.Sample(sampler_point_clamp, i.uv);
     float3 viewNorm;
     float depth;
     DecodeDepthNormal (depthnormal, depth, viewNorm);
@@ -87,11 +102,7 @@ half frag_ao (v2f_ao i, int sampleCount, float3 samples[MAX_SAMPLE_COUNT])
         float sD = depth - (randomDir.z * _Params.x);
 
 		// Sample depth at offset location
-        float4 sampleND = _CameraDepthNormalsTexture.Sample(sampler_linear_clamp, i.uv + offset);
-        float sampleD;
-        float3 sampleN;
-        DecodeDepthNormal (sampleND, sampleD, sampleN);
-        sampleD *= _ProjectionParams.z;
+        float sampleD = SampleDepth01 (i.uv + offset) * _ProjectionParams.z;
         float zd = saturate(sD-sampleD);
         if (zd > _Params.y) {
         	// This sample occludes, contribute to occlusion
