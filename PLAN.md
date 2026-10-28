@@ -129,7 +129,7 @@ Status: ported and verified on the probe pad. Judged comparable to the Wine vers
 - Audit missing scripts and incompatible shaders within the selected environment only.
 - Validate suspension feel, scale, speed perception, altitude, minimap, arrow, and camera obstruction behaviour.
 
-Status: Fort Boxy loads offline and its sky, fog, lighting, base marker and textures match the Wine version. Open: laser aimer colour. Spawn light and horizon traced from source on 2026-10-23: light matches (engine differences only), `VehicleLight` now disabled as in `updatePrefs()`, horizon settings match; the dark band below the horizon at Fantastic was point-sampled SSAO depth and now samples it bilinearly, as Unity 2 likely did (not yet checked by hand in the player). Detail: [docs/world-and-rendering.md](docs/world-and-rendering.md).
+Status: Fort Boxy loads offline and its sky, fog, lighting, base marker and textures match the Wine version. Open: laser aimer colour. Spawn light and horizon traced from source on 2026-10-23: light matches (engine differences only), `VehicleLight` now disabled as in `updatePrefs()`, horizon settings match; the dark band below the horizon at Fantastic was point-sampled SSAO depth and now reads interpolated decoded depth for the pixel and its samples; a faint speckle at 18–26° up in chase view remains from the original formula (not yet checked by hand in the player). Detail: [docs/world-and-rendering.md](docs/world-and-rendering.md).
 
 ## Milestone 4: Gameplay loop parity
 

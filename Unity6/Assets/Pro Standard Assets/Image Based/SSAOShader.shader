@@ -43,8 +43,8 @@ v2f_ao vert_ao (appdata_img v)
 // Unity 6 point-filters the camera's depth-normals texture. With point sampling,
 // distant samples smaller than a texel read the pixel's own depth, and a floor
 // seen while looking above the horizon occludes itself (Wine shows no such band).
-// The AO term therefore reads offset samples as depth interpolated between the
-// four nearest texels. It decodes each texel first: filtering the two-byte
+// The AO term therefore reads its own and its offset samples' depth interpolated
+// between the four nearest texels. It decodes each texel first: filtering the two-byte
 // encoding directly breaks wherever the low byte wraps, which draws lines.
 Texture2D _CameraDepthNormalsTexture;
 SamplerState sampler_point_clamp;
@@ -75,10 +75,10 @@ half frag_ao (v2f_ao i, int sampleCount, float3 samples[MAX_SAMPLE_COUNT])
     
     // read scene depth/normal
     float4 depthnormal = _CameraDepthNormalsTexture.Sample(sampler_point_clamp, i.uv);
-    float3 viewNorm;
-    float depth;
-    DecodeDepthNormal (depthnormal, depth, viewNorm);
-    depth *= _ProjectionParams.z;
+    float3 viewNorm = DecodeViewNormalStereo (depthnormal);
+    // Interpolated like the samples: a texel's depth against interpolated
+    // neighbours is off by up to half a texel, metres on distant floor.
+    float depth = SampleDepth01 (i.uv) * _ProjectionParams.z;
     #if SHADER_API_OPENGL
     float2 scale = (_Params.x / depth) * _CameraDepthNormalsTexture_ST.xy;
     #else
