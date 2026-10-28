@@ -4,7 +4,7 @@
 
 Deliver a recognisably original Mars Explorer single-player experience as a native macOS application, targeting Apple silicon (`arm64`) first and a universal binary only after the arm64 path is stable.
 
-`Unity6/` is the canonical runtime project. Its baseline editor is Unity 6.3 LTS (`6000.3.26f1`), supported until December 2027. `unity/` is retained as original behavioural and asset reference material; the ignored local `Unity5/` project is an asset-conversion bridge only.
+`Unity6/` is the canonical runtime project. Its baseline editor is Unity 6.3 LTS (`6000.3.27f1`), supported until December 2027. `unity/` is retained as original behavioural and asset reference material; the ignored local `Unity5/` project is an asset-conversion bridge only.
 
 ## Documentation
 

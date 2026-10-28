@@ -14,13 +14,13 @@
 # does not prove that Unity compiles the project, imports assets, or plays.
 #
 # Usage: tools/compile-check.sh [path/to/Unity.app]
-# Default editor: /Applications/Unity/Hub/Editor/6000.3.26f1/Unity.app
+# Default editor: /Applications/Unity/Hub/Editor/6000.3.27f1/Unity.app
 # Outputs are written to Unity6/Temp/CompileCheck/ (ignored by Git).
 
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
-unity_app="${1:-/Applications/Unity/Hub/Editor/6000.3.26f1/Unity.app}"
+unity_app="${1:-/Applications/Unity/Hub/Editor/6000.3.27f1/Unity.app}"
 scripting="$unity_app/Contents/Resources/Scripting"
 dotnet="$scripting/NetCoreRuntime/dotnet"
 csc="$scripting/DotNetSdkRoslyn/csc.dll"

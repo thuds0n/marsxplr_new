@@ -20,7 +20,7 @@ The vehicle physics, representative world loading, combat loop, and end-to-end m
 
 ## Repository layout
 
-- `Unity6/` — canonical modern runtime project, targeting Unity 6.3 LTS (`6000.3.26f1`).
+- `Unity6/` — canonical modern runtime project, targeting Unity 6.3 LTS (`6000.3.27f1`).
 - `tools/` — command-line helpers, including an editor-free C# compile check.
 - `unity/` — historical/original project used as a behavioural and asset reference.
 - `graphics/` — original supporting graphics.
@@ -32,14 +32,14 @@ The vehicle physics, representative world loading, combat loop, and end-to-end m
 ## Requirements
 
 - macOS on Apple silicon for the primary development target;
-- Unity 6.3 LTS (`6000.3.26f1`) with macOS Build Support;
+- Unity 6.3 LTS (`6000.3.27f1`) with macOS Build Support;
 - Xcode for IL2CPP macOS builds.
 
 The first deliverable targets native macOS `arm64`. A universal `arm64` and `x86_64` player is planned only after the arm64 vertical slice is stable.
 
 ## Getting started
 
-1. Open `Unity6/` in Unity `6000.3.26f1`.
+1. Open `Unity6/` in Unity `6000.3.27f1`.
 2. Open `Assets/_Scenes/Game.unity`.
 3. Run `Tools -> MarsXPLR -> Prepare Game Scene Baseline`.
 4. Run `Tools -> MarsXPLR -> Validate Project Baseline`.
