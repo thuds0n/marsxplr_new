@@ -32,3 +32,6 @@ sysinfo.txt
 
 # Per-user editor package settings
 /Unity6/ProjectSettings/Packages/
+
+# Python bytecode from the tools/ scripts
+__pycache__/
