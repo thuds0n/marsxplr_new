@@ -148,7 +148,7 @@ public static class ReplaceMissingCoreScripts
     }
 
     // The green guidance arrow (Game/Camera/Arrow) holds an instance of the
-    // Arrow.jas model. The Unity 2 scene stored the model's child expanded, with
+    // Arrow model (Arrow.fbx, from the original Arrow.jas). The Unity 2 scene stored the model's child expanded, with
     // the GUIArrow material, a 90 degree turn about X and z -0.003; Unity 6 loads
     // the instance from the model's defaults instead (Default-Material, no turn),
     // so those values are reapplied as prefab-instance overrides. Also links the

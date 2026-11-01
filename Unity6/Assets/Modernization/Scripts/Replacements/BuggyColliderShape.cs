@@ -1,9 +1,10 @@
 using UnityEngine;
 
 // The original buggy body collider: the convex "Collider" mesh from
-// Martian Assets/Vehicles/Buggy/Components/Buggy.jas. The converted FBX lost
-// this mesh, so its vertices and triangles are reproduced here. The original
-// prefab scaled the model by 2.
+// Martian Assets/Vehicles/Buggy/Components/Buggy.fbx (Cheetah 3D's export of the
+// original Buggy.jas). The Unity 5 export, Vehicles/Buggy/Buggy.fbx, lost this
+// mesh, so its vertices and triangles are reproduced here. The original prefab
+// scaled the model by 2.
 public static class BuggyColliderShape
 {
     private const float ModelScale = 2f;

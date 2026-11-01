@@ -39,7 +39,7 @@ The current working tree has not been compiled or played in Unity since its newe
 ## Decisions
 
 - Order of authority for parity:
-  1. The original code and assets decide behaviour and values. `unity/` is Aubrey Falconer's open-source release (2.22, upgraded by him to Unity 4.6.1f1 with no script changes). The ignored local `Unity5/` is the "Mars Explorer - Unity 5 Compatibility Fix" folder: a Unity 5.0.0f4 port by Ethan (BluetoothBoy), merged by the author as pull request #1 on 2015-03-29. It holds the same logic with Unity 5 API updates only, so either can be read. If they ever disagree on logic, `unity/` wins.
+  1. The original code and assets decide behaviour and values. `unity/` is Aubrey Falconer's open-source release (2.22, upgraded by him to Unity 4.6.1f1 with no script changes). The ignored local `Unity5/` is the "Mars Explorer - Unity 5 Compatibility Fix" folder: a Unity 5.0.0f4 port by Ethan (BluetoothBoy), merged by the author as pull request #1 on 2015-03-29. It holds the same logic with Unity 5 API updates only, so either can be read. If they ever disagree on logic, `unity/` wins. Assets are different: every asset in `Unity6/` was converted through the Unity 5 editor, which reinterprets lighting, ambient, shaders and physics on import, so treat converted values in those areas as Unity 5's reading until checked against `unity/` (audit in [docs/world-and-rendering.md](docs/world-and-rendering.md)).
   2. How the engine the game shipped on (Unity 4 and earlier) rendered that content decides the look. Neither `Unity5/` nor a modern editor shows the original look, for example the doubled legacy lighting.
   3. The Wine build of Mars Explorer 4.0.2, which is newer than the 2.22 source, is evidence for checks and for data found nowhere else (downloaded worlds, values in binary prefabs). Values taken only from it are recorded as inferences.
 
@@ -75,6 +75,8 @@ The current working tree has not been compiled or played in Unity since its newe
 ### Required before the baseline is locked
 
 - [x] Add `tools/compile-check.sh`, an editor-free compile check against Unity 6 reference assemblies.
+- [x] Replace the 12 Cheetah 3D (`.jas`) models in `Unity6/` with Cheetah's own FBX export, so imports no longer need Cheetah 3D; Unity's import is unchanged and the models render intact (`tools/jas2fbx/`, [docs/world-and-rendering.md](docs/world-and-rendering.md)).
+- [ ] Convert the five Blender (`.blend`) models the same way: without Blender, FortBoxy's castle pyramids, the tank and the simple buggy wheel have no mesh.
 - [x] Fix the editor-free compile errors (see [docs/validation.md](docs/validation.md#editor-free-compile-status)).
 - [x] Open the project in Unity `6000.3.26f1`, let the API updater run, and complete a clean script compile.
 - [x] Review scene, prefab, and project-setting re-serialisation against `pre-unity6-upgrade` before committing it (binary assets reviewed by file list only).
