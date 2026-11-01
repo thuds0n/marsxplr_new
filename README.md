@@ -4,6 +4,20 @@ Mars Explorer was a freeform vehicular adventure for macOS and the Dashboard, or
 
 Original project: [MarsXPLR.com](http://MarsXPLR.com)
 
+## About the original
+
+Aubrey Falconer built Mars Explorer in 2008: flying cars, giant volcanoes and laser tag across player-made worlds called Whirlds. It drew over a million players before retiring in June 2015, a few months after its source was opened. The original repository, [terran-labs/unity3d-marsxplr](https://github.com/terran-labs/unity3d-marsxplr), is now archived; its README tells the full story.
+
+<p align="center">
+  <img src="docs/readme/hover-warfare.jpg" alt="Hovercraft trading laser fire beside a Martian volcano" width="49%">
+  <img src="docs/readme/buggy.jpg" alt="A buggy climbing a red Martian slope" width="49%">
+</p>
+
+| Folder | Unity version |
+| --- | --- |
+| `unity/` | 4.6.1f1, the original game |
+| `Mars Explorer - Unity 5 Compatibility Fix/` | 5.0.0f4, the community Unity 5 port (original repository pull request #1) |
+
 ## Project status
 
 The modern port is under active development and does not yet provide a supported release build. The immediate target is an original-faithful single-player vertical slice that runs natively on Apple silicon without Rosetta.
@@ -22,12 +36,12 @@ The vehicle physics, representative world loading, combat loop, and end-to-end m
 
 - `Unity6/` — canonical modern runtime project, targeting Unity 6.3 LTS (`6000.3.27f1`).
 - `tools/` — command-line helpers, including an editor-free C# compile check.
-- `unity/` — historical/original project used as a behavioural and asset reference.
+- `unity/` — the original game (Unity 4.6.1f1) and the primary behavioural and asset reference.
 - `graphics/` — original supporting graphics.
 - `PLAN.md` — implementation roadmap, verification status, and prioritised next work.
 - `docs/` — detailed findings and measurements by area (buggy, flight, world and rendering, validation, release, measuring the original).
 
-`Unity5/` may exist locally as an ignored asset-conversion bridge: the Unity 5 compatibility port merged into the original repository as pull request #1. It is not an active gameplay project.
+`Unity5/` may exist locally as an ignored asset-conversion bridge: a copy of the upstream `Mars Explorer - Unity 5 Compatibility Fix/` folder (Unity 5.0.0f4). It is not an active gameplay project, and where it differs from `unity/`, `unity/` is authoritative.
 
 ## Requirements
 
