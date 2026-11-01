@@ -43,7 +43,7 @@ public static class ModelImportProbe
         EditorApplication.Exit(0);
     }
 
-    private static void DumpModel(string path, StringBuilder json)
+    public static void DumpModel(string path, StringBuilder json)
     {
         var root = AssetDatabase.LoadAssetAtPath<GameObject>(path);
         if (root == null)

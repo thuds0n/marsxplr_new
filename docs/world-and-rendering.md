@@ -202,7 +202,7 @@ Verified two ways, both passing for all 12:
 
 The four Unity 5 exports these replace (`Vehicles/Buggy/Buggy.fbx` and `Buggy Wheel.fbx`, `Vehicles/Hovercraft/Hovercraft.fbx`, `Vehicles/Jet/Jet.fbx`) were unreferenced and are removed; the Unity 5 `Buggy.fbx` was the one missing the collider mesh. The other 36 were removed too: they were baked copies of the neighbouring prefabs' meshes (`Marker.fbx` beside `Marker.prefab` and so on), written by the FBX Exporter package 4.2.1 from a modern editor opened on `Unity5/` and committed with the move to `Unity6/` (`ceac971`). None was referenced by any asset or loaded by code; `Resources.Load` of `Base`, `Floor`, `Light` and `Cube` still resolves to the prefabs in `Whirld/Resources/`, and the count of empty mesh references is unchanged.
 
-Still open, and older than this change: five Blender (`.blend`) models (`Pyramid`, `TankTread`, `Buggy Wheels Simple` and others) import only with Blender installed, the same problem the `.jas` files had. Without it, 21 mesh references in `Castle.prefab` (FortBoxy's pyramids), `Pyramid.prefab`, the tank prefabs and `Buggy Wheel.prefab`'s simple wheel are empty. One more, in Unity Island's `Bridge.prefab`, points to an asset missing from both projects.
+The five Blender (`.blend`) models had the same problem; they are converted too (see below). One mesh reference in Unity Island's `Bridge.prefab` points to an asset missing from both projects.
 
 Rules of Cheetah's export that the source check models (each confirmed against the captured files):
 
@@ -215,3 +215,20 @@ Rules of Cheetah's export that the source check models (each confirmed against t
 - 19 zero-area polygons in `CircularPlane` have NaN UVs in the original; the FBX keeps them, with NaN for both coordinates.
 
 These are the current Cheetah 3D's export, not the one the original game was built with. Where the two might differ, the original player data decides, as before: the `Arrow` and `CircularPlane` checks above still apply. `CircularPlane.fbx` is unused, since `Floor.prefab` uses the decoded `CircularPlane.obj`; its 9.8 m height in Unity 6 is the High mesh compression quantising positions in 2,500 / 512 m steps, not a conversion fault.
+
+## Blender models converted to FBX (2026-11-01)
+
+Unity `6000.3.27f1`, macOS 27.2 (26B123), Blender 5.2.3 LTS (already installed in `/Applications`). The five Blender models in `Unity6/Assets` (`Whirld/ResourceSources/Primitives/Pyramid` and `Cone`, `Vehicles/Tank/Components/Meshes/Tank` and `TankTread`, `Vehicles/Buggy/Components/Buggy Wheels Simple`; saved by Blender 2.47 and 2.49, byte-identical to `unity/`) are now FBX files. Unity imports a `.blend` only by running Blender with its own `Unity-BlenderToFBX.py` and importing the FBX that writes, so without Blender these meshes were empty. The originals stay in `unity/`.
+
+Method (`tools/blend2fbx/convert.sh`): Blender runs Unity's own exporter script from the editor bundle (`Unity.app/Contents/Resources/AssetImporting/Unity-BlenderToFBX.py`), so the FBX is the one Unity would import itself. Each FBX is placed next to its `.blend` and the `.blend.meta` becomes the `.fbx.meta`, keeping the GUID, mesh IDs and import settings. The FBX files are generated, committed, binary and safe to regenerate while the `.blend` files are present (from `unity/`). `ModelImportProbe.DumpModel` is now public so the baseline can be dumped from the open editor (`BASELINE=` in `convert.sh`).
+
+Verified, all passing for all five:
+
+1. Against the source (`tools/blend2fbx/verify.py blend`): `blenddump.py` reads each `.blend` inside Blender, and the FBX is read independently with `tools/jas2fbx/fbxread.py`. Every mesh object is present with the same name, parent and local transform (converted to FBX's Y-up axes), and every polygon matches in corner positions, UVs and material slot (Pyramid 5, Cone 40, wheel 60, Tank 154 + 60 + 154, TankTread 1,074 + 54). No object has modifiers.
+2. Against Unity's import (`tools/jas2fbx/verify.py unity`): a `ModelImportProbe` dump of the editor's import of the `.blend` files (with Blender present) and one of the FBX import after the swap are identical in hierarchy, transforms, mesh names and local IDs, vertices, normals, UVs and triangles. Reimporting the `.blend` files logged Unity's "inconsistent result" warning for `Tank`, `TankTread` and `Cone`; the swapped FBX files do not depend on that.
+3. References and rendering, in the editor: `Pyramid.prefab` (`Cube`, ±0.5 as in the shipped game), `Tank.prefab` (`Mesh` ×2), `TankTrack.prefab` and `TankTrackSimple.prefab` (`Mesh`, `Mesh.001`) and `Buggy Wheel.prefab` (`Cylinder.003`) have no empty mesh filters or colliders. The tank, the simple wheel and the pyramid render intact with their materials from four angles.
+
+`Castle.prefab` is not fixed by this. Its 12 pyramids (12 mesh filters and 12 mesh colliders) and six references in `Fort Boxy.unity` point to GUID `e212371230126492b8ecdb2ec048ee7b`, an `Assets/Resource Sources/pyramid.blend` that is in neither `unity/` nor `Unity5/`; the original project's binary `Castle.prefab` already carried that dangling reference. `World` still covers it at runtime with the generated ±0.5 pyramid (see World textures). They are deliberately left as they are. The original built the castle's primitives at load time (`WhirldIn.js`), as `World` does, so pointing the references at `Pyramid.fbx` (`fileID 4300000`, the same ID) would only change the editor view. It would also mean rewriting a binary prefab, and the result could come out at double size: the `.blend` mesh is ±1, and whether `Pyramid.prefab`'s ±0.5 comes from its transform or the import scale is unchecked.
+
+`verify.sh` (batch mode, editor closed) has not been run; the same comparison was run from the open editor. `Validate Project Baseline` was not rerun.
+

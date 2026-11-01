@@ -76,7 +76,8 @@ The current working tree has not been compiled or played in Unity since its newe
 
 - [x] Add `tools/compile-check.sh`, an editor-free compile check against Unity 6 reference assemblies.
 - [x] Replace the 12 Cheetah 3D (`.jas`) models in `Unity6/` with Cheetah's own FBX export, so imports no longer need Cheetah 3D; Unity's import is unchanged and the models render intact (`tools/jas2fbx/`, [docs/world-and-rendering.md](docs/world-and-rendering.md)).
-- [ ] Convert the five Blender (`.blend`) models the same way: without Blender, FortBoxy's castle pyramids, the tank and the simple buggy wheel have no mesh.
+- [x] Replace the five Blender (`.blend`) models with FBX from Unity's own Blender exporter; Unity's import is unchanged and the tank, tank tracks, simple buggy wheel and `Pyramid.prefab` resolve and render (`tools/blend2fbx/`, [docs/world-and-rendering.md](docs/world-and-rendering.md)).
+- Decision (2026-11-01): FortBoxy `Castle.prefab`'s 12 pyramids keep their dangling mesh reference, inherited from the original project. `World` generates them at runtime at the shipped ±0.5 size, as `WhirldIn.js` did; repointing them at `Pyramid.fbx` would only tidy the editor view and needs a reviewed rewrite of a binary prefab.
 - [x] Fix the editor-free compile errors (see [docs/validation.md](docs/validation.md#editor-free-compile-status)).
 - [x] Open the project in Unity `6000.3.26f1`, let the API updater run, and complete a clean script compile.
 - [x] Review scene, prefab, and project-setting re-serialisation against `pre-unity6-upgrade` before committing it (binary assets reviewed by file list only).
