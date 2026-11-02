@@ -15,3 +15,8 @@ Verified in the Unity `6000.3.26f1` editor on macOS `27.0.1` (probe pad, full fl
 Not yet verified or ported: comparison with the Wine build, flight on Fort Boxy terrain, the wing-flex animation viewed close up, LOD 1 wings, lava floating and diving, and player-driven flight with real keyboard input.
 
 Compared by eye with the Wine version (2026-10-21): flight looks and feels comparable. An instrumented comparison of take-off speed, stall and landing is backlogged, because screenshot-based measurement is costly for the detail it adds.
+
+Parity fixes from a line-by-line re-read of `Buggy.js` (2026-10-30, static only; editor-free compile check passes, not yet run in Unity `6000.3.27f1`):
+
+- Lava thermals: below `lavaAlt + 10` the original short-circuits the water raycast and reads an empty hit, so the lift is a constant 400 N rather than `(10 - distance) * 40`. The ray distance is now used only above that height.
+- Ground motor: `motorAccel` was an `int` in `Buggy.js`, so the interpolated acceleration is truncated to whole numbers (up to 1 in 60 less). The port now truncates it too.

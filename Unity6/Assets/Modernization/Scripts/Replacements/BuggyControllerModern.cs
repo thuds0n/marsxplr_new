@@ -186,7 +186,8 @@ public class BuggyControllerModern : MonoBehaviour
 
         // Motor
         _motorTorque = Mathf.Max(1f, Mathf.Lerp(settings.buggyPower * 5f, 0f, motorSpeed / (settings.buggySpeed * 10f)) * Mathf.Abs(_wingOpen ? 0f : input.y));
-        float motorAccel = Mathf.Lerp(MaxAcceleration, 0f, motorSpeed / (settings.buggySpeed * 10f));
+        // Buggy.js declared motorAccel as an int, so the Lerp result was truncated.
+        int motorAccel = (int)Mathf.Lerp(MaxAcceleration, 0f, motorSpeed / (settings.buggySpeed * 10f));
         motorSpeed += input.y * motorAccel / MotorMass * dt;
         motorSpeed += -motorSpeed * (brakes ? 50f : MotorDrag) / _motorTorque * dt;
 
@@ -302,10 +303,15 @@ public class BuggyControllerModern : MonoBehaviour
         }
 
         // Lava "thermals". Unity 3 raycasts hit triggers, so the water layer test does too.
-        bool overLava = NearestHit(transform.position, Vector3.down, 10f, 1 << 4, QueryTriggerInteraction.Collide, out RaycastHit lava);
-        if (transform.position.y < settings.lavaAlt + 10f || overLava)
+        // Below lavaAlt + 10 the original skipped the raycast and read an empty
+        // hit, so the lift is the full 10 * 40.
+        if (transform.position.y < settings.lavaAlt + 10f)
         {
-            _rb.AddForce(Vector3.up * (10f - (overLava ? lava.distance : 0f)) * 40f);
+            _rb.AddForce(Vector3.up * 10f * 40f);
+        }
+        else if (NearestHit(transform.position, Vector3.down, 10f, 1 << 4, QueryTriggerInteraction.Collide, out RaycastHit lava))
+        {
+            _rb.AddForce(Vector3.up * (10f - lava.distance) * 40f);
         }
 
         _rb.angularDamping = 5f;

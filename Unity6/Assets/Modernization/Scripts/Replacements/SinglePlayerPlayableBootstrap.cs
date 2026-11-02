@@ -181,6 +181,7 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
         }
 
         AttachRidePos(go.transform);
+        AttachVehicleLight(go.transform);
 
         if (vehicleState != null)
         {
@@ -350,6 +351,28 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
             if (t.name == "Trail1") presentation.leftTrail = copy.transform;
             else if (t.name == "Trail2") presentation.rightTrail = copy.transform;
         }
+    }
+
+    // Vehicle.prefab VehicleLight, values from the shipped 2.22 sharedassets3:
+    // a pixel spot light 1 m up and 1 m back, tilted 15° down, lighting the
+    // Default layer only. Settings switches it off; VehicleMe.js turns the
+    // player's own light back on at Fantastic.
+    private static void AttachVehicleLight(Transform vehicle)
+    {
+        var go = new GameObject("VehicleLight");
+        go.transform.SetParent(vehicle, false);
+        go.transform.localPosition = new Vector3(0f, 1f, -1f);
+        go.transform.localRotation = Quaternion.Euler(15f, 0f, 0f);
+        var light = go.AddComponent<Light>();
+        light.type = LightType.Spot;
+        light.color = new Color(0.745098f, 0.853023f, 1f, 1f);
+        light.intensity = 1f;
+        light.range = 100f;
+        light.spotAngle = 60f;
+        light.shadows = LightShadows.None;
+        light.renderMode = LightRenderMode.ForcePixel;
+        light.cullingMask = 1;
+        light.enabled = false;
     }
 
     private static GameObject CopyMeshObject(Transform source, Transform parent)

@@ -176,6 +176,14 @@ public class Settings : MonoBehaviour
             light.enabled = false;
         }
 
+        // VehicleMe.js OnPrefsUpdated(): at Fantastic the player's own vehicle
+        // light comes back on.
+        if (renderLevel > 4 && Game.Player != null)
+        {
+            var playerLight = Game.Player.GetComponentInChildren<Light>();
+            if (playerLight != null) playerLight.enabled = true;
+        }
+
         laserLocking = false;
         if (laserLock != null)
         {
