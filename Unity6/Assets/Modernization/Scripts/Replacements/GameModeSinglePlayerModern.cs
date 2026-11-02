@@ -2,7 +2,8 @@ using UnityEngine;
 
 // Local quarry rules from Game.js and Vehicle.js: someone is always the
 // quarry (eSI), quarry changes hands (sQ), and laser tags change the score
-// (iS, dS). Ramming (OnRam) and fatal laser hits (lR) are not ported yet.
+// (iS, dS). Fatal laser hits (lR) are in VehicleLaserResetModern and ramming
+// (OnRam) in VehicleRamoSphereModern.
 public class GameModeSinglePlayerModern : MonoBehaviour
 {
     public static GameModeSinglePlayerModern Instance;
@@ -44,14 +45,23 @@ public class GameModeSinglePlayerModern : MonoBehaviour
         foreach (VehicleStateModern other in FindObjectsByType<VehicleStateModern>(FindObjectsSortMode.None))
         {
             other.isIt = 0;
+            RefreshColour(other);
         }
         veh.isIt = 1;
         Game.QuarryVeh = veh.gameObject;
+        RefreshColour(veh);
         if (mode == 0) return;
         if (mode == 1) Game.Controller.msg(veh.name + " rammed the Quarry", ServerOrigin);
         else if (mode == 2) Game.Controller.msg(veh.name + " is now the Quarry", ServerOrigin);
         else if (mode == 3) Game.Controller.msg(veh.name + " Defaulted to Quarry", ServerOrigin);
         veh.lastTag = Time.time;
+    }
+
+    // Vehicle.js sQ() calls setColor() on every vehicle so the quarry turns green.
+    private static void RefreshColour(VehicleStateModern veh)
+    {
+        var colour = veh.GetComponent<VehicleColourModern>();
+        if (colour != null) colour.setColor();
     }
 
     // Rocket.js: the firer's instance scores a laser that reaches another vehicle.

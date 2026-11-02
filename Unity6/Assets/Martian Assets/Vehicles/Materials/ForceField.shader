@@ -39,7 +39,8 @@ Shader "ForceField" {
                 float3 viewDir = normalize(ObjSpaceViewDir(v.vertex));
                 v.texcoord.x = v.texcoord.x;
                 v.texcoord.y = v.texcoord.y + _Offset;
-                o.uv = TRANSFORM_UV (1);
+                // Unity 2.x TRANSFORM_UV(1): the offset texture coordinates.
+                o.uv = v.texcoord.xy;
                 o.uv2 = float2( abs (dot (viewDir, v.normal)), 0.5);
                 o.normal = v.normal;
                 return o;
@@ -54,15 +55,13 @@ Shader "ForceField" {
                 f.normal = normalize (f.normal);
                 
                 half4 ramp = tex2D (_RampTex, f.uv2) * _Color.a;
-                half4 texture = tex2D (_SurfaceTex, f.uv) * ramp * _Color;
+                // Renamed from "texture", a reserved word in current HLSL.
+                half4 surface = tex2D (_SurfaceTex, f.uv) * ramp * _Color;
                 
-                return half4 (texture.r, texture.g, texture.b, ramp.r);
+                return half4 (surface.r, surface.g, surface.b, ramp.r);
             }
             
             ENDCG 
- 
-            SetTexture [_RampTex] {combine texture}
-            SetTexture [_SurfaceTex] {combine texture}
         }
     }
     Fallback "Transparent/VertexLit"

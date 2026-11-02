@@ -21,6 +21,8 @@ public class Settings : MonoBehaviour
     public float laserRico;
     public bool lasersFatal;
     public bool lasersOptHit;
+    // Settings.js ramoSpheres: RORB size, 0 when off.
+    public float ramoSpheres;
     public float zorbSpeed = 7f;
     public bool zorbEnabled;
     public int[] firepower = { 2, 2, 3, 2 };
@@ -208,8 +210,7 @@ public class Settings : MonoBehaviour
     // Settings.js showDialogServer(), the host branch, limited to what the
     // single-player port honours. Left out: the online settings (Default All,
     // server name, listing, password, welcome message, networking, settings
-    // I/O and nTime), Camouflage Badges (name tags are not ported), RORBs and
-    // XORBs, and the hovercraft, tank and jet sections.
+    // I/O and nTime), Camouflage Badges (name tags are not ported), XORBs, and the hovercraft, tank and jet sections.
     public void showDialogServer()
     {
         GUILayout.Space(20);
@@ -219,6 +220,24 @@ public class Settings : MonoBehaviour
         {
             minimapAllowed = !minimapAllowed;
             updateServerPrefs();
+        }
+
+        if (GUILayout.Toggle(ramoSpheres != 0f, "RORBs Enabled") != (ramoSpheres != 0f))
+        {
+            ramoSpheres = ramoSpheres != 0f ? 0f : 0.5f;
+            updateServerPrefs();
+        }
+        if (ramoSpheres != 0f)
+        {
+            GUILayout.BeginHorizontal();
+            float size = GUILayout.HorizontalSlider(ramoSpheres, 0.001f, 1f);
+            if (ramoSpheres != size)
+            {
+                ramoSpheres = size;
+                updateServerPrefs();
+            }
+            GUILayout.Label("Size", GUILayout.Width(65));
+            GUILayout.EndHorizontal();
         }
 
         if (GUILayout.Toggle(lasersAllowed, "Lasers enabled") != lasersAllowed)

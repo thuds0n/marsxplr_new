@@ -4,11 +4,16 @@ using UnityEngine;
 // Player vehicle colouring, ported from Vehicle.js (Start and the updateColor
 // section of Update) and the colour start-up in Game.js. The body material
 // (materialMain) fades to vehicleColor and the accent materials (the buggy's
-// wheel beadlocks and wings) to vehicleAccent. The green "it" colours
-// are not ported with the rest of the quarry rules.
+// wheel beadlocks and wings) to vehicleAccent, or to the green quarry colours
+// while this vehicle is quarry and there is more than one vehicle.
 [RequireComponent(typeof(VehicleStateModern))]
 public class VehicleColourModern : MonoBehaviour
 {
+    // Game.js vehicleIsItColor and vehicleIsItAccent, as serialised on Game in
+    // the shipped 2.22 build (level2).
+    private static readonly Color IsItColor = new Color(0.1288984f, 0.3921569f, 0f, 1f);
+    private static readonly Color IsItAccent = new Color(0.0644492f, 0.1960784f, 0f, 1f);
+
     private VehicleStateModern _state;
     private readonly List<Material> _materialMain = new List<Material>();
     private readonly List<Material> _materialAccent = new List<Material>();
@@ -41,10 +46,11 @@ public class VehicleColourModern : MonoBehaviour
         if (_materialMain.Count == 0) CollectMaterials();
         _updateColor = false;
         float t = Time.deltaTime * 2f;
+        bool isGreen = _state.isIt != 0 && FindObjectsByType<VehicleStateModern>(FindObjectsSortMode.None).Length > 1;
 
         if (_materialMain.Count > 0)
         {
-            Color target = _state.vehicleColor;
+            Color target = isGreen ? IsItColor : _state.vehicleColor;
             Color c = Color.Lerp(_materialMain[0].color, target, t);
             c.a = 0.5f;
             _materialMain[0].color = c;
@@ -54,7 +60,7 @@ public class VehicleColourModern : MonoBehaviour
         }
         if (_materialAccent.Count > 0)
         {
-            Color target = _state.vehicleAccent;
+            Color target = isGreen ? IsItAccent : _state.vehicleAccent;
             Color c = Color.Lerp(_materialAccent[0].color, target, t);
             c.a = 0.5f;
             _materialAccent[0].color = c;

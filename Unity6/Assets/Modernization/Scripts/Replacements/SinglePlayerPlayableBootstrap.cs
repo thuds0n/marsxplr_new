@@ -182,6 +182,8 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
 
         AttachRidePos(go.transform);
         AttachVehicleLight(go.transform);
+        go.AddComponent<VehicleLaserResetModern>();
+        go.AddComponent<VehicleRamoSphereModern>();
 
         if (vehicleState != null)
         {
