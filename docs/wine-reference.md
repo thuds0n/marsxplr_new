@@ -1,6 +1,6 @@
 # Measuring the original (Wine version)
 
-The original used for side-by-side checks is Mars Explorer 4.0.2 under the `/Applications/Mars Explorer.app` Wine wrapper. It is newer than the 2.22 source in `unity/`, so values taken only from it are recorded as inferences (see Decisions in [PLAN.md](../PLAN.md)).
+From 2026-11-02 the original used for side-by-side checks is the official Mars Explorer 2.22 Windows build under the Sikarugir wrapper `~/Applications/Sikarugir/Mars Explorer 2.22.app`, the same version as the source in `unity/`. Values taken only from it are still recorded as inferences (see Decisions in [PLAN.md](../PLAN.md)). Checks before that date used the community "4.0.2" build (formerly `/Applications/Mars Explorer.app`, now kept in `archive/Community Wine Version/`); its provenance and changes are described below.
 
 Provenance (checked 2026-10-31, macOS `27.2`): this is not the untouched Windows release. It comes from the community "original game with fixes" build on gitea.moe (`VIA256/marsxplr-decomp`), linked from the `GandalfPotter/Mars-Explorer-Guide` README. That repository and its releases refuse automated fetches (HTTP 403), so its list of fixes has not been read. What the install itself shows:
 
