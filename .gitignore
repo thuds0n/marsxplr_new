@@ -35,3 +35,6 @@ sysinfo.txt
 
 # Python bytecode from the tools/ scripts
 __pycache__/
+
+# Local reference builds (not tracked)
+archive/
