@@ -10,7 +10,7 @@ Properties {
 	_Parallax ("Height", Range (0.005, 0.08)) = 0.02
 	_MainTex ("Base (RGB) Gloss (A)", 2D) = "white" { }
 	_Cube ("Reflection Cubemap", Cube) = "_Skybox" {}
-	_BumpMap ("Normalmap", 2D) = "bump" { }
+	_BumpMap ("Normalmap", 2D) = "gray" { }
 	_ParallaxMap ("Heightmap (A)", 2D) = "black" {}
 }
 SubShader {
@@ -50,9 +50,13 @@ void surf (Input IN, inout SurfaceOutput o) {
 	o.Gloss = tex.a;
 	o.Specular = _Shininess;
 	
-	o.Normal = UnpackNormal(tex2D(_BumpMap, IN.uv_BumpMap));
-	
-	float3 worldRefl = WorldReflectionVector (IN, o.Normal);
+	// Unity 2.6's reflection pass decoded the bump map as rgb * 2 - 1 and
+	// its unassigned default to a zero normal, so the reflection followed
+	// the view ray. Lighting keeps the geometric normal, as its own pass did.
+	half3 reflNormal = tex2D(_BumpMap, IN.uv_BumpMap).rgb * 2 - 1;
+	o.Normal = half3(0, 0, 1);
+
+	float3 worldRefl = WorldReflectionVector (IN, reflNormal);
 	fixed4 reflcol = texCUBE (_Cube, worldRefl);
 	reflcol *= tex.a;
 	o.Emission = reflcol.rgb * _ReflectColor.rgb;

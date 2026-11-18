@@ -77,6 +77,7 @@ The current working tree has not been compiled or played in Unity since its newe
 - [x] Add `tools/compile-check.sh`, an editor-free compile check against Unity 6 reference assemblies.
 - [x] Replace the 12 Cheetah 3D (`.jas`) models in `Unity6/` with Cheetah's own FBX export, so imports no longer need Cheetah 3D; Unity's import is unchanged and the models render intact (`tools/jas2fbx/`, [docs/world-and-rendering.md](docs/world-and-rendering.md)).
 - [x] Replace the five Blender (`.blend`) models with FBX from Unity's own Blender exporter; Unity's import is unchanged and the tank, tank tracks, simple buggy wheel and `Pyramid.prefab` resolve and render (`tools/blend2fbx/`, [docs/world-and-rendering.md](docs/world-and-rendering.md)).
+- [ ] When Unity Island is brought in: repoint `IslandsWhirld.unity`'s fence from the Maya file `Whirlds/Unity Island/Bridges/trailFence.mb` (imports only with Maya installed) to the author's own 2006 FBX export beside it, `trailFenceFBX.fbx` (same `fencePost` and `fenceRope` meshes, currently unused). Mesh IDs differ, so check the swap on screen, then remove the `.mb` from `Unity6/`.
 - Decision (2026-11-01): FortBoxy `Castle.prefab`'s 12 pyramids keep their dangling mesh reference, inherited from the original project. `World` generates them at runtime at the shipped ±0.5 size, as `WhirldIn.js` did; repointing them at `Pyramid.fbx` would only tidy the editor view and needs a reviewed rewrite of a binary prefab.
 - [x] Fix the editor-free compile errors (see [docs/validation.md](docs/validation.md#editor-free-compile-status)).
 - [x] Open the project in Unity `6000.3.26f1`, let the API updater run, and complete a clean script compile.
@@ -144,7 +145,7 @@ Replace scaffolding with dedicated systems:
 
 Do not make placeholder cylinders, debug-line lasers, or impact stubs part of the permanent architecture.
 
-Status: in progress. First slice (2026-10-21): auto and snipe fire, `Rocket.js` projectiles, hits, the player defaulting to quarry and tag scoring, with the placeholders removed. Verified by a scripted Play-mode test and by firing by hand from `Init` (the buggy now has the original `RideCam`, and the impact sparks are rebuilt as a `ParticleSystem`). Not yet compared with the Wine version; sound not confirmed by ear. Weapons lock, lock-on shots and bots ported and tested 2026-10-23. Fatal hits and ramming (RORBs 2026-11-02; body contact, the world's own settings, the Messaging Console and the original start-of-game rules 2026-11-17, play-tested in the editor 2026-11-18, not yet by hand) are ported. Open: name tags, the materialisation effect, XORBs. Menu: Server Settings ported 2026-10-23; Game, Player, Active Players, Switch Vehicle and Settings Advisor panels still to port. Detail: [docs/combat.md](docs/combat.md).
+Status: in progress. First slice (2026-10-21): auto and snipe fire, `Rocket.js` projectiles, hits, the player defaulting to quarry and tag scoring, with the placeholders removed. Verified by a scripted Play-mode test and by firing by hand from `Init` (the buggy now has the original `RideCam`, and the impact sparks are rebuilt as a `ParticleSystem`). Not yet compared with the Wine version; sound not confirmed by ear. Weapons lock, lock-on shots and bots ported and tested 2026-10-23. Fatal hits and ramming (RORBs 2026-11-02; body contact, the world's own settings, the Messaging Console and the original start-of-game rules 2026-11-17, play-tested in the editor and by hand 2026-11-18) are ported. Open: name tags, the materialisation effect, XORBs. Menu: Server Settings ported 2026-10-23; Game, Player, Active Players, Switch Vehicle and Settings Advisor panels still to port. Detail: [docs/combat.md](docs/combat.md).
 
 ## Milestone 5: Rendering and asset compatibility
 
@@ -164,7 +165,7 @@ Status: an arm64 Mono development player of `master` (2026-10-21, late) builds a
 
 The evidence-backed baseline is tagged `unity6-baseline-2026-10-21` (Milestone 0 complete; buggy ground handling, Fort Boxy, HUD, image effects and shadows checked against the Wine version).
 
-1. Try the 2026-11-17 parity fixes ([docs/parity-audit.md](docs/parity-audit.md)) by hand (chat typing, ramming a bot); the editor play-test and scripted tests passed on 2026-11-18. Then continue Milestone 4: compare the sparks and sounds with the Wine version, and the remaining menu panels.
+1. The 2026-11-17 parity fixes ([docs/parity-audit.md](docs/parity-audit.md)) passed the editor play-test, the scripted tests and a hand test on 2026-11-18 (chat Tab and focus fixed for Unity 6). Next, continue Milestone 4: compare the sparks and sounds with the Wine version, and the remaining menu panels.
 2. Fort Boxy rendering (2026-10-21): the shadow strip east of the spawn slab no longer reproduces and the `Arrow.jas` mesh matches the original cone. The arrow now points at the base as the original did. The floor writes its original alpha again, so the contrast stretch saturates it as the original code did (see [docs/world-and-rendering.md](docs/world-and-rendering.md)).
 
 ## Definition of done for the single-player milestone

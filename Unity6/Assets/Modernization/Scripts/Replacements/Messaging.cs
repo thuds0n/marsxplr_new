@@ -96,6 +96,9 @@ public class Messaging : MonoBehaviour
             _inputField = "";
             chatting = false;
             GUI.UnfocusWindow();
+            // Unity 6 keeps the field's keyboard focus, which hides the next
+            // key from Input (see the Tab handling below).
+            GUIUtility.keyboardControl = 0;
         }
 
         GUI.SetNextControlName("Chat input field");
@@ -111,8 +114,13 @@ public class Messaging : MonoBehaviour
             GUI.FocusWindow(id);
         }
 
+        // Engine difference: Unity 6 does not report keys to Input while an
+        // IMGUI text field has keyboard focus, so Tab pressed while chatting
+        // only arrives as a GUI key event. Unity 2.x reported it to Input too.
+        bool tabEvent = Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Tab;
+        bool tabDown = Input.GetKeyDown(KeyCode.Tab) || tabEvent;
         if (showChat < 0 && showChat > -5) showChat = showChat - 1;
-        else if (showChat < 0 || ((Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.Mouse0)) && Time.time > Game.Controller.kpTime))
+        else if (showChat < 0 || ((tabDown || Input.GetKeyDown(KeyCode.Mouse0)) && Time.time > Game.Controller.kpTime))
         {
             Game.Controller.kpTime = Time.time + Game.Controller.kpDur;
             // The original tests the window rectangle against Input.mousePosition,
@@ -125,9 +133,14 @@ public class Messaging : MonoBehaviour
             else
             {
                 chatting = false;
-                if (Input.GetKeyDown(KeyCode.Tab)) GUI.UnfocusWindow();
+                if (tabDown)
+                {
+                    GUI.UnfocusWindow();
+                    GUIUtility.keyboardControl = 0;
+                }
             }
         }
+        if (tabEvent) Event.current.Use();
     }
 
     // Messaging.js ChatWindow(), on Enter: the "x" and "r" commands, else chat.

@@ -28,7 +28,28 @@ public static class RebuildWhirldResourcePrefabs
     [MenuItem("Tools/MarsXPLR/Remove Missing Scripts From Buggy and Vehicle Prefabs")]
     public static void StripVehiclePrefabs()
     {
-        foreach (string path in new[] { "Assets/Martian Assets/Vehicles/Buggy/Buggy.prefab", "Assets/Martian Assets/Vehicles/Prefabs/Vehicle.prefab" })
+        StripPrefabs("Assets/Martian Assets/Vehicles/Buggy/Buggy.prefab", "Assets/Martian Assets/Vehicles/Prefabs/Vehicle.prefab");
+    }
+
+    // The laser bolts and their impact sparks keep only their meshes, trails,
+    // audio and transforms; Rocket.js and the sparks' scripts are ported into
+    // RocketModern and PlasmaSparksModern, which CombatSystemModern adds at
+    // runtime with the values read from these prefabs. The originals in unity/
+    // keep those values. Removing the missing components stops the warnings
+    // logged when a shot or hit instantiates them.
+    [MenuItem("Tools/MarsXPLR/Remove Missing Scripts From Laser Prefabs")]
+    public static void StripLaserPrefabs()
+    {
+        StripPrefabs(
+            "Assets/Martian Assets/Vehicles/Lasers/LaserAuto.prefab",
+            "Assets/Martian Assets/Vehicles/Lasers/LaserSnipe.prefab",
+            "Assets/Martian Assets/Vehicles/Lasers/Components/PlasmaSparks.prefab",
+            "Assets/Martian Assets/Vehicles/Lasers/Components/PlasmaSparksSnipe.prefab");
+    }
+
+    private static void StripPrefabs(params string[] paths)
+    {
+        foreach (string path in paths)
         {
             GameObject root = PrefabUtility.LoadPrefabContents(path);
             try
