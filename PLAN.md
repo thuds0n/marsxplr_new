@@ -34,7 +34,7 @@ The single-player buggy slice runs from `Init` in the Unity `6000.3.27f1` editor
 - laser fire, `Rocket.js` projectiles and impact sparks, hits, quarry scoring, weapons lock, bots, fatal hits and ramming (RORB sphere and body contact) are ported; bot name tags, the materialisation effect and XORBs are not;
 - editor tooling rebuilds and inspects the `Game` scene baseline and runs scripted Play-mode tests under `Tools -> MarsXPLR`.
 
-The last arm64 development player was built and launched on 2026-10-29 (Milestone 6, [docs/release.md](docs/release.md)). It predates the combat, messaging and parity work since then, which has been checked only in the editor.
+The last arm64 development player was built and launched on 2026-11-19 from `combat-parity-rorbs` (Milestone 6, [docs/release.md](docs/release.md)); it includes the combat, messaging and parity-audit work.
 
 ## Decisions
 
@@ -159,7 +159,7 @@ Shader and material findings so far are in [docs/world-and-rendering.md](docs/wo
 
 ## Milestone 6: Release path
 
-Status: an arm64 Mono development player of `master` (2026-10-21, late) builds and launches into Fort Boxy with no exceptions or missing scripts; driving, flight, cameras, the guidance arrow and the floor and vehicle alpha fixes are confirmed in the player. Laser fire by hand is unconfirmed in the player, and hits and scoring untested. Acceptance criteria, later steps and build records: [docs/release.md](docs/release.md). Validation strategy and import results: [docs/validation.md](docs/validation.md).
+Status: an arm64 Mono development player of `combat-parity-rorbs` (2026-11-19, Unity `6000.3.27f1`, macOS `27.2.1`) builds with only the 4 known water shader errors and launches into Fort Boxy with no exceptions or missing scripts. Chat, the HUD at Retina size, driving, wings, firing by hand, a bot from Server Settings, the crosshair and the `0` fullscreen key work in the player. Open: a clean-clone build, the release scripting backend and the universal player. Acceptance criteria, later steps and build records: [docs/release.md](docs/release.md). Validation strategy and import results: [docs/validation.md](docs/validation.md).
 
 ## Immediate next actions
 
