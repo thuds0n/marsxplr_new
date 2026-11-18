@@ -24,17 +24,17 @@ Record new findings in the matching `docs/` file, dated and with exact Unity and
 
 ## Current status
 
-The repository contains a promising but incomplete modernisation foundation:
+The single-player buggy slice runs from `Init` in the Unity `6000.3.27f1` editor and in an arm64 development player:
 
-- replacement C# components cover the active camera, HUD, messaging, minimap, world, settings, and game scaffolding;
-- `SimplePlayerController` provides temporary drive and flight behaviour;
-- `VehicleStateModern` provides a shared vehicle-state seam;
-- the runtime bootstrap spawns the buggy with the original body, wheel, and axle models;
-- laser fire, hits and quarry scoring are ported in a first slice (Milestone 4); weapons lock, lock-on shots and bots are ported (2026-10-23); the side-panel menu with Server Settings (including Add/Axe Bot) and the Messaging Console are ported; the other menu panels and bot name tags are not;
-- editor tooling can rebuild and inspect the `Game` scene baseline;
-- the intended offline flow is now `Init -> InitGame -> Game`, with `Lobby` retained outside the active vertical slice.
+- the offline flow is `Init -> InitGame -> Game`, verified in the editor from `Init`; `Lobby` stays outside the active slice;
+- `BuggyControllerModern` drives the buggy (`useModernBuggyController` is on by default); `SimplePlayerController` remains only as a selectable fallback;
+- `VehicleStateModern` is the shared vehicle-state seam;
+- the buggy uses the original body, wheel, axle and wing models, and wings and flight are ported (Milestone 2);
+- replacement C# components cover the camera, HUD, minimap, Fort Boxy's world loading and settings, and the Messaging Console with chat; of the menu panels only Server Settings is ported;
+- laser fire, `Rocket.js` projectiles and impact sparks, hits, quarry scoring, weapons lock, bots, fatal hits and ramming (RORB sphere and body contact) are ported; bot name tags, the materialisation effect and XORBs are not;
+- editor tooling rebuilds and inspects the `Game` scene baseline and runs scripted Play-mode tests under `Tools -> MarsXPLR`.
 
-The current working tree has not been compiled or played in Unity since its newest changes. Cached assemblies predate the latest scene-flow, validation, and vehicle-state work. There is no verified arm64 player build yet.
+The last arm64 development player was built and launched on 2026-10-29 (Milestone 6, [docs/release.md](docs/release.md)). It predates the combat, messaging and parity work since then, which has been checked only in the editor.
 
 ## Decisions
 
@@ -113,17 +113,17 @@ Acceptance criteria:
 - Port the original special-input and wing deployment state machine.
 - Port wing mesh/flap presentation without mutating shared source meshes at runtime.
 - Port lift, drag, stall, airbrakes, ground effect, take-off, and landing behaviour.
-- Keep `specialInput`, `flightMode`, `camSmooth`, brakes, and throttle-channel selection as distinct state concepts.
+- Keep `specialInput`, `flightMode`, `camSmooth`, brakes, and throttle-channel selection as distinct state concepts. `BuggyControllerModern` keeps them separate; `VehicleStateModern.SetFlightMode` still sets the first three together and is used only at spawn and by the `SimplePlayerController` fallback.
 - Validate drive-to-flight and flight-to-drive transitions against recorded parity scenarios.
 
 Acceptance criteria:
 
-- [ ] Wing opening and closing have deterministic state and presentation.
-- [ ] Take-off requires plausible speed and surface interaction.
-- [ ] Stall, roll, pitch, drag, airbrakes, and landing remain controllable.
-- [ ] Returning to drive mode does not reset orientation or momentum incorrectly.
+- [x] Wing opening and closing have deterministic state and presentation.
+- [x] Take-off requires plausible speed and surface interaction.
+- [ ] Stall, roll, pitch, drag, airbrakes, and landing remain controllable (all but airborne airbrakes shown by the flight probe).
+- [x] Returning to drive mode does not reset orientation or momentum incorrectly.
 
-Status: ported and verified on the probe pad. Judged comparable to the Wine version by eye on 2026-10-21; an instrumented comparison (take-off, stall, landing) is backlogged. Detail: [docs/flight.md](docs/flight.md).
+Status: ported and verified on the probe pad by `Run Buggy Flight Probe`. Judged comparable to the Wine version by eye on 2026-10-21; an instrumented comparison (take-off, stall, landing) is backlogged. Detail: [docs/flight.md](docs/flight.md).
 
 ## Milestone 3: Representative world vertical slice
 
@@ -133,7 +133,7 @@ Status: ported and verified on the probe pad. Judged comparable to the Wine vers
 - Audit missing scripts and incompatible shaders within the selected environment only.
 - Validate suspension feel, scale, speed perception, altitude, minimap, arrow, and camera obstruction behaviour.
 
-Status: Fort Boxy loads offline and its sky, fog, lighting, base marker and textures match the Wine version. Open: laser aimer colour. Spawn light and horizon traced from source on 2026-10-23: light matches (engine differences only), `VehicleLight` now disabled as in `updatePrefs()`, horizon settings match; the dark band below the horizon at Fantastic was point-sampled SSAO depth and now reads interpolated decoded depth for the pixel and its samples; confirmed by hand in the editor; the faint speckle at steep upward chase angles also shows in Wine (arm64 player not yet checked). Detail: [docs/world-and-rendering.md](docs/world-and-rendering.md).
+Status: Fort Boxy loads offline, its sky, fog, lighting, base marker and textures match the Wine version, and its own settings and welcome message are applied (2026-11-17). Open: laser aimer colour. Spawn light and horizon traced from source on 2026-10-23: light matches (engine differences only), `VehicleLight` now disabled as in `updatePrefs()`, horizon settings match; the dark band below the horizon at Fantastic was point-sampled SSAO depth and now reads interpolated decoded depth for the pixel and its samples; confirmed by hand in the editor; the faint speckle at steep upward chase angles also shows in Wine (arm64 player not yet checked). Detail: [docs/world-and-rendering.md](docs/world-and-rendering.md).
 
 ## Milestone 4: Gameplay loop parity
 
@@ -145,7 +145,7 @@ Replace scaffolding with dedicated systems:
 
 Do not make placeholder cylinders, debug-line lasers, or impact stubs part of the permanent architecture.
 
-Status: in progress. First slice (2026-10-21): auto and snipe fire, `Rocket.js` projectiles, hits, the player defaulting to quarry and tag scoring, with the placeholders removed. Verified by a scripted Play-mode test and by firing by hand from `Init` (the buggy now has the original `RideCam`, and the impact sparks are rebuilt as a `ParticleSystem`). Not yet compared with the Wine version; sound not confirmed by ear. Weapons lock, lock-on shots and bots ported and tested 2026-10-23. Fatal hits and ramming (RORBs 2026-11-02; body contact, the world's own settings, the Messaging Console and the original start-of-game rules 2026-11-17, play-tested in the editor and by hand 2026-11-18) are ported. Open: name tags, the materialisation effect, XORBs. Menu: Server Settings ported 2026-10-23; Game, Player, Active Players, Switch Vehicle and Settings Advisor panels still to port. Detail: [docs/combat.md](docs/combat.md).
+Status: in progress. First slice (2026-10-21): auto and snipe fire, `Rocket.js` projectiles, hits, the player defaulting to quarry and tag scoring, with the placeholders removed (the last leftovers went on 2026-11-19). Verified by a scripted Play-mode test and by firing by hand from `Init` (the buggy now has the original `RideCam`, and the impact sparks are rebuilt as a `ParticleSystem`). Not yet compared with the Wine version; sound not confirmed by ear. Weapons lock, lock-on shots and bots ported and tested 2026-10-23. Fatal hits and ramming (RORBs 2026-11-02; body contact, the world's own settings, the Messaging Console and the original start-of-game rules 2026-11-17, play-tested in the editor and by hand 2026-11-18) are ported. Open: name tags, the materialisation effect, XORBs. Menu: Server Settings ported 2026-10-23; Game, Player, Active Players, Switch Vehicle and Settings Advisor panels still to port. Detail: [docs/combat.md](docs/combat.md).
 
 ## Milestone 5: Rendering and asset compatibility
 

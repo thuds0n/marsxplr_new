@@ -252,6 +252,8 @@ Compared with `diff` after normalising line endings. `VortexEffect`, `TwirlEffec
 
 ## `PLAN.md` claims the code or the rest of the plan does not support
 
+Resolved 2026-11-19: `PLAN.md` was rewritten where these rows point (P1 to P5 in "Current status", P6 to P8 by the 2026-11-17 and 2026-11-19 status lines, P9 to P11 in Milestones 2 and 3). The line numbers below refer to the plan before that change.
+
 | # | `PLAN.md` | Claim | What the tree shows |
 | --- | --- | --- | --- |
 | P1 | line 37 | "There is no verified arm64 player build yet." | Contradicted by line 91 (arm64 development player created and launched, ticked) and line 162 (Milestone 6 status). |
