@@ -209,6 +209,8 @@ public class CameraVehicle : MonoBehaviour
 
     private void ApplyHotkeys()
     {
+        // CameraVehicle.js: the camera keys are ignored while chatting.
+        if (Game.Messaging != null && Game.Messaging.chatting) return;
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             Game.Settings.camMode = 0;

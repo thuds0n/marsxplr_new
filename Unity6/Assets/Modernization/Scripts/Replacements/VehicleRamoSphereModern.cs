@@ -115,14 +115,12 @@ public class VehicleRamoSphereModern : MonoBehaviour
         if (other.attachedRigidbody != null) OnRam(other.attachedRigidbody.gameObject);
     }
 
-    // Vehicle.js OnRam(): we rammed the quarry, so we become quarry.
+    // Vehicle.js OnRam() is in VehicleLocalModern, shared with body contact.
     private void OnRam(GameObject other)
     {
-        var veh = other.GetComponent<VehicleStateModern>();
-        if (veh == null || veh == _vehicle || veh.isIt != 1 || !veh.isResponding ||
-            Time.time - _vehicle.lastTag < 3f || Time.time - veh.lastTag < 3f) return;
-        _vehicle.lastTag = Time.time;
-        if (GameModeSinglePlayerModern.Instance != null) GameModeSinglePlayerModern.Instance.SetQuarry(_vehicle, 1);
+        if (other == gameObject) return;
+        var local = GetComponent<VehicleLocalModern>();
+        if (local != null) local.OnRam(other);
     }
 
     // Trigger messages go to the collider's own object, so the sphere passes

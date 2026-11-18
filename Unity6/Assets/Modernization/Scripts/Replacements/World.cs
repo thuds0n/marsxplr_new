@@ -13,6 +13,9 @@ public class World : MonoBehaviour
     public static GameObject fallbackGround;
     // True while the world scene is streaming in; the player spawn waits for it.
     public static bool loading;
+    // The world's "message" and "marsxplr" parameters, empty when it has none.
+    public static string worldMessage = "";
+    public static string worldServerPrefs = "";
 
     // Fort Boxy is the first entry in the original Game scene's built-in world
     // list, which the game fell back to when the update server was unreachable.
@@ -27,6 +30,8 @@ public class World : MonoBehaviour
         sea = null;
         fallbackGround = null;
         loading = false;
+        worldMessage = "";
+        worldServerPrefs = "";
 
         if (seaFogColor == default) seaFogColor = new Color(0.6f, 0.2f, 0.1f, 1f);
         if (seaGlowColor == default) seaGlowColor = new Color(1f, 0.4f, 0.1f, 1f);
@@ -83,12 +88,30 @@ public class World : MonoBehaviour
         foreach (GameObject go in FindObjectsByType<GameObject>(FindObjectsSortMode.None))
             go.SendMessage("OnSceneGenerated", SendMessageOptions.DontRequireReceiver);
 
+        if (worldScene.IsValid()) ReadWorldParams(worldScene);
         FinishWorld();
         if (Game.Settings != null) Game.Settings.fogColor = RenderSettings.fogColor;
         // Restart the camera's world entry effect from the moment the world is ready.
         if (Game.Controller != null) Game.Controller.worldLoadTime = Time.time;
         loading = false;
         Debug.Log("[World] Loaded world: " + worldSceneName);
+    }
+
+    // WhirldIn.js worldParams: the [name:value] header of the world file. A
+    // captured world scene keeps them on its root's WhirldObject. Game.js
+    // applies "message" and "marsxplr" once the player has joined.
+    private static void ReadWorldParams(Scene scene)
+    {
+        foreach (GameObject root in scene.GetRootGameObjects())
+        {
+            foreach (WhirldObjectModern whirldObject in root.GetComponentsInChildren<WhirldObjectModern>(true))
+            {
+                whirldObject.Activate();
+                if (whirldObject.Params == null) continue;
+                if (whirldObject.Params.TryGetValue("message", out object message) && message is string m) worldMessage = m;
+                if (whirldObject.Params.TryGetValue("marsxplr", out object prefs) && prefs is string p) worldServerPrefs = p;
+            }
+        }
     }
 
     private sealed class GameSceneLighting
@@ -381,7 +404,8 @@ public class World : MonoBehaviour
         }
 
         fallbackGround.transform.localScale = new Vector3(fallbackGroundSize, fallbackGroundThickness, fallbackGroundSize);
-        fallbackGround.layer = 8;
+        // Default layer, so the vehicles' terrainMask (layers 0 and 11) sees it.
+        fallbackGround.layer = 0;
 
         var mr = fallbackGround.GetComponent<MeshRenderer>();
         if (mr != null)

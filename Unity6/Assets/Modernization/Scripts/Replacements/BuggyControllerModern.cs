@@ -16,8 +16,9 @@ public class BuggyControllerModern : MonoBehaviour
     // Buggy.prefab: wheelPos (0.7, 0, 0.8); Buggy.js: wheelRadius 0.3.
     public Vector3 wheelPos = new Vector3(0.7f, 0f, 0.8f);
     public float wheelRadius = 0.3f;
-    // Vehicle.js default: everything except the water layer.
-    public LayerMask terrainMask = ~(1 << 4);
+    // Vehicle.js terrainMask as serialised in the original Vehicle.prefab:
+    // layers 0 (Default) and 11.
+    public LayerMask terrainMask = VehicleLocalModern.TerrainMask;
 
     // Read-only telemetry for presentation (wheel graphics, skidmarks, HUD).
     public float suspensionRange { get; private set; }

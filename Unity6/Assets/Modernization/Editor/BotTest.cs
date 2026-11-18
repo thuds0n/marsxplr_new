@@ -116,7 +116,8 @@ public static class BotTest
         Check(botState.input.y == 1f, $"quarry bot drives on (input {botState.input})");
 
         Game.Controller.axeBot();
-        yield return 0.5f;
+        // Game.js axeBot() runs eSI 0.5 s after the bot is removed.
+        yield return 0.75f;
         Check(GameObject.Find(botName) == null, "axed bot is removed");
         Check(playerState.isIt == 1, "player is quarry again after the bot is axed");
         Line("done");

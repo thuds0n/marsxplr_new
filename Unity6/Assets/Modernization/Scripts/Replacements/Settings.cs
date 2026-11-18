@@ -24,7 +24,11 @@ public class Settings : MonoBehaviour
     // Settings.js ramoSpheres: RORB size, 0 when off.
     public float ramoSpheres;
     public float zorbSpeed = 7f;
-    public bool zorbEnabled;
+    // Settings.js hideNames ("Camouflage Badges"). Name tags are not ported
+    // yet, so nothing reads it.
+    public bool hideNames;
+    // Settings.js serverWelcome.
+    public string serverWelcome = "";
     public int[] firepower = { 2, 2, 3, 2 };
     // Settings.js world default.
     public float worldGrav = -9.81f;
@@ -162,6 +166,9 @@ public class Settings : MonoBehaviour
         else if (renderLevel > 2) World.lodDist = 75;
         else World.lodDist = 0;
 
+        // Settings.js: XORBs are unavailable without RORBs.
+        if (ramoSpheres == 0f) zorbSpeed = 0f;
+
         Physics.gravity = new Vector3(0f, worldGrav, 0f);
         if (World.sea != null)
         {
@@ -200,6 +207,53 @@ public class Settings : MonoBehaviour
         }
     }
 
+    // Game.js sSS(): apply a packed server-settings string such as a world's
+    // "marsxplr" parameter ("camo:1;lsrh:1;"). Only the settings the port has
+    // are read; the rest (other vehicles, networking) are skipped.
+    public void applyServerString(string str)
+    {
+        if (string.IsNullOrEmpty(str)) return;
+        foreach (string pref in str.Split(';'))
+        {
+            string[] val = pref.Split(':');
+            if (val.Length < 2) continue;
+            string v = val[1];
+            float.TryParse(v, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float f);
+            switch (val[0])
+            {
+                case "lasr": lasersAllowed = v == "1"; break;
+                case "lsrh": lasersFatal = v == "1"; break;
+                case "lsro": lasersOptHit = v == "1"; break;
+                case "mmap": minimapAllowed = v == "1"; break;
+                case "camo": hideNames = v == "1"; break;
+                case "rorb": ramoSpheres = f; break;
+                case "xspd": zorbSpeed = f; break;
+                case "grav": worldGrav = f * -1f; break;
+                case "wvis": worldViewDist = f; break;
+                case "lfog": lavaFog = f; break;
+                case "lalt": lavaAlt = f; break;
+                case "lspd": laserSpeed = f; break;
+                case "lgvt": laserGrav = Mathf.Clamp(f, 0f, 1f); break;
+                case "lrco": laserRico = Mathf.Clamp(f, 0f, 1f); break;
+                case "botfire": botsCanFire = v == "1"; break;
+                case "botdrive": botsCanDrive = v == "1"; break;
+                case "bugflsl": buggyFlightSlip = v == "1"; break;
+                case "bugflpw": buggyFlightLooPower = v == "1"; break;
+                case "bugspn": buggySmartSuspension = v == "1"; break;
+                case "bugfldr": buggyFlightDrag = Mathf.Clamp(f, 1f, 1000f); break;
+                case "bugflag": buggyFlightAgility = Mathf.Clamp(f, 0.5f, 1.5f); break;
+                case "bugcg": buggyCG = Mathf.Clamp(f, -1f, 0f); break;
+                case "bugpow": buggyPower = Mathf.Clamp(f, 0.1f, 3f); break;
+                case "bugspd": buggySpeed = Mathf.Clamp(f, 1f, 1000f); break;
+                case "bugtr": buggyTr = Mathf.Clamp(f, 0.1f, 3f); break;
+                case "bugsh": buggySh = Mathf.Clamp(f, 0f, 140f); break;
+                case "bugfp": if (firepower != null && firepower.Length > 0) firepower[0] = Mathf.Clamp((int)f, 0, 3); break;
+                case "bugll": if (laserLock != null && laserLock.Length > 0) laserLock[0] = Mathf.Clamp(f, 0f, 1f); break;
+            }
+        }
+        updatePrefs();
+    }
+
     // Settings.js updateServerPrefs(): offline there is no server to update,
     // so only the local settings are applied.
     public void updateServerPrefs()
@@ -225,6 +279,7 @@ public class Settings : MonoBehaviour
         if (GUILayout.Toggle(ramoSpheres != 0f, "RORBs Enabled") != (ramoSpheres != 0f))
         {
             ramoSpheres = ramoSpheres != 0f ? 0f : 0.5f;
+            if (ramoSpheres != 0f) zorbSpeed = 7f;
             updateServerPrefs();
         }
         if (ramoSpheres != 0f)

@@ -63,10 +63,12 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
 
     private void SpawnPlayer()
     {
-        GameObject go = SpawnVehicle("Player", false);
-        Rigidbody rb = go.GetComponent<Rigidbody>();
+        // Game.js Init(): the vehicle carries the player's name ("MarsRacer"
+        // when none is set).
+        string playerName = string.IsNullOrWhiteSpace(GameDataModern.userName) ? "MarsRacer" : GameDataModern.userName;
+        GameDataModern.userName = playerName;
+        GameObject go = SpawnVehicle(playerName, false);
         var vehicleState = go.GetComponent<VehicleStateModern>();
-        bool usingBuggyVisual = go.GetComponent<VehicleColourModern>() != null;
 
         AttachLegacyLaserSight(go);
 
@@ -77,6 +79,11 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
             marker.transform.parent = go.transform;
         }
 
+        // Game.js Init(): the host's vehicle is created as quarry (iV with
+        // isIt 1), with no message.
+        if (vehicleState != null) vehicleState.isIt = 1;
+        Game.QuarryVeh = go;
+
         Game.Player = go;
         if (Game.Settings != null)
         {
@@ -84,10 +91,7 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
             Game.Settings.updatePrefs();
         }
 
-        if (Game.Controller != null)
-        {
-            Game.Controller.msg(usingBuggyVisual ? "Single-player buggy spawned." : "Single-player fallback pawn spawned.", 2);
-        }
+        if (Game.Controller != null) Game.Controller.ApplyWorldParams();
     }
 
     // Game.js iV() and Vehicle.js Start() for a bot: the same buggy, driven by
@@ -105,10 +109,10 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
     // Shared by the player and bots (Game.js iV()).
     private GameObject SpawnVehicle(string vehicleName, bool isBot)
     {
-        // Game.js iV(): spawn at the base with identity rotation, raised a metre
-        // at a time until a 3 m sphere there is clear.
+        // Game.js iV(): spawn at the base with the base's rotation, raised a
+        // metre at a time until a 3 m sphere there is clear.
         Vector3 spawn = World.@base != null ? World.@base.position : Vector3.up * 8f;
-        Quaternion spawnRot = Quaternion.identity;
+        Quaternion spawnRot = World.@base != null ? World.@base.rotation : Quaternion.identity;
         while (Physics.CheckSphere(spawn, 3f)) spawn += Vector3.up;
 
         // Always create a clean root player object for control/physics.
@@ -162,11 +166,9 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
         }
         go.AddComponent<CombatSystemModern>();
         var vehicleState = go.GetComponent<VehicleStateModern>();
-        // VehicleBot.js does its own bounds check.
-        if (!isBot && go.GetComponent<FallReset>() == null)
-        {
-            go.AddComponent<FallReset>();
-        }
+        // VehicleLocal.js: terrain penetration, contact ramming and (for the
+        // player) the VehicleMe.js bounds checks.
+        go.AddComponent<VehicleLocalModern>();
 
         bool usingBuggyVisual = AttachOriginalBody(go.transform);
         if (usingBuggyVisual)

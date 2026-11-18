@@ -30,7 +30,7 @@ The repository contains a promising but incomplete modernisation foundation:
 - `SimplePlayerController` provides temporary drive and flight behaviour;
 - `VehicleStateModern` provides a shared vehicle-state seam;
 - the runtime bootstrap spawns the buggy with the original body, wheel, and axle models;
-- laser fire, hits and quarry scoring are ported in a first slice (Milestone 4); weapons lock, lock-on shots and bots are ported (2026-10-23); the side-panel menu with Server Settings (including Add/Axe Bot) is ported; the other menu panels, bot name tags and impact visuals are not;
+- laser fire, hits and quarry scoring are ported in a first slice (Milestone 4); weapons lock, lock-on shots and bots are ported (2026-10-23); the side-panel menu with Server Settings (including Add/Axe Bot) and the Messaging Console are ported; the other menu panels and bot name tags are not;
 - editor tooling can rebuild and inspect the `Game` scene baseline;
 - the intended offline flow is now `Init -> InitGame -> Game`, with `Lobby` retained outside the active vertical slice.
 
@@ -144,7 +144,7 @@ Replace scaffolding with dedicated systems:
 
 Do not make placeholder cylinders, debug-line lasers, or impact stubs part of the permanent architecture.
 
-Status: in progress. First slice (2026-10-21): auto and snipe fire, `Rocket.js` projectiles, hits, the player defaulting to quarry and tag scoring, with the placeholders removed. Verified by a scripted Play-mode test and by firing by hand from `Init` (the buggy now has the original `RideCam`, and the impact sparks are rebuilt as a `ParticleSystem`). Not yet compared with the Wine version; sound not confirmed by ear. Weapons lock, lock-on shots and bots ported and tested 2026-10-23. Open: ramming, fatal hits, name tags, the materialisation effect. Menu: Server Settings ported 2026-10-23; Game, Player, Active Players, Switch Vehicle and Settings Advisor panels still to port. Detail: [docs/combat.md](docs/combat.md).
+Status: in progress. First slice (2026-10-21): auto and snipe fire, `Rocket.js` projectiles, hits, the player defaulting to quarry and tag scoring, with the placeholders removed. Verified by a scripted Play-mode test and by firing by hand from `Init` (the buggy now has the original `RideCam`, and the impact sparks are rebuilt as a `ParticleSystem`). Not yet compared with the Wine version; sound not confirmed by ear. Weapons lock, lock-on shots and bots ported and tested 2026-10-23. Fatal hits and ramming (RORBs 2026-11-02; body contact, the world's own settings, the Messaging Console and the original start-of-game rules 2026-11-17, play-tested in the editor 2026-11-18, not yet by hand) are ported. Open: name tags, the materialisation effect, XORBs. Menu: Server Settings ported 2026-10-23; Game, Player, Active Players, Switch Vehicle and Settings Advisor panels still to port. Detail: [docs/combat.md](docs/combat.md).
 
 ## Milestone 5: Rendering and asset compatibility
 
@@ -164,7 +164,7 @@ Status: an arm64 Mono development player of `master` (2026-10-21, late) builds a
 
 The evidence-backed baseline is tagged `unity6-baseline-2026-10-21` (Milestone 0 complete; buggy ground handling, Fort Boxy, HUD, image effects and shadows checked against the Wine version).
 
-1. Continue Milestone 4: compare the sparks and sounds with the Wine version, then ramming and fatal hits, and the remaining menu panels.
+1. Try the 2026-11-17 parity fixes ([docs/parity-audit.md](docs/parity-audit.md)) by hand (chat typing, ramming a bot); the editor play-test and scripted tests passed on 2026-11-18. Then continue Milestone 4: compare the sparks and sounds with the Wine version, and the remaining menu panels.
 2. Fort Boxy rendering (2026-10-21): the shadow strip east of the spawn slab no longer reproduces and the `Arrow.jas` mesh matches the original cone. The arrow now points at the base as the original did. The floor writes its original alpha again, so the contrast stretch saturates it as the original code did (see [docs/world-and-rendering.md](docs/world-and-rendering.md)).
 
 ## Definition of done for the single-player milestone

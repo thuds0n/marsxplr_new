@@ -22,16 +22,30 @@ public class VehicleColourModern : MonoBehaviour
     private void Start()
     {
         _state = GetComponent<VehicleStateModern>();
-        _state.vehicleColor = new Color(PlayerPrefs.GetFloat("vehColR"), PlayerPrefs.GetFloat("vehColG"), PlayerPrefs.GetFloat("vehColB"));
-        _state.vehicleAccent = new Color(PlayerPrefs.GetFloat("vehColAccR"), PlayerPrefs.GetFloat("vehColAccG"), PlayerPrefs.GetFloat("vehColAccB"));
-
-        Settings settings = Game.Settings;
-        if (settings != null)
+        VehicleStateModern player = Game.Player != null ? Game.Player.GetComponent<VehicleStateModern>() : null;
+        if (_state.isBot && player != null)
         {
-            settings.colorCustom = PlayerPrefs.GetInt("vehColCustom") == 1;
-            if (!settings.colorCustom) settings.randomizeVehicleColor(_state);
+            // Vehicle.js Start(): a bot takes its owner's colours.
+            _state.vehicleColor = player.vehicleColor;
+            _state.vehicleAccent = player.vehicleAccent;
         }
-        setColor();
+        else
+        {
+            _state.vehicleColor = new Color(PlayerPrefs.GetFloat("vehColR"), PlayerPrefs.GetFloat("vehColG"), PlayerPrefs.GetFloat("vehColB"));
+            _state.vehicleAccent = new Color(PlayerPrefs.GetFloat("vehColAccR"), PlayerPrefs.GetFloat("vehColAccG"), PlayerPrefs.GetFloat("vehColAccB"));
+
+            // Game.js Init(): the player's colour is random unless customised.
+            Settings settings = Game.Settings;
+            if (settings != null)
+            {
+                settings.colorCustom = PlayerPrefs.GetInt("vehColCustom") == 1;
+                if (!settings.colorCustom) settings.randomizeVehicleColor(_state);
+            }
+        }
+
+        // Vehicle.js Start(): every vehicle recolours when one joins, so the
+        // quarry turns green as soon as there is a second vehicle.
+        foreach (VehicleColourModern other in FindObjectsByType<VehicleColourModern>(FindObjectsSortMode.None)) other.setColor();
     }
 
     public void setColor()

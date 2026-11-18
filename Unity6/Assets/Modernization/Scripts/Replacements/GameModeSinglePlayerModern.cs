@@ -1,9 +1,9 @@
 using UnityEngine;
 
-// Local quarry rules from Game.js and Vehicle.js: someone is always the
-// quarry (eSI), quarry changes hands (sQ), and laser tags change the score
-// (iS, dS). Fatal laser hits (lR) are in VehicleLaserResetModern and ramming
-// (OnRam) in VehicleRamoSphereModern.
+// Local quarry rules from Game.js and Vehicle.js: the player defaults to
+// quarry when a bot's removal leaves none (eSI), quarry changes hands (sQ), and
+// laser tags change the score (iS, dS). Fatal laser hits (lR) are in
+// VehicleLaserResetModern and ramming (OnRam) in VehicleLocalModern.
 public class GameModeSinglePlayerModern : MonoBehaviour
 {
     public static GameModeSinglePlayerModern Instance;
@@ -23,12 +23,13 @@ public class GameModeSinglePlayerModern : MonoBehaviour
 
     private void Update()
     {
-        EnsureSomeoneIsQuarry();
         UpdateQuarryDistance();
     }
 
-    // Game.js eSI(): if nobody is quarry, the player defaults to it.
-    private void EnsureSomeoneIsQuarry()
+    // Game.js eSI(): if nobody is quarry, the player defaults to it. The
+    // original only ran this after a bot was removed or a player left; the
+    // host's own vehicle is created as quarry (see SinglePlayerPlayableBootstrap).
+    public void eSI()
     {
         if (Game.Player == null) return;
         foreach (VehicleStateModern veh in FindObjectsByType<VehicleStateModern>(FindObjectsSortMode.None))

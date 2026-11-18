@@ -25,6 +25,9 @@ public class Game : MonoBehaviour
     public GameObject objectMarkerQuarry;
     // Game.js botsInGame.
     public int botsInGame;
+    // Game.js kpDur and kpTime: a short guard between key presses.
+    [System.NonSerialized] public float kpDur = 0.1f;
+    [System.NonSerialized] public float kpTime;
     // Game.js Skin: the Mars GUI skin for the menus.
     public GUISkin Skin;
 
@@ -226,6 +229,27 @@ public class Game : MonoBehaviour
         Rigidbody body = bot.GetComponent<Rigidbody>();
         if (body != null) body.isKinematic = true;
         Destroy(bot);
+        StartCoroutine(EnsureQuarryAfterAxe());
+    }
+
+    // Game.js axeBot(): half a second later, make sure someone is quarry.
+    private System.Collections.IEnumerator EnsureQuarryAfterAxe()
+    {
+        yield return new WaitForSeconds(0.5f);
+        if (GameModeSinglePlayerModern.Instance != null) GameModeSinglePlayerModern.Instance.eSI();
+    }
+
+    // Game.js Init(), host branch: once the player has joined, show the
+    // world's "message" as the welcome and apply its "marsxplr" settings.
+    public void ApplyWorldParams()
+    {
+        if (Settings == null) return;
+        if (!string.IsNullOrEmpty(World.worldMessage))
+        {
+            Settings.serverWelcome = World.worldMessage;
+            msg(Settings.serverWelcome, 1);
+        }
+        if (!string.IsNullOrEmpty(World.worldServerPrefs)) Settings.applyServerString(World.worldServerPrefs);
     }
 
     public static bool RaycastIgnoringPlayer(Ray ray, float range, out RaycastHit hit)
