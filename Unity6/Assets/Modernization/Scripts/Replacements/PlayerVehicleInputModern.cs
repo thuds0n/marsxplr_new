@@ -14,8 +14,10 @@ public class PlayerVehicleInputModern : MonoBehaviour
     private void Update()
     {
         bool chatting = Game.Messaging != null && Game.Messaging.chatting;
-        if (Input.GetButtonDown("Jump") && !chatting)
+        // VehicleMe.js: Jump also waits out Game's short key guard.
+        if (Input.GetButtonDown("Jump") && !chatting && (Game.Controller == null || Time.time > Game.Controller.kpTime))
         {
+            if (Game.Controller != null) Game.Controller.kpTime = Time.time + Game.Controller.kpDur;
             // Buggy.OnSetSpecialInput: special input opens the wings and smooths the camera.
             _state.specialInput = !_state.specialInput;
             _state.camSmooth = _state.specialInput;

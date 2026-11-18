@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 // Port of the RORB ("ramo sphere") from Vehicle.js (OnPrefsUpdated, the
@@ -8,8 +9,9 @@ using UnityEngine;
 // over as quarry ("rammed the Quarry"), with the same 3 s guards as laser tags.
 // The ORB prefab values (layer 13, trigger radius 0.5, child "Sphere" using the
 // built-in sphere mesh, tagColor and ramColor) were read with UnityPy from the
-// shipped 2.22 sharedassets3. Not ported: XORBs (zorbBall, the solid rolling
-// sphere and its ramColor).
+// shipped 2.22 sharedassets3. Settings.updatePrefs() calls OnPrefsUpdated on
+// every vehicle, as Settings.js updateObjects() did. Not ported: XORBs
+// (zorbBall, the solid rolling sphere and its ramColor).
 [RequireComponent(typeof(VehicleStateModern))]
 public class VehicleRamoSphereModern : MonoBehaviour
 {
@@ -21,32 +23,76 @@ public class VehicleRamoSphereModern : MonoBehaviour
     private Material _shieldMaterial;
     private float _ramoSphereScale;
     private float _offset;
-    private float _appliedSetting = -1f;
+    private Rigidbody _body;
 
     private void Awake()
     {
         _vehicle = GetComponent<VehicleStateModern>();
+        _body = GetComponent<Rigidbody>();
     }
 
-    // Vehicle.js OnPrefsUpdated(): build, resize or remove the sphere when the
-    // setting changes.
-    private void Update()
+    // Vehicle.js Start() calls Settings.updateObjects(), which reaches
+    // OnPrefsUpdated.
+    private void Start()
+    {
+        OnPrefsUpdated();
+    }
+
+    public void OnPrefsUpdated()
+    {
+        StartCoroutine(PrefsUpdated());
+    }
+
+    // Vehicle.js OnPrefsUpdated(): a second after the preferences change,
+    // build the sphere if there is none and grow it to its size, keeping the
+    // rigidbody's inertia tensor and centre of mass; with RORBs off, shrink it
+    // and destroy it 2 s later. As in the source, switching RORBs off and on
+    // again within 2 s ends with no sphere until the next change.
+    private IEnumerator PrefsUpdated()
     {
         Settings s = Game.Settings;
-        if (s != null && s.ramoSpheres != _appliedSetting)
+        if (s == null) yield break;
+        if (s.ramoSpheres != 0f)
         {
-            _appliedSetting = s.ramoSpheres;
-            if (s.ramoSpheres != 0f)
+            yield return new WaitForSeconds(1f);
+            if (Game.Settings == null || Game.Settings.ramoSpheres == 0f) yield break;
+            Vector3 tensor = _body != null ? _body.inertiaTensor : Vector3.zero;
+            Vector3 cg = _body != null ? _body.centerOfMass : Vector3.zero;
+            if (_ramoSphere == null) Build();
+            _ramoSphereScale = Game.Settings.ramoSpheres * 15f + _vehicle.camOffset * 1f;
+            if (_body != null)
             {
-                if (_ramoSphere == null) Build();
-                _ramoSphereScale = s.ramoSpheres * 15f + _vehicle.camOffset * 1f;
-            }
-            else if (_ramoSphere != null)
-            {
-                _ramoSphereScale = 0.1f;
-                Destroy(_ramoSphere, 2f);
+                _body.inertiaTensor = tensor;
+                _body.centerOfMass = cg;
             }
         }
+        else if (_ramoSphere != null)
+        {
+            _ramoSphereScale = 0.1f;
+            GameObject sphere = _ramoSphere;
+            yield return new WaitForSeconds(2f);
+            if (sphere != null) Destroy(sphere);
+        }
+    }
+
+    // Vehicle.js lR(): shrink the sphere while the vehicle rematerialises.
+    public void Shrink()
+    {
+        if (_ramoSphere != null) _ramoSphereScale = 0.01f;
+    }
+
+    // Vehicle.js lR() and Game.js's delayed reset destroy the sphere; the next
+    // OnPrefsUpdated builds a new one.
+    public void DestroySphere()
+    {
+        if (_ramoSphere != null) Destroy(_ramoSphere);
+        _ramoSphere = null;
+        _shield = null;
+        _shieldMaterial = null;
+    }
+
+    private void Update()
+    {
         if (_shield == null) return;
 
         // RamoSphere.js Update(): scroll the shield, ease its alpha back to
@@ -100,18 +146,35 @@ public class VehicleRamoSphereModern : MonoBehaviour
         _shieldMaterial.color = TagColor;
     }
 
+    private void SetShieldAlpha(float a)
+    {
+        if (_shieldMaterial == null) return;
+        Color c = _shieldMaterial.color;
+        c.a = a;
+        _shieldMaterial.color = c;
+    }
+
+    // RamoSphere.js OnTriggerEnter: another ORB entering flashes the shield.
+    private void OnSphereEnter(Collider other)
+    {
+        if (other.gameObject.layer == 14) return;
+        if (other.name == "ORB") SetShieldAlpha(10f);
+    }
+
+    // RamoSphere.js OnLaserHit: Rocket.js broadcasts the hit to the whole
+    // vehicle, sphere included.
+    private void OnShieldLaserHit()
+    {
+        SetShieldAlpha(5f);
+    }
+
     // RamoSphere.js OnTriggerStay. Its impact flash (OnCollisionEnter) only
     // runs for a solid XORB sphere, so it is not ported.
     private void OnSphereStay(Collider other)
     {
         if (other.gameObject.layer == 14) return;
         // Another ORB inside ours lights the shield up.
-        if (other.name == "ORB" && _shieldMaterial != null && _shieldMaterial.color.a < 3f)
-        {
-            Color c = _shieldMaterial.color;
-            c.a = 3f;
-            _shieldMaterial.color = c;
-        }
+        if (other.name == "ORB" && _shieldMaterial != null && _shieldMaterial.color.a < 3f) SetShieldAlpha(3f);
         if (other.attachedRigidbody != null) OnRam(other.attachedRigidbody.gameObject);
     }
 
@@ -132,6 +195,17 @@ public class VehicleRamoSphereModern : MonoBehaviour
         private void OnTriggerStay(Collider other)
         {
             if (owner != null) owner.OnSphereStay(other);
+        }
+
+        private void OnTriggerEnter(Collider other)
+        {
+            if (owner != null) owner.OnSphereEnter(other);
+        }
+
+        // RocketModern broadcasts OnLaserHit with a bool, so take it here.
+        private void OnLaserHit(bool isFatal)
+        {
+            if (owner != null) owner.OnShieldLaserHit();
         }
     }
 }

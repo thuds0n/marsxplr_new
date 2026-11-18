@@ -159,10 +159,22 @@ public class Game : MonoBehaviour
 
     private void Update()
     {
+        // Game.js: keep running while the window is in the background.
+        Application.runInBackground = true;
+
         if (Player == null)
         {
             var tagged = GameObject.FindGameObjectWithTag("Player");
             if (tagged != null) Player = tagged;
+        }
+
+        // Game.js: 0 toggles fullscreen. Settings.js picked the largest
+        // resolution; the port keeps the point-size resolution Settings uses
+        // for the IMGUI HUD (see IMPROVEMENTS.md).
+        if (Input.GetKeyDown(KeyCode.Alpha0) && (Messaging == null || !Messaging.chatting) && Time.time > kpTime)
+        {
+            kpTime = Time.time + kpDur;
+            Screen.fullScreen = !Screen.fullScreen;
         }
 
         // Game.js: frames counted over each 2 s heavy tick. fpsFrames and
@@ -182,6 +194,9 @@ public class Game : MonoBehaviour
             var spawnPos = World.@base != null ? World.@base.position : Vector3.up * 6f;
             var spawnRot = World.@base != null ? World.@base.rotation : Quaternion.identity;
 
+            // Game.js: destroy the RORB; updatePrefs() builds a new one.
+            var orb = Player.GetComponent<VehicleRamoSphereModern>();
+            if (orb != null) orb.DestroySphere();
             Player.transform.position = spawnPos;
             Player.transform.rotation = spawnRot;
 
@@ -190,7 +205,6 @@ public class Game : MonoBehaviour
             {
                 rb.isKinematic = false;
                 rb.linearVelocity = Vector3.zero;
-                rb.angularVelocity = Vector3.zero;
             }
 
             Settings.resetTime = -10f;
@@ -424,27 +438,14 @@ public class Game : MonoBehaviour
         Rigidbody rb = Player.GetComponent<Rigidbody>();
         if (state == null && rb == null) return;
 
-        int mph = 0;
-        int alt = Mathf.RoundToInt(Player.transform.position.y);
-        if (state != null)
-        {
-            mph = state.mph < 0.05f ? 0 : Mathf.RoundToInt(state.mph);
-            alt = Mathf.RoundToInt(state.altitude);
-        }
-        else if (rb != null)
-        {
-            mph = rb.linearVelocity.magnitude < 0.05f ? 0 : Mathf.RoundToInt(rb.linearVelocity.magnitude * 2.23f);
-        }
+        // Vehicle.js OnGUI(): speed from the rigidbody, "Static" below
+        // 0.05 m/s, fields five spaces apart; the distance shows whenever the
+        // player is not the quarry.
+        float speed = rb != null ? rb.linearVelocity.magnitude : (state != null ? state.mph / 2.23f : 0f);
+        string text = (speed < 0.05f ? "Static" : Mathf.RoundToInt(speed * 2.23f) + " MPH") + "     " + Mathf.RoundToInt(Player.transform.position.y) + " ALT";
+        if (state == null || state.isIt == 0) text += "     " + Mathf.RoundToInt(quarryDist) + " DST";
 
-        string text = (mph == 0 ? "Static" : mph + " MPH") + "     " + alt + " ALT";
-
-        // Vehicle.js: only a player who is not the quarry sees the distance to it.
-        if (QuarryVeh != null && (state == null || state.isIt == 0))
-        {
-            text += "     " + Mathf.RoundToInt(quarryDist) + " DST";
-        }
-
-        Rect rect = new Rect((Screen.width * 0.5f) - 95f, Screen.height - 30f, 190f, 20f);
+        Rect rect = new Rect((Screen.width * 0.5f) - 75f, Screen.height - 30f, 150f, 20f);
         if (hudTextStyle != null)
         {
             GUI.Button(rect, text, hudTextStyle);
@@ -453,5 +454,15 @@ public class Game : MonoBehaviour
         {
             GUI.Box(rect, text);
         }
+    }
+
+    // Game.js LanguageFilter(): mild words become ".", the rest "#".
+    private const string LanguageFilterMild = " crap | prawn |d4mn| damn | turd ";
+    private const string LanguageFilterPattern = "anus|ash0le|ash0les|asholes| ass |Ass Monkey|Assface|assh0le|assh0lez|bastard|bastards|bastardz|basterd|suka|asshole|assholes|assholz|asswipe|azzhole|bassterds|basterdz|Biatch|bitch|bitches|Blow Job|blowjob|in bed|butthole|buttwipe|c0ck|c0cks|c0k|Clit|cnts|cntz|cockhead| cock |cock-head|CockSucker|cock-sucker| cum |cunt|cunts|cuntz|dick|dild0|dild0s|dildo|dildos|dilld0|dilld0s|dominatricks|dominatrics|dominatrix|f.u.c.k|f u c k|f u c k e r|fag|fag1t|faget|fagg1t|faggit|faggot|fagit|fags|fagz|faig|faigs|fuck|fucker|fuckin|mother fucker|fucking|fucks|Fudge Packer|fuk|Fukah|Fuken|fuker|Fukin|Fukk|Fukkah|Fukken|Fukker|Fukkin|gay|gayboy|gaygirl|gays|gayz|God-dam|God dam|h00r|h0ar|h0re|jackoff|jerk-off|jizz|kunt|kunts|kuntz|Lesbian|Lezzian|Lipshits|Lipshitz|masochist|masokist|massterbait|masstrbait|masstrbate|masterbaiter|masterbate|masterbates|Motha Fucker|Motha Fuker|Motha Fukkah|Motha Fukker|Mother Fucker|Mother Fukah|Mother Fuker|Mother Fukkah|Mother Fukker|mother-fucker|Mutha Fucker|Mutha Fukah|Mutha Fuker|Mutha Fukkah|Mutha Fukker|orafis|orgasim|orgasm|orgasum|oriface|orifice|orifiss|packi|packie|packy|paki|pakie|peeenus|peeenusss|peenus|peinus|pen1s|penas|penis|penis-breath|penus|penuus|Phuc|Phuck|Phuk|Phuker|Phukker|polac|polack|polak|Poonani|pr1c|pr1ck|pr1k|pusse|pussee|pussy|puuke|puuker|queer|queers|queerz|qweers|qweerz|qweir|recktum|rectum|retard|sadist|scank|schlong|screwing| sex |sh1t|sh1ter|sh1ts|sh1tter|sh1tz|shit|shits|shitter|Shitty|Shity|shitz|Shyt|Shyte|Shytty|Shyty|skanck|skank|skankee| sob |skankey|skanks|Skanky|slut|sluts|Slutty|slutz|son-of-a-bitch|va1jina|vag1na|vagiina|vagina|vaj1na|vajina|vullva|vulva|xxx|b!+ch|bitch|blowjob|clit|arschloch|fuck|shit|asshole|b!tch|b17ch|b1tch|bastard|bi+ch|boiolas|buceta|c0ck|cawk|chink|clits|cunt|dildo|dirsa|ejakulate|fatass|fcuk|fuk|fux0r|l3itch|lesbian|masturbate|masterbat*|motherfucker|s.o.b.|mofo|nigga|nigger|n1gr|nigur|niiger|niigr|nutsack|phuck|blue balls|blue_balls|blueballs|pussy|scrotum|shemale|sh!t|slut|smut|teets|tits|boobs|b00bs|testical|testicle|titt|jackoff|whoar|whore|fuck|shit|arse|bi7ch|bitch|bollock|breasts|cunt|dick|fag |feces|fuk|futkretzn|gay|jizz|masturbat*|piss|poop|porn|p0rn|pr0n|shiz|splooge|b00b|testicle|titt|wank|quitreadingthisyouneedalife";
+
+    public static string LanguageFilter(string str)
+    {
+        str = System.Text.RegularExpressions.Regex.Replace(str, LanguageFilterMild, ".", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        return System.Text.RegularExpressions.Regex.Replace(str, LanguageFilterPattern, "#", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
     }
 }

@@ -16,6 +16,8 @@ public class World : MonoBehaviour
     // The world's "message" and "marsxplr" parameters, empty when it has none.
     public static string worldMessage = "";
     public static string worldServerPrefs = "";
+    // WhirldIn.js worldParams: every [name:value] of the world's header.
+    public static System.Collections.Generic.Dictionary<string, string> worldParams = new System.Collections.Generic.Dictionary<string, string>();
 
     // Fort Boxy is the first entry in the original Game scene's built-in world
     // list, which the game fell back to when the update server was unreachable.
@@ -32,6 +34,7 @@ public class World : MonoBehaviour
         loading = false;
         worldMessage = "";
         worldServerPrefs = "";
+        worldParams.Clear();
 
         if (seaFogColor == default) seaFogColor = new Color(0.6f, 0.2f, 0.1f, 1f);
         if (seaGlowColor == default) seaGlowColor = new Color(1f, 0.4f, 0.1f, 1f);
@@ -108,6 +111,12 @@ public class World : MonoBehaviour
             {
                 whirldObject.Activate();
                 if (whirldObject.Params == null) continue;
+                // Only the world root carries the file header; other objects'
+                // data (AirCastle's cc, the floor texture) is their own.
+                if (whirldObject.transform.parent == null) foreach (var kv in whirldObject.Params)
+                {
+                    if (kv.Value is string v && !worldParams.ContainsKey(kv.Key)) worldParams[kv.Key] = v;
+                }
                 if (whirldObject.Params.TryGetValue("message", out object message) && message is string m) worldMessage = m;
                 if (whirldObject.Params.TryGetValue("marsxplr", out object prefs) && prefs is string p) worldServerPrefs = p;
             }
@@ -170,14 +179,20 @@ public class World : MonoBehaviour
 
         terrains = FindObjectsByType<Terrain>(FindObjectsSortMode.None);
 
-        var seaGo = GameObject.Find("Sea");
+        // Game.js Init(): a space world gets neither a sea nor a floor; a
+        // world can also turn the floor off with "nofloor" or "floor:0".
+        worldParams.TryGetValue("env", out string env);
+        bool space = env == "space";
+        var seaGo = space ? null : GameObject.Find("Sea");
         if (seaGo != null)
         {
             sea = seaGo.transform;
             if (Game.Settings != null) Game.Settings.lavaAlt = sea.position.y;
         }
 
-        if (GameObject.Find("Floor") == null && terrains.Length == 0 && sea == null)
+        worldParams.TryGetValue("nofloor", out string noFloor);
+        worldParams.TryGetValue("floor", out string floor);
+        if (!space && GameObject.Find("Floor") == null && terrains.Length == 0 && sea == null && string.IsNullOrEmpty(noFloor) && floor != "0")
         {
             var floorPrefab = Resources.Load<GameObject>("Floor");
             if (floorPrefab != null) Instantiate(floorPrefab, Vector3.zero, Quaternion.identity).name = "Floor";

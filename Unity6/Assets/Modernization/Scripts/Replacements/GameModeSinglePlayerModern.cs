@@ -88,14 +88,11 @@ public class GameModeSinglePlayerModern : MonoBehaviour
         }
     }
 
-    // Vehicle.js: quarryDist is the distance from the quarry to the player.
+    // Vehicle.js Update(): a quarry other than the player writes its distance
+    // to the player; otherwise the last value stays.
     private void UpdateQuarryDistance()
     {
-        if (Game.Player == null || Game.QuarryVeh == null)
-        {
-            Game.Controller.quarryDist = 0f;
-            return;
-        }
+        if (Game.Player == null || Game.QuarryVeh == null || Game.QuarryVeh == Game.Player) return;
         Game.Controller.quarryDist = Vector3.Distance(Game.QuarryVeh.transform.position, Game.Player.transform.position);
     }
 }

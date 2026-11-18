@@ -6,7 +6,9 @@ Method: static reading only. Every script under `unity/Assets` was matched to it
 
 Follow-up (2026-11-17): summary items 1 to 6 and B1 were then fixed (V1, V2, V3, M1, M2, L1, L2, G1 to G4, G6, S1, C5, X1, X2, and the `terrainMask` decode: 2049, layers 0 and 11). The tables below describe the tree before those fixes. Details are in [combat.md](combat.md), [buggy.md](buggy.md) and [ui.md](ui.md). The fixes pass the editor-free compile check and were play-tested in the editor on 2026-11-18 (see [combat.md](combat.md)).
 
-Second follow-up (2026-11-19, Unity `6000.3.27f1`, macOS `27.2.1`): C1, C2, C3, C4, C6, C8, S3, G7, G8 (crosshair while chatting only), G14, B4 and P12 were fixed or recorded; those rows are marked "Fixed 2026-11-19" below. Details are in [buggy.md](buggy.md#camera) and [ui.md](ui.md). The deliberate departures (B4, and the centred crosshair from G8) are now listed in `IMPROVEMENTS.md`. Everything else in the tables is still open, including the larger unported features: name tags (V4), the materialisation effect (V7, G5), RORB flashes (R1, R2), XORBs (M6, R3), music and hypersound (S2), lava floating and diving (B2), the "new physics" motor (B3), the other menu panels (S9, G10), roam camera (C7), worlds generated from `.utw` (W1) and the other vehicles.
+Second follow-up (2026-11-19, Unity `6000.3.27f1`, macOS `27.2.1`): C1, C2, C3, C4, C6, C8, S3, G7, G8 (crosshair while chatting only), G14, B4 and P12 were fixed or recorded; those rows are marked "Fixed 2026-11-19" below. Details are in [buggy.md](buggy.md#camera) and [ui.md](ui.md). The deliberate departures (B4, and the centred crosshair from G8) are now listed in `IMPROVEMENTS.md`. Third follow-up (2026-11-19, same versions): the remaining Low rows were worked through. Fixed: V5, V7 (the RORB part), V8, V9, M3, M4, R1, R2, B5, B6, G9, the `0` key of G10, G12, G13, S4, S5, S6, S8, C7, F1 to F3 and X3. No change needed: M5 (the converted `Buggy.prefab` already has its wing trails enabled, so the render-level gate changes nothing), L3 (the port's self-righting receives the collision directly), K1 to K3 (correct offline, documented, or networking only). G11 is recorded as a departure in `IMPROVEMENTS.md`. Still open among the Low rows: V6 (lava bubbles), B7 (distance level of detail), G5 (materialisation effect), G15 (`FallbackGround` scaffolding), S7 (terrain detail; no terrain on Fort Boxy), W2, and the XORB rows M6 and R3. Details are in [combat.md](combat.md), [buggy.md](buggy.md) and [ui.md](ui.md).
+
+Everything else in the tables is still open, including the larger unported features: name tags (V4), the materialisation effect (V7, G5), RORB flashes (R1, R2), XORBs (M6, R3), music and hypersound (S2), lava floating and diving (B2), the "new physics" motor (B3), the other menu panels (S9, G10), roam camera (C7), worlds generated from `.utw` (W1) and the other vehicles.
 
 ## Path legend
 
@@ -96,11 +98,11 @@ Severity: **High** changes the outcome of play on Fort Boxy; **Medium** is visib
 | V2 | Medium | `Vehicle.js:98-103` | `VehicleColourModern.cs:25-33` | Bots take the player's colours in the original. The port randomises each bot when the colour is not custom, and writes that colour to the player's saved preferences (`Settings.cs:86-95`). |
 | V3 | Medium | `Vehicle.js:117` | `SinglePlayerPlayableBootstrap.cs:96-103`; `GameModeSinglePlayerModern.cs:45-52` | Every vehicle recolours when a vehicle joins, so an existing quarry turns green as soon as there are two vehicles. The port recolours only when the quarry changes. |
 | V4 | Medium | `Vehicle.js:181-206` | none | Name tags (name, vehicle short name, score) are not drawn. Acknowledged in `docs/combat.md`. |
-| V5 | Low | `Vehicle.js:187` | `Game.cs:402-437` | HUD readout: the original separates the fields with five spaces in a 150 px button; the port uses two spaces in 190 px. The original shows "Static" below 0.05 m/s; the port below 0.05 MPH after its own rounding, so 0.05 to 0.22 m/s reads "Static" instead of "0 MPH" (`Game.cs:412`, `Game.cs:420`). |
+| V5 | Low, fixed 2026-11-19 | `Vehicle.js:187` | `Game.cs:402-437` | HUD readout: the original separates the fields with five spaces in a 150 px button; the port uses two spaces in 190 px. The original shows "Static" below 0.05 m/s; the port below 0.05 MPH after its own rounding, so 0.05 to 0.22 m/s reads "Static" instead of "0 MPH" (`Game.cs:412`, `Game.cs:420`). |
 | V6 | Low | `Vehicle.js:131-132` | none | Lava bubbles emitter is not ported. |
-| V7 | Low | `Vehicle.js:274-288` | `VehicleLaserResetModern.cs:31-41` | The reset does not shrink, destroy and rebuild the RORB (`Vehicle.js:281-283`, `Vehicle.js:288`), and the two materialisation effects (`Vehicle.js:279-280`) are missing. The file's header comment (`VehicleLaserResetModern.cs:7-9`) still says the sphere "has not got yet" a port. |
-| V8 | Low | `Vehicle.js:211-236` | `VehicleRamoSphereModern.cs:33-49` | The original waits 1 s before building the sphere and restores the rigidbody's inertia tensor and centre of mass afterwards; the port builds at once and does neither. If the setting is switched off and on again within 2 s, the port keeps the sphere that is already scheduled for destruction (`VehicleRamoSphereModern.cs:41`, `:47`) and ends with none. |
-| V9 | Low | `Vehicle.js:143` | `GameModeSinglePlayerModern.cs:91-99` | `quarryDist` is only written by a non-player quarry in the original; the port recomputes it every frame. No visible effect, because the readout hides it while the player is quarry. |
+| V7 | Low, RORB rebuild fixed 2026-11-19; materialisation effects open | `Vehicle.js:274-288` | `VehicleLaserResetModern.cs:31-41` | The reset does not shrink, destroy and rebuild the RORB (`Vehicle.js:281-283`, `Vehicle.js:288`), and the two materialisation effects (`Vehicle.js:279-280`) are missing. The file's header comment (`VehicleLaserResetModern.cs:7-9`) still says the sphere "has not got yet" a port. |
+| V8 | Low, fixed 2026-11-19 (the off-and-on case matches the source) | `Vehicle.js:211-236` | `VehicleRamoSphereModern.cs:33-49` | The original waits 1 s before building the sphere and restores the rigidbody's inertia tensor and centre of mass afterwards; the port builds at once and does neither. If the setting is switched off and on again within 2 s, the port keeps the sphere that is already scheduled for destruction (`VehicleRamoSphereModern.cs:41`, `:47`) and ends with none. |
+| V9 | Low, fixed 2026-11-19 | `Vehicle.js:143` | `GameModeSinglePlayerModern.cs:91-99` | `quarryDist` is only written by a non-player quarry in the original; the port recomputes it every frame. No visible effect, because the readout hides it while the player is quarry. |
 | V10 | Low | `Vehicle.js:75-77` | `SinglePlayerPlayableBootstrap.cs:74-78` | Matches (player marker). Listed for completeness. |
 
 ### `VehicleMe.js`
@@ -109,9 +111,9 @@ Severity: **High** changes the outcome of play on Fort Boxy; **Medium** is visib
 | --- | --- | --- | --- | --- |
 | M1 | Medium | `VehicleMe.js:70-76` | `FallReset.cs:6`, `FallReset.cs:16-30` | The original resets below −300 m to the base position, keeps the direction of travel at 1 m/s, keeps the rotation and broadcasts "… fell off the planet". The port resets below −200 m to 4 m above the base, zeroes linear and angular velocity, resets the rotation and shows no message. Bots use the original rule (`VehicleBotModern.cs:152-159`). |
 | M2 | Medium | `VehicleMe.js:77` | none | Speed above 500 m/s is halved each frame in the original. |
-| M3 | Low | `VehicleMe.js:6-8` | `PlayerVehicleInputModern.cs:17-22` | The 0.1 s key guard (`kpTime`) is not applied to Jump. |
-| M4 | Low | `VehicleMe.js:26-42` | `LegacyLaserSightController.cs:47-63` | The original shows an aimer whenever weapons lock is on. The port also requires lasers enabled and firepower above 0. |
-| M5 | Low | `VehicleMe.js:94-98` | none | Wing trails are switched on only above render level 3 in the original; the port never gates them. |
+| M3 | Low, fixed 2026-11-19 | `VehicleMe.js:6-8` | `PlayerVehicleInputModern.cs:17-22` | The 0.1 s key guard (`kpTime`) is not applied to Jump. |
+| M4 | Low, fixed 2026-11-19 | `VehicleMe.js:26-42` | `LegacyLaserSightController.cs:47-63` | The original shows an aimer whenever weapons lock is on. The port also requires lasers enabled and firepower above 0. |
+| M5 | Low, no change needed | `VehicleMe.js:94-98` | none | Wing trails are switched on only above render level 3 in the original; the port never gates them. |
 | M6 | Low | `VehicleMe.js:80-87` | none | XORB driving forces. Acknowledged as not ported. |
 | — | — | `VehicleMe.js:45-67` | `CombatSystemModern.cs:40-70` | Fire conditions, snipe rule, muzzle position and cooldowns match. |
 | — | — | `VehicleMe.js:26-38` | `CombatSystemModern.cs:76-87` | Lock ray matches. |
@@ -122,7 +124,7 @@ Severity: **High** changes the outcome of play on Fort Boxy; **Medium** is visib
 | --- | --- | --- | --- | --- |
 | L1 | High | `VehicleLocal.js:48-62` | none | Contact ramming (see V1). |
 | L2 | Medium | `VehicleLocal.js:29-46` | none | Terrain-penetration guard: each physics step the original casts from the previous position to the current one against `terrainMask` and, on a hit less than √500 m away, puts the vehicle back on the surface. The port has no equivalent, so a fast buggy can pass through thin geometry that the original would stop. |
-| L3 | Low | `VehicleLocal.js:54` | none | `OnCollisionStay` is rebroadcast to the vehicle model. The port's self-righting receives it directly (`BuggyControllerModern.cs:321`). |
+| L3 | Low, no change needed | `VehicleLocal.js:54` | none | `OnCollisionStay` is rebroadcast to the vehicle model. The port's self-righting receives it directly (`BuggyControllerModern.cs:321`). |
 
 ### `VehicleBot.js`
 
@@ -132,8 +134,8 @@ Matches `VehicleBotModern.cs` branch for branch, including the `int` enemy timer
 
 | # | Severity | Original | Port | Difference |
 | --- | --- | --- | --- | --- |
-| R1 | Low | `RamoSphere.js:48-53` | none | Shield flash (alpha 10) when another ORB first enters. |
-| R2 | Low | `RamoSphere.js:55-57` | none | Shield flash (alpha 5) on a laser hit. |
+| R1 | Low, fixed 2026-11-19 | `RamoSphere.js:48-53` | none | Shield flash (alpha 10) when another ORB first enters. |
+| R2 | Low, fixed 2026-11-19 | `RamoSphere.js:55-57` | none | Shield flash (alpha 5) on a laser hit. |
 | R3 | Low | `RamoSphere.js:26-37` | none | `colorSet` and the collision flash belong to XORBs; acknowledged. |
 | — | — | `RamoSphere.js:14-24`, `:39-46` | `VehicleRamoSphereModern.cs:54-60`, `:105-116` | Scroll, alpha easing and the stay trigger match. |
 
@@ -145,8 +147,8 @@ Matches `VehicleBotModern.cs` branch for branch, including the `int` enemy timer
 | B2 | Medium | `Buggy.js:435-475` | none | Lava floating and diving. Listed as open in `PLAN.md`. |
 | B3 | Low | `Buggy.js:181`, `:187`, `:310-353` | none | "New physics" motor. Listed as open in `PLAN.md`. `buggyNewPhysics` and `buggyAWD` do not exist in `Settings.cs`. |
 | B4 | Low, recorded in `IMPROVEMENTS.md` 2026-11-19 | `Buggy.js:201`, `:400` | `BuggyControllerModern.cs:333-340` | Wheel rays ignore triggers in the port, described there as a deliberate change. In the original a trigger on a masked layer (another vehicle's lock or RORB sphere) counts as ground. Not recorded in `IMPROVEMENTS.md`. |
-| B5 | Low | `Buggy.js:81-88` | `SinglePlayerPlayableBootstrap.cs:175`, `:344-355` | The original deactivates the wing trails on vehicles that are not the player's. The port clones them, enabled, on to bots as well. |
-| B6 | Low | `Buggy.js:83` | `BuggyPresentationModern.cs:62-66` | The tyre-track object is put on layer 11 in the original; the port leaves it on the default layer. `LegacyLaserSightController.cs:117` notes that the minimap skips layer 11, so the tracks may show on the minimap. |
+| B5 | Low, fixed 2026-11-19 | `Buggy.js:81-88` | `SinglePlayerPlayableBootstrap.cs:175`, `:344-355` | The original deactivates the wing trails on vehicles that are not the player's. The port clones them, enabled, on to bots as well. |
+| B6 | Low, fixed 2026-11-19 | `Buggy.js:83` | `BuggyPresentationModern.cs:62-66` | The tyre-track object is put on layer 11 in the original; the port leaves it on the default layer. `LegacyLaserSightController.cs:117` notes that the minimap skips layer 11, so the tracks may show on the minimap. |
 | B7 | Low | `Buggy.js:123-124`, `:519-525`; `WhirldLOD.js:16-20` | `BuggyPresentationModern.cs:41-47` | Distance level of detail (simple wheels, hidden axles, second wing mesh) is not ported; the detailed set is always shown. `World.lodDist` is set (`Settings.cs:160-163`) but nothing reads it. |
 | — | — | `Buggy.js:178-208`, `:282-307`, `:392-433`, `:477-495` | `BuggyControllerModern.cs:120-246`, `:321-331` | Suspension, centre of gravity, kinematic branch, drag and brakes, steering, default motor, wheel friction, springs, collision friction and self-righting match, including the `int` truncation of `motorAccel` (`Buggy.js:53`, `BuggyControllerModern.cs:190`). |
 | — | — | `Buggy.js:210-280` | `BuggyControllerModern.cs:248-318` | Flight matches, including the `input.y + 0.5 * 100` stall torque (`Buggy.js:278`, `BuggyControllerModern.cs:262`) and the constant 400 N thermal below `lavaAlt + 10` (`Buggy.js:265-266`, `BuggyControllerModern.cs:308-315`). |
@@ -160,9 +162,9 @@ Matches `VehicleBotModern.cs` branch for branch, including the `int` enemy timer
 
 | # | Severity | Original | Port | Difference |
 | --- | --- | --- | --- | --- |
-| K1 | Low | `Rocket.js:15-18` | `RocketModern.cs:33-37` | Inherited speed is fixed at zero. Correct offline, because only `VehicleNet.js` writes `Vehicle.velocity`. |
-| K2 | Low | `Rocket.js:74-75` | `RocketModern.cs:85-89` | Hits are sorted nearest first; the original used engine order. Documented. |
-| K3 | Low | `Rocket.js:32-43`, `:57`, `:82`, `:89` | none | Remote-vehicle prediction, lag extrapolation and the `lH` RPC are networking only. |
+| K1 | Low, no change needed | `Rocket.js:15-18` | `RocketModern.cs:33-37` | Inherited speed is fixed at zero. Correct offline, because only `VehicleNet.js` writes `Vehicle.velocity`. |
+| K2 | Low, no change needed | `Rocket.js:74-75` | `RocketModern.cs:85-89` | Hits are sorted nearest first; the original used engine order. Documented. |
+| K3 | Low, no change needed | `Rocket.js:32-43`, `:57`, `:82`, `:89` | none | Remote-vehicle prediction, lag extrapolation and the `lH` RPC are networking only. |
 | — | — | `Rocket.js:22-53`, `:69-112`, `:114-128` | `RocketModern.cs:43-64`, `:74-118`, `:120-143` | Lock-on lead, gravity, ricochet, scoring calls, explosion force and sparks match. Scoring rules match (`Rocket.js:91-98`, `GameModeSinglePlayerModern.cs:68-88`). |
 
 ### `Game.js`
@@ -177,11 +179,11 @@ Matches `VehicleBotModern.cs` branch for branch, including the `int` enemy timer
 | G6 | Low | `Game.js:1022-1034` | `Game.cs:219-229` | The original waits 0.5 s before making someone quarry after a bot is axed; the port does it on the next frame. |
 | G7 | Low, fixed 2026-11-19 | `Game.js:325-329`, `:532` | `Game.cs:314` | Frame rate shown is a 2 s average in the original and `1 / smoothDeltaTime` in the port. |
 | G8 | Low, chatting gate fixed 2026-11-19; centring kept as a recorded departure | `Game.js:379-382` | `Game.cs:369-400` | Crosshair: the original draws it whenever the cursor is locked, at centre minus `cursorOffset`, choosing the texture by the player's vehicle type. The port hides it while chatting, centres it, and always reads `firepower[0]` (`Game.cs:373`). The centring is documented in `docs/combat.md`. |
-| G9 | Low | `Game.js:265-273` | `Game.cs:162-180` | The delayed reset does not destroy and rebuild the RORB, and additionally zeroes angular velocity. |
-| G10 | Low | `Game.js:395-430`, `:438-450`, `:454-480`, `:585-621`, `:288-307`, `:320-323` | `Game.cs:258-260` | Exit button, fullscreen notice, hint lines, Switch Vehicle, Settings Advisor, GUI fade and the `0` fullscreen key are not ported. The first six are acknowledged in `docs/ui.md`; the `0` key is not mentioned. |
-| G11 | Low | `Game.js:162-164` | none | `CombineChildren` on worlds with more than 15 objects. |
-| G12 | Low | `Game.js:190` | `World.cs:157-161` | The `nofloor` and `floor` world parameters are not checked before adding the floor. |
-| G13 | Low | `Game.js:247` | none | `Application.runInBackground` is not set by script. |
+| G9 | Low, fixed 2026-11-19 | `Game.js:265-273` | `Game.cs:162-180` | The delayed reset does not destroy and rebuild the RORB, and additionally zeroes angular velocity. |
+| G10 | Low, `0` key fixed 2026-11-19; the rest open | `Game.js:395-430`, `:438-450`, `:454-480`, `:585-621`, `:288-307`, `:320-323` | `Game.cs:258-260` | Exit button, fullscreen notice, hint lines, Switch Vehicle, Settings Advisor, GUI fade and the `0` fullscreen key are not ported. The first six are acknowledged in `docs/ui.md`; the `0` key is not mentioned. |
+| G11 | Low, recorded in `IMPROVEMENTS.md` 2026-11-19 | `Game.js:162-164` | none | `CombineChildren` on worlds with more than 15 objects. |
+| G12 | Low, fixed 2026-11-19 | `Game.js:190` | `World.cs:157-161` | The `nofloor` and `floor` world parameters are not checked before adding the floor. |
+| G13 | Low, fixed 2026-11-19 | `Game.js:247` | none | `Application.runInBackground` is not set by script. |
 | G14 | Low, fixed 2026-11-19 | none | `Game.cs:195`, `:231-247` | `RaycastIgnoringPlayer` and its buffer are left over from the removed hitscan laser; nothing calls them. |
 | G15 | Low | none | `World.cs:174-177`, `:364-399` | `FallbackGround` is still created when nothing lies below the base. Non-original scaffolding, inactive on Fort Boxy. |
 | — | — | `Game.js:484-563`, `:566-583` | `Game.cs:275-349`, `:353-367` | Side-panel layout and panel window match. |
@@ -194,11 +196,11 @@ Matches `VehicleBotModern.cs` branch for branch, including the `int` enemy timer
 | S1 | Medium | `Settings.js:1596`, `:735` | `Settings.cs:26`, `:132-201`; `Messaging.cs:92-111` | With RORBs off the original forces `zorbSpeed` to 0, so XORBs are unavailable. The port leaves it at 7, so the X key reports "XORB Activated" and flips a flag (`zorbEnabled`) that nothing reads. |
 | S2 | Medium | `Settings.js:1598-1607`; `CameraVehicle.js:37-39` | `Settings.cs:13-14` | Music selection and the hypersound pitch are not ported; the two fields are declared and unused. |
 | S3 | Low, fixed 2026-11-19 | `Settings.js:794` | `Settings.cs:249-269` | The "L Hit ORBs" toggle is missing, so `lasersOptHit` (honoured at `RocketModern.cs:86`) cannot be switched on. |
-| S4 | Low | `Settings.js:1832-1834` | none | Particle emitters are switched off below render level 3. |
-| S5 | Low | `Settings.js:236` | none | The original caps the frame rate at 100 from preferences. |
-| S6 | Low | `Settings.js:239-243` | `Settings.cs:121-130` | `showHints`, `useMusic`, `useSfx`, `useHypersound` and `useMinimap` are not loaded from preferences. |
+| S4 | Low, fixed 2026-11-19 | `Settings.js:1832-1834` | none | Particle emitters are switched off below render level 3. |
+| S5 | Low, fixed 2026-11-19 | `Settings.js:236` | none | The original caps the frame rate at 100 from preferences. |
+| S6 | Low, fixed 2026-11-19 | `Settings.js:239-243` | `Settings.cs:121-130` | `showHints`, `useMusic`, `useSfx`, `useHypersound` and `useMinimap` are not loaded from preferences. |
 | S7 | Low | `Settings.js:1626-1687` | none | Terrain detail settings by render level. No terrain on Fort Boxy. |
-| S8 | Low | `Settings.js:76` | `Settings.cs:55` | `resetTime` starts at 0 in the original and −10 in the port; this only matters to the unported Switch Vehicle panel (`Game.js:456`). |
+| S8 | Low, fixed 2026-11-19 | `Settings.js:76` | `Settings.cs:55` | `resetTime` starts at 0 in the original and −10 in the port; this only matters to the unported Switch Vehicle panel (`Game.js:456`). |
 | S9 | Low | `Settings.js:257-675` | `Game.cs:361-363` | Game Settings, Player Settings and Active Players panels show "{Not ported yet}". Acknowledged. |
 | — | — | `Settings.js:1551-1583`, `:1617-1624`, `:1689-1690`, `:1836-1839` | `Settings.cs:132-200` | Lock flag, LOD distance, contrast and SSAO, quality level, fixed step, far clip and fog, gravity, sea height and vehicle lights match. |
 | — | — | `Settings.js:1701-1735` | `Settings.cs:63-95` | Colour randomising formula matches; who it is applied to does not (V2). |
@@ -213,7 +215,7 @@ Matches `VehicleBotModern.cs` branch for branch, including the `int` enemy timer
 | C4 | Low, fixed 2026-11-19 | `CameraVehicle.js:62-65` | none | Escape leaves first person in the original. |
 | C5 | Low | `CameraVehicle.js:66` | `CameraVehicle.cs:210-268` | Camera keys are ignored while chatting in the original; no check in the port (not reachable until chat exists). |
 | C6 | Low, fixed 2026-11-19 | `CameraVehicle.js:112-118` | `CameraVehicle.cs:79-86` | The look angles reset only on Fire2 down or key 1. The port resets them every time first person becomes active, including on Snipe and after the entry effect. |
-| C7 | Low | `CameraVehicle.js:229-239` | `CameraVehicle.cs:122-189` | Roam mode (4) is not ported; any mode other than 0, 2 and 3 is treated as chase. |
+| C7 | Low, fixed 2026-11-19 | `CameraVehicle.js:229-239` | `CameraVehicle.cs:122-189` | Roam mode (4) is not ported; any mode other than 0, 2 and 3 is treated as chase. |
 | C8 | Low, fixed 2026-11-19 | `CameraVehicle.js:24` | `CameraVehicle.cs:22-28` | The start orientation (x = 270.01°) is not set, so the entry effect starts from the scene's camera rotation. |
 | — | — | `CameraVehicle.js:42-59`, `:100-106`, `:138-204`, `:216-226`, `:242-263` | `CameraVehicle.cs:40-55`, `:70-76`, `:122-189`, `:111-121`, `:191-205`, `:294-317` | Cursor lock, snipe zoom, arrow, entry effect, the three chase styles, soar, spectate and fog switching match. |
 
@@ -223,7 +225,7 @@ Matches `VehicleBotModern.cs` branch for branch, including the `int` enemy timer
 | --- | --- | --- | --- | --- |
 | X1 | High | `Messaging.js:17-122` | `Messaging.cs:34-40` | No console window, chat input, Tab handling or `chatting` state. Game messages are not visible to the player. |
 | X2 | Medium | `Messaging.js:66-77` | `Messaging.cs:19-32` | Pressing R starts the 10 s reset and freezes the vehicle; pressing X toggles XORB. In the original both are chat commands. |
-| X3 | Low | `Messaging.js:79` | `Messaging.cs:64-68` | Language filter not applied. |
+| X3 | Low, fixed 2026-11-19 | `Messaging.js:79` | `Messaging.cs:64-68` | Language filter not applied. |
 | — | — | `Game.js:1346-1353` | `Messaging.cs:34-38` | The 50-entry cap matches. |
 
 ### `MiniMap.js`, `BaseSimple.js`, `FloorController.js`, `WhirldObject.js`, `GameData.js`
@@ -242,9 +244,9 @@ No behavioural differences found (`MiniMap.js:11-61` against `MiniMap.cs:20-77`;
 
 | # | Severity | Original | Port | Difference |
 | --- | --- | --- | --- | --- |
-| F1 | Low | `LobbyStarfield.js:22` | `LobbyStarfield.cs:38-42` | Emission also stops below the "Good" quality level in the original. |
-| F2 | Low | `LobbyStarfield.js:15-17` | `LobbyStarfield.cs:25-30` | The port tints the shared material asset, not an instance. Only reached in the Lobby scene. |
-| F3 | Low | `LobbyStarfield.js:11`, `:20` | `LobbyStarfield.cs:20-32` | Scene indices 1 and "above 1" meant Lobby and Game. The build list is now Init, InitGame, Game, Fort Boxy, so index 1 is InitGame. |
+| F1 | Low, fixed 2026-11-19 | `LobbyStarfield.js:22` | `LobbyStarfield.cs:38-42` | Emission also stops below the "Good" quality level in the original. |
+| F2 | Low, fixed 2026-11-19 | `LobbyStarfield.js:15-17` | `LobbyStarfield.cs:25-30` | The port tints the shared material asset, not an instance. Only reached in the Lobby scene. |
+| F3 | Low, fixed 2026-11-19 | `LobbyStarfield.js:11`, `:20` | `LobbyStarfield.cs:20-32` | Scene indices 1 and "above 1" meant Lobby and Game. The build list is now Init, InitGame, Game, Fort Boxy, so index 1 is InitGame. |
 
 ### C# scripts present on both sides
 

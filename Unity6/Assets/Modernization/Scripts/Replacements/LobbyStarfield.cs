@@ -17,25 +17,33 @@ public class LobbyStarfield : MonoBehaviour
 
     private void Update()
     {
-        int sceneIndex = SceneManager.GetActiveScene().buildIndex;
+        // LobbyStarfield.js tested level 1 (the Lobby) and levels above it (the
+        // game). The build list is now Init, InitGame, Game and the world, so
+        // the scenes are told apart by name.
+        string scene = SceneManager.GetActiveScene().name;
+        bool inLobby = scene == "Lobby";
+        bool inGame = !inLobby && scene != "Init" && scene != "InitGame";
         float guiHide = ReadLobbyGuiHide();
 
-        if (sceneIndex == 1 && guiHide > 0f)
+        if (inLobby && guiHide > 0f)
         {
+            // .material, as in the source: the tint goes on this starfield's
+            // own copy, not the shared asset.
             if (_renderer != null && _renderer.sharedMaterial != null)
             {
-                var col = _renderer.sharedMaterial.GetColor("_TintColor");
+                var col = _renderer.material.GetColor("_TintColor");
                 col.a = 0.5f - guiHide / 2f;
-                _renderer.sharedMaterial.SetColor("_TintColor", col);
+                _renderer.material.SetColor("_TintColor", col);
             }
         }
-        else if (sceneIndex > 1 && _ps != null)
+        else if (inGame && _ps != null)
         {
             var vel = _ps.velocityOverLifetime;
             vel.enabled = true;
             vel.y = -Mathf.Min(Time.timeSinceLevelLoad, 5f);
 
-            if (Time.timeSinceLevelLoad > 7f)
+            // Emission also stops below the Good quality level (index 3).
+            if (Time.timeSinceLevelLoad > 7f || QualitySettings.GetQualityLevel() < 3)
             {
                 var emission = _ps.emission;
                 emission.enabled = false;

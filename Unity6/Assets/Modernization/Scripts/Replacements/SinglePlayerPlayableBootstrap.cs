@@ -354,6 +354,8 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
             copy.transform.localScale = t.localScale;
             if (t.name == "Trail1") presentation.leftTrail = copy.transform;
             else if (t.name == "Trail2") presentation.rightTrail = copy.transform;
+            // Buggy.js: only the player's buggy keeps its wing trails.
+            if (!vehicle.CompareTag("Player") && (t.name == "Trail1" || t.name == "Trail2")) copy.SetActive(false);
         }
     }
 

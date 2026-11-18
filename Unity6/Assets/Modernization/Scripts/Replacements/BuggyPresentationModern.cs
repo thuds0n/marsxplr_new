@@ -60,6 +60,8 @@ public class BuggyPresentationModern : MonoBehaviour
         if (skidmarkMaterial != null && CompareTag("Player"))
         {
             var go = new GameObject("Buggy Skidmarks", typeof(MeshFilter), typeof(MeshRenderer));
+            // Buggy.js puts the tracks on layer 11, which the minimap skips.
+            go.layer = 11;
             var renderer = go.GetComponent<MeshRenderer>();
             renderer.sharedMaterial = skidmarkMaterial;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;

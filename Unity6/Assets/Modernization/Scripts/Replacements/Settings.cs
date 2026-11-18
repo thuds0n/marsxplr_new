@@ -11,6 +11,12 @@ public class Settings : MonoBehaviour
     public bool flightCam = false;
     public bool gyroCam;
     public int useHypersound;
+    // Settings.js getPrefs(): loaded from the preferences; music, sound
+    // effects and hints are not ported yet, so nothing else reads them.
+    public bool showHints = true;
+    public int useMusic = 1;
+    public bool useSfx = true;
+    public bool superCam = true;
     public AudioSource gameMusic;
     public bool lasersAllowed = true;
     public bool laserLocking = true;
@@ -56,7 +62,9 @@ public class Settings : MonoBehaviour
     public float worldViewDist = 5000f;
     public Color fogColor = Color.clear;
     public int renderLevel = 4;
-    public float resetTime = -10f;
+    // Settings.js resetTime starts at 0. Not serialised: the Game scene still
+    // holds the port's earlier -10.
+    [System.NonSerialized] public float resetTime;
 
     public bool enteredfullscreen;
     // Settings.js: true once the player picks a colour; otherwise each game
@@ -126,6 +134,15 @@ public class Settings : MonoBehaviour
     {
         renderLevel = PlayerPrefs.GetInt("renderLevel", 4);
         renderViewCap = PlayerPrefs.GetFloat("viewCap", 1000f);
+        // Settings.js: the frame rate is capped at 100 unless the player set
+        // another limit.
+        Application.targetFrameRate = (int)PlayerPrefs.GetFloat("targetFrameRate", 100f);
+        showHints = PlayerPrefs.GetInt("showHints", 1) != 0;
+        useMusic = PlayerPrefs.GetInt("useMusic", 1);
+        useSfx = PlayerPrefs.GetInt("useSfx", 1) != 0;
+        useHypersound = PlayerPrefs.GetInt("useHypersound", 0);
+        useMinimap = PlayerPrefs.GetInt("useMinimap", 1) != 0;
+        superCam = PlayerPrefs.GetInt("superCam", 1) != 0;
         camMode = PlayerPrefs.GetInt("cam", 1);
         camChase = PlayerPrefs.GetInt("camChase", 1);
         camDist = PlayerPrefs.GetFloat("camDist", 0.01f);
@@ -177,21 +194,7 @@ public class Settings : MonoBehaviour
             World.sea.position = seaPos;
         }
 
-        // Settings.js switched off every vehicle's spot light (Vehicle.prefab's
-        // VehicleLight) whenever the preferences were applied.
-        foreach (var light in FindObjectsByType<Light>(FindObjectsSortMode.None))
-        {
-            if (light.name != "VehicleLight") continue;
-            light.enabled = false;
-        }
-
-        // VehicleMe.js OnPrefsUpdated(): at Fantastic the player's own vehicle
-        // light comes back on.
-        if (renderLevel > 4 && Game.Player != null)
-        {
-            var playerLight = Game.Player.GetComponentInChildren<Light>();
-            if (playerLight != null) playerLight.enabled = true;
-        }
+        updateObjects();
 
         laserLocking = false;
         if (laserLock != null)
@@ -204,6 +207,48 @@ public class Settings : MonoBehaviour
                     break;
                 }
             }
+        }
+    }
+
+    // Settings.js updateObjects(): particles emit only from render level 3,
+    // every vehicle's spot light (Vehicle.prefab's VehicleLight) is switched
+    // off, then every object hears OnPrefsUpdated.
+    public void updateObjects()
+    {
+        foreach (var ps in FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None))
+        {
+            var emission = ps.emission;
+            emission.enabled = renderLevel >= 3;
+        }
+
+        foreach (var light in FindObjectsByType<Light>(FindObjectsSortMode.None))
+        {
+            if (light.name != "VehicleLight") continue;
+            light.enabled = false;
+        }
+
+        // Vehicle.js OnPrefsUpdated(): the laser aimers keep emitting.
+        foreach (var sight in FindObjectsByType<LegacyLaserSightController>(FindObjectsSortMode.None))
+        {
+            foreach (GameObject aimer in new[] { sight.laserAimer, sight.laserAimerLocked })
+            {
+                if (aimer == null) continue;
+                foreach (var ps in aimer.GetComponentsInChildren<ParticleSystem>(true))
+                {
+                    var emission = ps.emission;
+                    emission.enabled = true;
+                }
+            }
+        }
+
+        foreach (var orb in FindObjectsByType<VehicleRamoSphereModern>(FindObjectsSortMode.None)) orb.OnPrefsUpdated();
+
+        // VehicleMe.js OnPrefsUpdated(): at Fantastic the player's own vehicle
+        // light comes back on.
+        if (renderLevel > 4 && Game.Player != null)
+        {
+            var playerLight = Game.Player.GetComponentInChildren<Light>();
+            if (playerLight != null) playerLight.enabled = true;
         }
     }
 

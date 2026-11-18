@@ -164,6 +164,7 @@ public class Messaging : MonoBehaviour
         }
         else
         {
+            input = Game.LanguageFilter(input);
             Game.Controller.msg(input, Local);
         }
     }

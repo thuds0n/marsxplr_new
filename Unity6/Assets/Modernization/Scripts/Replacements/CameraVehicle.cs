@@ -15,6 +15,7 @@ public class CameraVehicle : MonoBehaviour
     private float _lastY;
     private float _heightBoost;
     private float _worldTime;
+    private const float RoamSensitivity = 1f;
 
     private void Start()
     {
@@ -127,7 +128,17 @@ public class CameraVehicle : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Game.Player.transform.position - transform.position), Time.deltaTime * 1.5f);
             transform.Translate(new Vector3(Input.GetAxis("camX") * Time.deltaTime * 50f, Input.GetAxis("camY") * Time.deltaTime * 40f, Input.GetAxis("camZ") * Time.deltaTime * 50f));
         }
-        else
+        else if (Game.Settings.camMode == 4)
+        {
+            // CameraVehicle.js Roam: fly freely with the camera axes and look
+            // with the mouse (sensitivity 1 in the original Game scene).
+            transform.position += new Vector3(Input.GetAxis("camX"), Input.GetAxis("camY"), Input.GetAxis("camZ")) * (Time.deltaTime * 50f);
+            _rotationX += Input.GetAxis("Mouse X") * RoamSensitivity;
+            _rotationY += Input.GetAxis("Mouse Y") * RoamSensitivity;
+            transform.localRotation = Quaternion.AngleAxis(_rotationX, Vector3.up);
+            transform.localRotation *= Quaternion.AngleAxis(_rotationY, Vector3.left);
+        }
+        else if (Game.Settings.camMode == 1)
         {
             if (Game.Settings.camChase == 1)
             {

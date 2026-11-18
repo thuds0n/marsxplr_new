@@ -44,9 +44,9 @@ public class LegacyLaserSightController : MonoBehaviour
             return;
         }
 
-        bool hasFirepower = Game.Settings.firepower != null && Game.Settings.firepower.Length > vehicleId && Game.Settings.firepower[vehicleId] > 0;
-        bool lasersEnabled = Game.Settings.lasersAllowed && hasFirepower;
-        bool lockingEnabled = lasersEnabled && Game.Settings.laserLocking;
+        // VehicleMe.js shows an aimer whenever weapons lock is on, whether or
+        // not lasers are allowed or the vehicle has firepower.
+        bool lockingEnabled = Game.Settings.laserLocking;
 
         // VehicleMe.js: the aimers swap on CombatSystemModern's weapons lock.
         var combat = GetComponent<CombatSystemModern>();
