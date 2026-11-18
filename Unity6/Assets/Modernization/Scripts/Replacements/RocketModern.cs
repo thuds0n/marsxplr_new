@@ -136,6 +136,7 @@ public class RocketModern : MonoBehaviour
         if (explosion != null)
         {
             Transform sparks = Instantiate(explosion, pos, Quaternion.FromToRotation(Vector3.up, norm));
+            Settings.SoundEffect(sparks.gameObject);
             var effect = sparks.gameObject.AddComponent<PlasmaSparksModern>();
             effect.snipe = speedX > 1;
             effect.material = sparksMaterial;

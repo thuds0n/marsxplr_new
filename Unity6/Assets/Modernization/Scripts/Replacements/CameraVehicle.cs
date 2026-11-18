@@ -34,6 +34,13 @@ public class CameraVehicle : MonoBehaviour
         if (Game.Player == null) return;
         if (Game.Settings == null) return;
 
+        // CameraVehicle.js: HyperSound bends the music's pitch with speed.
+        if (Game.Settings.useHypersound == 1 && Game.Settings.gameMusic != null)
+        {
+            var body = Game.Player.GetComponent<Rigidbody>();
+            if (body != null) Game.Settings.gameMusic.pitch = Mathf.Clamp(-0.5f + body.linearVelocity.magnitude / 15f, 0.8f, 1.5f);
+        }
+
         var playerState = Game.Player.GetComponent<VehicleStateModern>();
         Transform rideTarget = playerState != null && playerState.rideTarget != null
             ? playerState.rideTarget

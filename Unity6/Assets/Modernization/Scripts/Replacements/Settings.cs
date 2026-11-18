@@ -11,14 +11,18 @@ public class Settings : MonoBehaviour
     public bool flightCam = false;
     public bool gyroCam;
     public int useHypersound;
-    // Settings.js getPrefs(): loaded from the preferences. Music and sound
-    // effects are not ported, so nothing reads them; hints are only shown as
-    // the Game Settings toggle (the Settings Advisor panel is not ported).
+    // Settings.js getPrefs(): loaded from the preferences. Hints are only
+    // shown as the Game Settings toggle (the Settings Advisor panel is not
+    // ported).
     public bool showHints = true;
     public int useMusic = 1;
     public bool useSfx = true;
     public bool superCam = true;
+    // Settings.js gameMusic and musicTracks, as in the 2.22 build's level2:
+    // the Camera's disabled, looping AudioSource (volume 0.5) and Classic,
+    // Ambient and Carefree.
     public AudioSource gameMusic;
+    public AudioClip[] musicTracks;
     public bool lasersAllowed = true;
     public bool laserLocking = true;
     public float[] laserLock = { 0.4f, 0.4f, 0.4f, 0.4f };
@@ -198,6 +202,30 @@ public class Settings : MonoBehaviour
 
         // Settings.js: XORBs are unavailable without RORBs.
         if (ramoSpheres == 0f) zorbSpeed = 0f;
+
+        // Settings.js: music off, or the chosen track at normal pitch.
+        if (gameMusic != null)
+        {
+            if (useMusic == 0)
+            {
+                gameMusic.enabled = false;
+                if (gameMusic.isPlaying) gameMusic.Stop();
+            }
+            else if (musicTracks != null && useMusic <= musicTracks.Length)
+            {
+                gameMusic.enabled = true;
+                gameMusic.pitch = 1f;
+                // A new track is stopped into explicitly so that it always
+                // starts from the beginning, as the original's Play() did.
+                AudioClip track = musicTracks[useMusic - 1];
+                if (gameMusic.clip != track)
+                {
+                    gameMusic.Stop();
+                    gameMusic.clip = track;
+                }
+                if (!gameMusic.isPlaying) gameMusic.Play();
+            }
+        }
 
         Physics.gravity = new Vector3(0f, worldGrav, 0f);
         if (World.sea != null)
@@ -467,8 +495,19 @@ public class Settings : MonoBehaviour
         }
     }
 
-    // Settings.js showDialogGame(). Left out: the Audio section (music, sound
-    // effects and HyperSound are not ported).
+    // SoundEffect.js Awake(): with sound effects off, a laser's or its sparks'
+    // AudioSource is removed as it spawns (stopped first, as Destroy waits
+    // until the end of the frame).
+    public static void SoundEffect(GameObject go)
+    {
+        if (Game.Settings == null || Game.Settings.useSfx) return;
+        var audio = go.GetComponent<AudioSource>();
+        if (audio == null) return;
+        audio.Stop();
+        Destroy(audio);
+    }
+
+    // Settings.js showDialogGame().
     public void showDialogGame()
     {
         GUILayout.Label("Resolution:");
@@ -583,6 +622,29 @@ public class Settings : MonoBehaviour
         {
             showHints = !showHints;
             PlayerPrefs.SetInt("showHints", showHints ? 1 : 0);
+            updatePrefs();
+        }
+
+        GUILayout.FlexibleSpace();
+        GUILayout.Space(20);
+        GUILayout.Label("Audio:");
+
+        // Settings.js: applies to sounds that start after the change.
+        if (GUILayout.Toggle(useSfx, "Sound Effects Enabled") != useSfx)
+        {
+            useSfx = !useSfx;
+            PlayerPrefs.SetInt("useSfx", useSfx ? 1 : 0);
+        }
+
+        MusicToggle(0, "No Music");
+        MusicToggle(1, "Classic");
+        MusicToggle(2, "Ambient");
+        MusicToggle(3, "Carefree");
+
+        if (GUILayout.Toggle(useHypersound == 1, "HyperSound") != (useHypersound == 1))
+        {
+            useHypersound = useHypersound == 1 ? 0 : 1;
+            PlayerPrefs.SetInt("useHypersound", useHypersound);
             updatePrefs();
         }
     }
@@ -714,6 +776,16 @@ public class Settings : MonoBehaviour
             GUILayout.Space(10);
             GUILayout.Label(veh.name + (veh.gameObject == Game.Player ? " (Me)" : ""));
             GUILayout.FlexibleSpace();
+        }
+    }
+
+    private void MusicToggle(int music, string label)
+    {
+        if (GUILayout.Toggle(useMusic == music, label) != (useMusic == music))
+        {
+            useMusic = music;
+            PlayerPrefs.SetInt("useMusic", music);
+            updatePrefs();
         }
     }
 

@@ -863,7 +863,11 @@ MonoBehaviour:
   flightCam: 1
   gyroCam: 0
   useHypersound: 0
-  gameMusic: {fileID: 0}
+  gameMusic: {fileID: 53}
+  musicTracks:
+  - {fileID: 8300000, guid: af042416cebc340cba35af61b1897a99, type: 3}
+  - {fileID: 8300000, guid: 405857be16b8544f2816fd448d48bd89, type: 3}
+  - {fileID: 8300000, guid: e4bcc0e8e8a734f4cbd249a917ea69bb, type: 3}
   lasersAllowed: 1
   laserLocking: 1
   laserLock:

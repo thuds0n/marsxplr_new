@@ -8,7 +8,7 @@ Follow-up (2026-11-17): summary items 1 to 6 and B1 were then fixed (V1, V2, V3,
 
 Second follow-up (2026-11-19, Unity `6000.3.27f1`, macOS `27.2.1`): C1, C2, C3, C4, C6, C8, S3, G7, G8 (crosshair while chatting only), G14, B4 and P12 were fixed or recorded; those rows are marked "Fixed 2026-11-19" below. Details are in [buggy.md](buggy.md#camera) and [ui.md](ui.md). The deliberate departures (B4, and the centred crosshair from G8) are now listed in `IMPROVEMENTS.md`. Third follow-up (2026-11-19, same versions): the remaining Low rows were worked through. Fixed: V5, V7 (the RORB part), V8, V9, M3, M4, R1, R2, B5, B6, G9, the `0` key of G10, G12, G13, S4, S5, S6, S8, C7, F1 to F3 and X3. No change needed: M5 (the converted `Buggy.prefab` already has its wing trails enabled, so the render-level gate changes nothing), L3 (the port's self-righting receives the collision directly), K1 to K3 (correct offline, documented, or networking only). G11 is recorded as a departure in `IMPROVEMENTS.md`. Still open among the Low rows: V6 (lava bubbles), B7 (distance level of detail), G5 (materialisation effect), G15 (`FallbackGround` scaffolding), S7 (terrain detail; no terrain on Fort Boxy), W2, and the XORB rows M6 and R3. Details are in [combat.md](combat.md), [buggy.md](buggy.md) and [ui.md](ui.md).
 
-Everything else in the tables is still open, including the larger unported features: name tags (V4), the materialisation effect (V7, G5), RORB flashes (R1, R2), XORBs (M6, R3), music and hypersound (S2), lava floating and diving (B2), the "new physics" motor (B3), the Switch Vehicle and Settings Advisor panels (G10), roam camera (C7), worlds generated from `.utw` (W1) and the other vehicles.
+Everything else in the tables is still open, including the larger unported features: name tags (V4), the materialisation effect (V7, G5), RORB flashes (R1, R2), XORBs (M6, R3), lava floating and diving (B2), the "new physics" motor (B3), the Switch Vehicle and Settings Advisor panels (G10), roam camera (C7), worlds generated from `.utw` (W1) and the other vehicles.
 
 ## Path legend
 
@@ -194,7 +194,7 @@ Matches `VehicleBotModern.cs` branch for branch, including the `int` enemy timer
 | # | Severity | Original | Port | Difference |
 | --- | --- | --- | --- | --- |
 | S1 | Medium | `Settings.js:1596`, `:735` | `Settings.cs:26`, `:132-201`; `Messaging.cs:92-111` | With RORBs off the original forces `zorbSpeed` to 0, so XORBs are unavailable. The port leaves it at 7, so the X key reports "XORB Activated" and flips a flag (`zorbEnabled`) that nothing reads. |
-| S2 | Medium | `Settings.js:1598-1607`; `CameraVehicle.js:37-39` | `Settings.cs:13-14` | Music selection and the hypersound pitch are not ported; the two fields are declared and unused. |
+| S2 | Medium, fixed 2026-11-19 | `Settings.js:1598-1607`; `CameraVehicle.js:37-39` | `Settings.cs` `updatePrefs`, `CameraVehicle.cs` `LateUpdate` | Music selection and the hypersound pitch are not ported; the two fields are declared and unused. Now ported with the Audio section and `SoundEffect.js` ([ui.md](ui.md)). |
 | S3 | Low, fixed 2026-11-19 | `Settings.js:794` | `Settings.cs:249-269` | The "L Hit ORBs" toggle is missing, so `lasersOptHit` (honoured at `RocketModern.cs:86`) cannot be switched on. |
 | S4 | Low, fixed 2026-11-19 | `Settings.js:1832-1834` | none | Particle emitters are switched off below render level 3. |
 | S5 | Low, fixed 2026-11-19 | `Settings.js:236` | none | The original caps the frame rate at 100 from preferences. |

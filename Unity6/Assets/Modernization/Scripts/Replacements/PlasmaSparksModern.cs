@@ -128,7 +128,8 @@ public class PlasmaSparksModern : MonoBehaviour
 
         // ParticleAnimator autodestruct, kept until the hit sound has finished.
         float life = legacy.energy;
-        var audio = GetComponent<AudioSource>();
+        // Settings.SoundEffect has already removed it with sound effects off.
+        var audio = Game.Settings != null && !Game.Settings.useSfx ? null : GetComponent<AudioSource>();
         if (audio != null) Make3D(audio);
         if (audio != null && audio.clip != null) life = Mathf.Max(life, audio.clip.length / Mathf.Max(0.01f, Mathf.Abs(audio.pitch)));
         Destroy(gameObject, life + 0.1f);
