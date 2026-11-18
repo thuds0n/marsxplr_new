@@ -303,6 +303,11 @@ public class Settings : MonoBehaviour
 
         if (lasersAllowed)
         {
+            if (ramoSpheres != 0f && GUILayout.Toggle(lasersOptHit, "L Hit ORBs") != lasersOptHit)
+            {
+                lasersOptHit = !lasersOptHit;
+                updateServerPrefs();
+            }
             if (GUILayout.Toggle(lasersFatal, "L Hits Rematerialize") != lasersFatal)
             {
                 lasersFatal = !lasersFatal;

@@ -14,14 +14,15 @@ public class CameraVehicle : MonoBehaviour
     private Vector3 _lastDir = new Vector3(1f, 1f, 1f);
     private float _lastY;
     private float _heightBoost;
-    private string _cameraToast = "";
-    private float _cameraToastUntil;
-    private bool _wasFirstPersonViewActive;
     private float _worldTime;
 
     private void Start()
     {
         Time.timeScale = 1f;
+        // CameraVehicle.js Start(): the entry effect begins from x = 270.01.
+        Vector3 euler = transform.eulerAngles;
+        euler.x = 270.01f;
+        transform.eulerAngles = euler;
         // The Game scene keeps the green arrow under the camera but never
         // assigned it here.
         if (arrow == null) arrow = transform.Find("Arrow");
@@ -76,34 +77,41 @@ public class CameraVehicle : MonoBehaviour
         }
         else if (firstPersonActive)
         {
-            if (!_wasFirstPersonViewActive)
+            // The buggy model's RideCam marks the original ridePos.
+            Transform ridePos = FindRidePos();
+            Quaternion rideRotation = ridePos != null ? ridePos.rotation : Game.Player.transform.rotation;
+            transform.position = ridePos != null ? ridePos.position : rideTarget.position + Vector3.up * 1.5f;
+
+            // CameraVehicle.js: the look angles reset only when Fire2 goes
+            // down or key 1 is pressed, not whenever first person starts.
+            if (Input.GetButtonDown("Fire2") || Input.GetKeyDown(KeyCode.Alpha1))
             {
                 _rotationX = 0f;
                 _rotationY = 0f;
-                _gyroBaseRotation = Game.Settings.gyroCam
-                    ? Quaternion.Euler(0f, Game.Player.transform.rotation.eulerAngles.y, 0f)
-                    : Quaternion.identity;
+                if (Game.Settings.gyroCam) _gyroBaseRotation = Quaternion.Euler(0f, rideRotation.eulerAngles.y, 0f);
             }
-
-            // The buggy model's RideCam marks the original ridePos.
-            Transform ridePos = FindRidePos();
-            transform.position = ridePos != null ? ridePos.position : rideTarget.position + Vector3.up * 1.5f;
 
             if (Game.Settings.gyroCam)
             {
-                if (_gyroBaseRotation == Quaternion.identity)
-                {
-                    _gyroBaseRotation = Quaternion.Euler(0f, Game.Player.transform.rotation.eulerAngles.y, 0f);
-                }
+                // Port scaffold: the original's gyroTation is unset until the
+                // first reset; take the ride heading instead of a zero quaternion.
+                if (_gyroBaseRotation == Quaternion.identity) _gyroBaseRotation = Quaternion.Euler(0f, rideRotation.eulerAngles.y, 0f);
                 transform.rotation = _gyroBaseRotation;
             }
             else
             {
-                transform.rotation = ridePos != null ? ridePos.rotation : Game.Player.transform.rotation;
+                transform.rotation = rideRotation;
             }
 
-            _rotationX += Input.GetAxis("Mouse X") * 2f;
-            _rotationY += Input.GetAxis("Mouse Y") * 2f;
+            // A quarter as sensitive while Snipe is held.
+            float lookSpeed = Input.GetButton("Snipe") ? 0.5f : 2f;
+            _rotationX += Input.GetAxis("Mouse X") * lookSpeed;
+            _rotationY += Input.GetAxis("Mouse Y") * lookSpeed;
+            if (_rotationX < -360f) _rotationX += 360f;
+            else if (_rotationX > 360f) _rotationX -= 360f;
+            if (_rotationY < -360f) _rotationY += 360f;
+            else if (_rotationY > 360f) _rotationY -= 360f;
+            _rotationX = Mathf.Clamp(_rotationX, -360f, 360f);
             _rotationY = Mathf.Clamp(_rotationY, Game.Settings.gyroCam ? -100f : -20f, 100f);
             transform.localRotation *= Quaternion.AngleAxis(_rotationX, Vector3.up);
             transform.localRotation *= Quaternion.AngleAxis(_rotationY, Vector3.left);
@@ -203,77 +211,53 @@ public class CameraVehicle : MonoBehaviour
             if (toTarget != Vector3.zero) arrow.rotation = Quaternion.Lerp(arrow.rotation, Quaternion.LookRotation(toTarget), Time.deltaTime * 15f);
             arrow.localScale = Vector3.one * Mathf.Lerp(0.03f, 1f, Camera.main != null ? Camera.main.fieldOfView / 60f : 1f);
         }
-
-        _wasFirstPersonViewActive = firstPersonActive;
     }
 
+    // CameraVehicle.js hotkeys. Escape leaves first person; the number keys
+    // are ignored while chatting. Keys 3 and 4 change only the chase distance.
     private void ApplyHotkeys()
     {
-        // CameraVehicle.js: the camera keys are ignored while chatting.
+        if (Input.GetKeyDown(KeyCode.Escape) && Game.Settings.camMode == 0)
+        {
+            Game.Settings.camMode = 1;
+            PlayerPrefs.SetInt("cam", 1);
+        }
         if (Game.Messaging != null && Game.Messaging.chatting) return;
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             Game.Settings.camMode = 0;
-            _rotationX = 0f;
-            _rotationY = 0f;
-            _gyroBaseRotation = Game.Settings.gyroCam
-                ? Quaternion.Euler(0f, Game.Player != null ? Game.Player.transform.rotation.eulerAngles.y : 0f, 0f)
-                : Quaternion.identity;
             PlayerPrefs.SetInt("cam", 0);
-            ShowCameraToast("Camera: First Person");
         }
         else if (Input.GetKeyDown(KeyCode.Alpha2))
         {
             Game.Settings.camMode = 1;
             PlayerPrefs.SetInt("cam", 1);
-            ShowCameraToast("Camera: Chase");
         }
         else if (Input.GetKeyDown(KeyCode.Alpha3))
         {
             Game.Settings.camDist = 0f;
-            Game.Settings.camMode = 1;
             PlayerPrefs.SetFloat("camDist", 0f);
-            PlayerPrefs.SetInt("cam", 1);
-            ShowCameraToast("Camera Distance: Near");
         }
         else if (Input.GetKeyDown(KeyCode.Alpha4))
         {
             Game.Settings.camDist = 20f;
-            Game.Settings.camMode = 1;
             PlayerPrefs.SetFloat("camDist", 20f);
-            PlayerPrefs.SetInt("cam", 1);
-            ShowCameraToast("Camera Distance: Far");
         }
         else if (Input.GetKeyDown(KeyCode.Alpha5))
         {
             Game.Settings.camMode = 2;
             PlayerPrefs.SetInt("cam", 2);
-            ShowCameraToast("Camera: Soar");
         }
         else if (Input.GetKeyDown(KeyCode.Alpha6))
         {
             Game.Settings.camMode = 3;
             PlayerPrefs.SetInt("cam", 3);
-            ShowCameraToast("Camera: Spectate");
         }
         else if (Input.GetKeyDown(KeyCode.Alpha7))
         {
             Game.Settings.gyroCam = !Game.Settings.gyroCam;
-            _rotationX = 0f;
-            _rotationY = 0f;
-            _gyroBaseRotation = Game.Settings.gyroCam
-                ? Quaternion.Euler(0f, Game.Player != null ? Game.Player.transform.rotation.eulerAngles.y : 0f, 0f)
-                : Quaternion.identity;
             PlayerPrefs.SetInt("gyroCam", Game.Settings.gyroCam ? 1 : 0);
-            ShowCameraToast("Gyro Cam: " + (Game.Settings.gyroCam ? "On" : "Off"));
         }
-    }
-
-    private void ShowCameraToast(string text)
-    {
-        _cameraToast = text;
-        _cameraToastUntil = Time.time + 1.4f;
-        if (Game.Controller != null) Game.Controller.msg(text, 0);
     }
 
     private Transform _ridePos;
@@ -316,15 +300,5 @@ public class CameraVehicle : MonoBehaviour
 
         if (colorEffect != null) colorEffect.enabled = glowEffect != null && glowEffect.enabled;
         if (Camera.main != null) Camera.main.backgroundColor = RenderSettings.fogColor;
-    }
-
-    private void OnGUI()
-    {
-        if (Time.time > _cameraToastUntil || string.IsNullOrEmpty(_cameraToast)) return;
-
-        const int width = 320;
-        const int height = 28;
-        Rect rect = new Rect((Screen.width - width) * 0.5f, 12f, width, height);
-        GUI.Box(rect, _cameraToast);
     }
 }

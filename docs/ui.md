@@ -32,3 +32,8 @@ Tried by hand (2026-11-18, Unity `6000.3.27f1` editor, macOS `27.2.1`, Play mode
 - After Enter the field kept keyboard focus, which swallowed the next game key (a Space after sending did nothing). Enter now clears keyboard focus too.
 
 Both rechecked by hand after the fix: Tab opens and cancels, and the first key after sending (5, Soar camera) acts at once.
+
+## L Hit ORBs (2026-11-19)
+
+Server Settings now shows "L Hit ORBs" between "Lasers enabled" and "L Hits Rematerialize" when lasers and RORBs are both on (`Settings.js:794`). It switches `lasersOptHit`, which `RocketModern` already honoured (`maskOpt`). The frame rate on the Game Settings button is now the original 2 s count (`Game.js:325-329`): frames over each 2 s divided by 2 with integer division, so it reads in whole steps and shows 0 or 1 for the first 2 s. The crosshair is drawn while chatting too, as `Game.js` drew it whenever the cursor was locked. Checked in Play mode from `Init` (Unity `6000.3.27f1`, macOS `27.2.1`): with RORBs and lasers on, the row showed in place and a real click ticked `lasersOptHit`; the button read "Game Settings (131 FPS)"; no console errors.
+

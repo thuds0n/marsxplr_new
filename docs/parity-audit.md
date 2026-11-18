@@ -6,6 +6,8 @@ Method: static reading only. Every script under `unity/Assets` was matched to it
 
 Follow-up (2026-11-17): summary items 1 to 6 and B1 were then fixed (V1, V2, V3, M1, M2, L1, L2, G1 to G4, G6, S1, C5, X1, X2, and the `terrainMask` decode: 2049, layers 0 and 11). The tables below describe the tree before those fixes. Details are in [combat.md](combat.md), [buggy.md](buggy.md) and [ui.md](ui.md). The fixes pass the editor-free compile check and were play-tested in the editor on 2026-11-18 (see [combat.md](combat.md)).
 
+Second follow-up (2026-11-19, Unity `6000.3.27f1`, macOS `27.2.1`): C1, C2, C3, C4, C6, C8, S3, G7, G8 (crosshair while chatting only), G14, B4 and P12 were fixed or recorded; those rows are marked "Fixed 2026-11-19" below. Details are in [buggy.md](buggy.md#camera) and [ui.md](ui.md). The deliberate departures (B4, and the centred crosshair from G8) are now listed in `IMPROVEMENTS.md`. Everything else in the tables is still open, including the larger unported features: name tags (V4), the materialisation effect (V7, G5), RORB flashes (R1, R2), XORBs (M6, R3), music and hypersound (S2), lava floating and diving (B2), the "new physics" motor (B3), the other menu panels (S9, G10), roam camera (C7), worlds generated from `.utw` (W1) and the other vehicles.
+
 ## Path legend
 
 Line references use the file name only. Names are unique within each side.
@@ -142,7 +144,7 @@ Matches `VehicleBotModern.cs` branch for branch, including the `int` enemy timer
 | B1 | Medium | `Vehicle.js:3` (`terrainMask : LayerMask = ~1<<4`) | `BuggyControllerModern.cs:19-20` | The port's comment reads the script default as "everything except the water layer". Unary `~` binds tighter than `<<`, so the script default is `(~1) << 4`: layers 5 to 31, excluding layers 0 to 4. The value actually used is the one serialised in the binary `Vehicle.prefab`, which was not decoded here. The port's `~(1 << 4)` is therefore an assumption, not the source default. It affects wheel rays, the gear-retract ray and the body-friction ray. |
 | B2 | Medium | `Buggy.js:435-475` | none | Lava floating and diving. Listed as open in `PLAN.md`. |
 | B3 | Low | `Buggy.js:181`, `:187`, `:310-353` | none | "New physics" motor. Listed as open in `PLAN.md`. `buggyNewPhysics` and `buggyAWD` do not exist in `Settings.cs`. |
-| B4 | Low | `Buggy.js:201`, `:400` | `BuggyControllerModern.cs:333-340` | Wheel rays ignore triggers in the port, described there as a deliberate change. In the original a trigger on a masked layer (another vehicle's lock or RORB sphere) counts as ground. Not recorded in `IMPROVEMENTS.md`. |
+| B4 | Low, recorded in `IMPROVEMENTS.md` 2026-11-19 | `Buggy.js:201`, `:400` | `BuggyControllerModern.cs:333-340` | Wheel rays ignore triggers in the port, described there as a deliberate change. In the original a trigger on a masked layer (another vehicle's lock or RORB sphere) counts as ground. Not recorded in `IMPROVEMENTS.md`. |
 | B5 | Low | `Buggy.js:81-88` | `SinglePlayerPlayableBootstrap.cs:175`, `:344-355` | The original deactivates the wing trails on vehicles that are not the player's. The port clones them, enabled, on to bots as well. |
 | B6 | Low | `Buggy.js:83` | `BuggyPresentationModern.cs:62-66` | The tyre-track object is put on layer 11 in the original; the port leaves it on the default layer. `LegacyLaserSightController.cs:117` notes that the minimap skips layer 11, so the tracks may show on the minimap. |
 | B7 | Low | `Buggy.js:123-124`, `:519-525`; `WhirldLOD.js:16-20` | `BuggyPresentationModern.cs:41-47` | Distance level of detail (simple wheels, hidden axles, second wing mesh) is not ported; the detailed set is always shown. `World.lodDist` is set (`Settings.cs:160-163`) but nothing reads it. |
@@ -173,14 +175,14 @@ Matches `VehicleBotModern.cs` branch for branch, including the `int` enemy timer
 | G4 | Medium | `Game.js:1165` | `SinglePlayerPlayableBootstrap.cs:108-111`, `:139` | The original spawns the local vehicle with the base's rotation. The port uses identity, and its comment says the original did. |
 | G5 | Low | `Game.js:198`, `:1008`, `:1027`, `:1062-1064` | none | Materialisation effect at spawn, bot add and bot removal. Acknowledged. |
 | G6 | Low | `Game.js:1022-1034` | `Game.cs:219-229` | The original waits 0.5 s before making someone quarry after a bot is axed; the port does it on the next frame. |
-| G7 | Low | `Game.js:325-329`, `:532` | `Game.cs:314` | Frame rate shown is a 2 s average in the original and `1 / smoothDeltaTime` in the port. |
-| G8 | Low | `Game.js:379-382` | `Game.cs:369-400` | Crosshair: the original draws it whenever the cursor is locked, at centre minus `cursorOffset`, choosing the texture by the player's vehicle type. The port hides it while chatting, centres it, and always reads `firepower[0]` (`Game.cs:373`). The centring is documented in `docs/combat.md`. |
+| G7 | Low, fixed 2026-11-19 | `Game.js:325-329`, `:532` | `Game.cs:314` | Frame rate shown is a 2 s average in the original and `1 / smoothDeltaTime` in the port. |
+| G8 | Low, chatting gate fixed 2026-11-19; centring kept as a recorded departure | `Game.js:379-382` | `Game.cs:369-400` | Crosshair: the original draws it whenever the cursor is locked, at centre minus `cursorOffset`, choosing the texture by the player's vehicle type. The port hides it while chatting, centres it, and always reads `firepower[0]` (`Game.cs:373`). The centring is documented in `docs/combat.md`. |
 | G9 | Low | `Game.js:265-273` | `Game.cs:162-180` | The delayed reset does not destroy and rebuild the RORB, and additionally zeroes angular velocity. |
 | G10 | Low | `Game.js:395-430`, `:438-450`, `:454-480`, `:585-621`, `:288-307`, `:320-323` | `Game.cs:258-260` | Exit button, fullscreen notice, hint lines, Switch Vehicle, Settings Advisor, GUI fade and the `0` fullscreen key are not ported. The first six are acknowledged in `docs/ui.md`; the `0` key is not mentioned. |
 | G11 | Low | `Game.js:162-164` | none | `CombineChildren` on worlds with more than 15 objects. |
 | G12 | Low | `Game.js:190` | `World.cs:157-161` | The `nofloor` and `floor` world parameters are not checked before adding the floor. |
 | G13 | Low | `Game.js:247` | none | `Application.runInBackground` is not set by script. |
-| G14 | Low | none | `Game.cs:195`, `:231-247` | `RaycastIgnoringPlayer` and its buffer are left over from the removed hitscan laser; nothing calls them. |
+| G14 | Low, fixed 2026-11-19 | none | `Game.cs:195`, `:231-247` | `RaycastIgnoringPlayer` and its buffer are left over from the removed hitscan laser; nothing calls them. |
 | G15 | Low | none | `World.cs:174-177`, `:364-399` | `FallbackGround` is still created when nothing lies below the base. Non-original scaffolding, inactive on Fort Boxy. |
 | — | — | `Game.js:484-563`, `:566-583` | `Game.cs:275-349`, `:353-367` | Side-panel layout and panel window match. |
 | — | — | `Game.js:1005-1011`, `:1138-1148` | `Game.cs:201-216`; `SinglePlayerPlayableBootstrap.cs:110-112` | Bot announcement, 2 s delay and the clear-sphere spawn search match. |
@@ -191,7 +193,7 @@ Matches `VehicleBotModern.cs` branch for branch, including the `int` enemy timer
 | --- | --- | --- | --- | --- |
 | S1 | Medium | `Settings.js:1596`, `:735` | `Settings.cs:26`, `:132-201`; `Messaging.cs:92-111` | With RORBs off the original forces `zorbSpeed` to 0, so XORBs are unavailable. The port leaves it at 7, so the X key reports "XORB Activated" and flips a flag (`zorbEnabled`) that nothing reads. |
 | S2 | Medium | `Settings.js:1598-1607`; `CameraVehicle.js:37-39` | `Settings.cs:13-14` | Music selection and the hypersound pitch are not ported; the two fields are declared and unused. |
-| S3 | Low | `Settings.js:794` | `Settings.cs:249-269` | The "L Hit ORBs" toggle is missing, so `lasersOptHit` (honoured at `RocketModern.cs:86`) cannot be switched on. |
+| S3 | Low, fixed 2026-11-19 | `Settings.js:794` | `Settings.cs:249-269` | The "L Hit ORBs" toggle is missing, so `lasersOptHit` (honoured at `RocketModern.cs:86`) cannot be switched on. |
 | S4 | Low | `Settings.js:1832-1834` | none | Particle emitters are switched off below render level 3. |
 | S5 | Low | `Settings.js:236` | none | The original caps the frame rate at 100 from preferences. |
 | S6 | Low | `Settings.js:239-243` | `Settings.cs:121-130` | `showHints`, `useMusic`, `useSfx`, `useHypersound` and `useMinimap` are not loaded from preferences. |
@@ -205,14 +207,14 @@ Matches `VehicleBotModern.cs` branch for branch, including the `int` enemy timer
 
 | # | Severity | Original | Port | Difference |
 | --- | --- | --- | --- | --- |
-| C1 | Medium | `CameraVehicle.js:123-124` | `CameraVehicle.cs:105-106` | Mouse look is a quarter as sensitive while Snipe is held (0.5 against 2). The port always uses 2, so aiming while zoomed is four times faster. |
-| C2 | Medium | `CameraVehicle.js:75-82` | `CameraVehicle.cs:229-244` | Keys 3 and 4 change only the chase distance. The port also forces chase mode. |
-| C3 | Medium | none | `CameraVehicle.cs:270-275`, `:319-327` | The port shows a toast box and adds a message for every camera key. The original shows nothing. |
-| C4 | Low | `CameraVehicle.js:62-65` | none | Escape leaves first person in the original. |
+| C1 | Medium, fixed 2026-11-19 | `CameraVehicle.js:123-124` | `CameraVehicle.cs:105-106` | Mouse look is a quarter as sensitive while Snipe is held (0.5 against 2). The port always uses 2, so aiming while zoomed is four times faster. |
+| C2 | Medium, fixed 2026-11-19 | `CameraVehicle.js:75-82` | `CameraVehicle.cs:229-244` | Keys 3 and 4 change only the chase distance. The port also forces chase mode. |
+| C3 | Medium, fixed 2026-11-19 | none | `CameraVehicle.cs:270-275`, `:319-327` | The port shows a toast box and adds a message for every camera key. The original shows nothing. |
+| C4 | Low, fixed 2026-11-19 | `CameraVehicle.js:62-65` | none | Escape leaves first person in the original. |
 | C5 | Low | `CameraVehicle.js:66` | `CameraVehicle.cs:210-268` | Camera keys are ignored while chatting in the original; no check in the port (not reachable until chat exists). |
-| C6 | Low | `CameraVehicle.js:112-118` | `CameraVehicle.cs:79-86` | The look angles reset only on Fire2 down or key 1. The port resets them every time first person becomes active, including on Snipe and after the entry effect. |
+| C6 | Low, fixed 2026-11-19 | `CameraVehicle.js:112-118` | `CameraVehicle.cs:79-86` | The look angles reset only on Fire2 down or key 1. The port resets them every time first person becomes active, including on Snipe and after the entry effect. |
 | C7 | Low | `CameraVehicle.js:229-239` | `CameraVehicle.cs:122-189` | Roam mode (4) is not ported; any mode other than 0, 2 and 3 is treated as chase. |
-| C8 | Low | `CameraVehicle.js:24` | `CameraVehicle.cs:22-28` | The start orientation (x = 270.01°) is not set, so the entry effect starts from the scene's camera rotation. |
+| C8 | Low, fixed 2026-11-19 | `CameraVehicle.js:24` | `CameraVehicle.cs:22-28` | The start orientation (x = 270.01°) is not set, so the entry effect starts from the scene's camera rotation. |
 | — | — | `CameraVehicle.js:42-59`, `:100-106`, `:138-204`, `:216-226`, `:242-263` | `CameraVehicle.cs:40-55`, `:70-76`, `:122-189`, `:111-121`, `:191-205`, `:294-317` | Cursor lock, snipe zoom, arrow, entry effect, the three chase styles, soar, spectate and fog switching match. |
 
 ### `Messaging.js`
@@ -263,7 +265,7 @@ Compared with `diff` after normalising line endings. `VortexEffect`, `TwirlEffec
 | P9 | line 116 | "Keep `specialInput`, `flightMode`, `camSmooth`, brakes, and throttle-channel selection as distinct state concepts." | `VehicleStateModern.SetFlightMode` sets all three together (`VehicleStateModern.cs:42-47`); it is called at spawn (`SinglePlayerPlayableBootstrap.cs:193`) and by `SimplePlayerController`. The modern controller keeps them separate. |
 | P10 | lines 121-124 against 126 | Milestone 2 status "ported and verified on the probe pad" | All four acceptance boxes are unticked. One of the two is out of date. |
 | P11 | line 136 | Milestone 3 lists only "laser aimer colour" as open | The world's own settings and welcome message (G1) are open and affect play on Fort Boxy; the fact is recorded only in `docs/world-and-rendering.md`. |
-| P12 | line 50 | "Preserve original behaviour and presentation by default." | Deliberate departures that are not in `IMPROVEMENTS.md`: wheel rays ignoring triggers (B4), the camera toast (C3), keys 3 and 4 forcing chase mode (C2), and the R and X hotkeys (X2). |
+| P12 (recorded 2026-11-19) | line 50 | "Preserve original behaviour and presentation by default." | Deliberate departures that are not in `IMPROVEMENTS.md`: wheel rays ignoring triggers (B4), the camera toast (C3), keys 3 and 4 forcing chase mode (C2), and the R and X hotkeys (X2). |
 
 Claims checked and supported: one scene-flow coordinator (line 66; `InitModern.cs:13` and `InitSceneLoaderModern.cs:17` both delegate to `SinglePlayerStartupBootstrap.cs:35-72`); Lobby out of Build Settings (line 68; `Unity6/ProjectSettings/EditorBuildSettings.asset`); flight state separate from `inputThrottle` (line 70; `VehicleStateModern.cs:9`, `:14`); body and beadlocks coloured from the vehicle state (line 105; `VehicleColourModern.cs:73-81`); recovery controller selectable (line 108); pyramids generated at ±0.5 (line 81; `World.cs:229-258`); lava floating, diving and the "new physics" motor open (line 99; `BuggyControllerModern.cs:9`); vehicle light off, then on for the player above render level 4 (line 136; `Settings.cs:175-187`).
 

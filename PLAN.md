@@ -18,7 +18,7 @@ Detail lives in `docs/`, one file per area. This file keeps status, decisions an
 - [docs/combat.md](docs/combat.md): lasers, quarry, score and bots.
 - [docs/ui.md](docs/ui.md): the in-game side-panel menu and Server Settings.
 - [docs/wine-reference.md](docs/wine-reference.md): how to run and measure the original for comparisons.
-- `IMPROVEMENTS.md`: faithful-but-improvable behaviour deferred from parity work.
+- `IMPROVEMENTS.md`: faithful-but-improvable behaviour deferred from parity work, and the deliberate departures already made.
 
 Record new findings in the matching `docs/` file, dated and with exact Unity and macOS versions, and update the status lines here.
 
@@ -165,7 +165,7 @@ Status: an arm64 Mono development player of `master` (2026-10-21, late) builds a
 
 The evidence-backed baseline is tagged `unity6-baseline-2026-10-21` (Milestone 0 complete; buggy ground handling, Fort Boxy, HUD, image effects and shadows checked against the Wine version).
 
-1. The 2026-11-17 parity fixes ([docs/parity-audit.md](docs/parity-audit.md)) passed the editor play-test, the scripted tests and a hand test on 2026-11-18 (chat Tab and focus fixed for Unity 6). Next, continue Milestone 4: compare the sparks and sounds with the Wine version, and the remaining menu panels.
+1. The 2026-11-17 parity fixes ([docs/parity-audit.md](docs/parity-audit.md)) passed the editor play-test, the scripted tests and a hand test on 2026-11-18 (chat Tab and focus fixed for Unity 6). The 2026-11-19 follow-up fixed the camera keys and snipe look, the "L Hit ORBs" toggle, the frame-rate count and leftovers (C1-C4, C6, C8, S3, G7, G8, G14), passing the scripted tests in the editor; the snipe look speed is not yet tried with a real mouse. Next, continue Milestone 4: the remaining audit rows, comparing the sparks and sounds with the Wine version, and the remaining menu panels.
 2. Fort Boxy rendering (2026-10-21): the shadow strip east of the spawn slab no longer reproduces and the `Arrow.jas` mesh matches the original cone. The arrow now points at the base as the original did. The floor writes its original alpha again, so the contrast stretch saturates it as the original code did (see [docs/world-and-rendering.md](docs/world-and-rendering.md)).
 
 ## Definition of done for the single-player milestone

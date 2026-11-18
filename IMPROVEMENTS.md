@@ -1,6 +1,6 @@
 # Future Improvements
 
-Behaviour that matches the original Mars Explorer but could be improved later. Each item is faithful today; changing it would be a deliberate departure from the original, so it waits until parity work is complete.
+Behaviour that matches the original Mars Explorer but could be improved later. Each item is faithful today; changing it would be a deliberate departure from the original, so it waits until parity work is complete. The departures already made are listed at the end.
 
 ## Vehicles
 
@@ -13,3 +13,10 @@ Behaviour that matches the original Mars Explorer but could be improved later. E
 ## HUD
 
 - **The guidance arrow's direction is hard to read.** The green arrow is a plain cone seen nearly end-on in the bottom-right corner, so pointing directly ahead and directly behind look alike. It points at the base while the player is the quarry or there is none, and otherwise at the quarry (`CameraVehicle.js`). A clearer shape, shading that separates tip from base, or a small ring showing the camera's heading would make the direction obvious.
+
+## Deliberate departures
+
+Places where the port knowingly differs from the original, kept because the original behaviour depended on the old engine or was a defect.
+
+- **Buggy wheel rays ignore triggers.** In `Buggy.js` the wheel, gear-retract and body-friction rays hit trigger colliders, so another vehicle's lock or RORB sphere on a masked layer counted as ground. `BuggyControllerModern` casts them with triggers ignored, so a buggy does not ride on those spheres.
+- **The crosshair is centred.** `Game.js` drew the crosshair at the screen centre minus `cursorOffset` (16, 16) with the Unity 2.x label style. Unity 6's label padding shrank and shifted the texture, so the port draws it exactly at the centre, where the lasers fly.

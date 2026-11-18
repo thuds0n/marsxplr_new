@@ -12,6 +12,11 @@ public class Game : MonoBehaviour
     public static GameObject QuarryVeh;
 
     public bool loadingWorld;
+    // Game.js fps, fpsTime, fpsFrames and heavyTickRate.
+    [System.NonSerialized] public float fps;
+    private float _fpsTime;
+    private int _fpsFrames;
+    private const int HeavyTickRate = 2;
     public float worldLoadTime;
     public Texture2D cursor;
     public Texture2D cursorLook;
@@ -160,6 +165,16 @@ public class Game : MonoBehaviour
             if (tagged != null) Player = tagged;
         }
 
+        // Game.js: frames counted over each 2 s heavy tick. fpsFrames and
+        // heavyTickRate are both ints there, so the division truncates.
+        _fpsFrames++;
+        if (Time.time > _fpsTime)
+        {
+            fps = _fpsFrames / HeavyTickRate;
+            _fpsTime = Time.time + HeavyTickRate;
+            _fpsFrames = 0;
+        }
+
         // Legacy reset lifecycle: /r style delayed reset back to base.
         if (Settings == null || Player == null) return;
         if (Settings.resetTime > 0f && (10f - (Time.time - Settings.resetTime)) < 1f)
@@ -195,9 +210,6 @@ public class Game : MonoBehaviour
         }
     }
 
-    private static readonly RaycastHit[] _laserHits = new RaycastHit[32];
-
-    // Nearest hit along the ray that does not belong to the player's own vehicle.
     // Game.js addBot(): announce, wait 2 s, then spawn "<name>'s bot[ n]"
     // at the base like any vehicle (iV). The materialisation effect is not
     // ported yet.
@@ -250,24 +262,6 @@ public class Game : MonoBehaviour
             msg(Settings.serverWelcome, 1);
         }
         if (!string.IsNullOrEmpty(World.worldServerPrefs)) Settings.applyServerString(World.worldServerPrefs);
-    }
-
-    public static bool RaycastIgnoringPlayer(Ray ray, float range, out RaycastHit hit)
-    {
-        int count = Physics.RaycastNonAlloc(ray, _laserHits, range, ~0, QueryTriggerInteraction.Ignore);
-        Transform playerRoot = Player != null ? Player.transform : null;
-        hit = default;
-        float best = float.MaxValue;
-        for (int i = 0; i < count; i++)
-        {
-            if (playerRoot != null && _laserHits[i].transform.IsChildOf(playerRoot)) continue;
-            if (_laserHits[i].distance < best)
-            {
-                best = _laserHits[i].distance;
-                hit = _laserHits[i];
-            }
-        }
-        return best < float.MaxValue;
     }
 
     private void OnGUI()
@@ -335,7 +329,7 @@ public class Game : MonoBehaviour
             if (panel.curHeight < buttonHeight * 1.5f)
             {
                 string txt = panel.name;
-                if (i == 1) txt += " (" + (1f / Mathf.Max(Time.smoothDeltaTime, 0.0001f)).ToString("f0") + " FPS)";
+                if (i == 1) txt += " (" + fps.ToString("f0") + " FPS)";
                 if (Event.current.type != EventType.Layout && GUI.Button(new Rect(Screen.width - 180, areaOffset, 170, panel.curHeight), txt))
                 {
                     panel.open = !panel.open;
@@ -392,7 +386,8 @@ public class Game : MonoBehaviour
 
     private void DrawCrosshair()
     {
-        if (!(ShouldShowAim() && !Messaging.chatting)) return;
+        // Game.js draws it whenever the cursor is locked, chatting or not.
+        if (!ShouldShowAim()) return;
 
         bool canFire = Settings.lasersAllowed && Settings.firepower != null && Settings.firepower.Length > 0 && Settings.firepower[0] > 0;
         Texture2D tex = canFire ? cursor : cursorLook;
