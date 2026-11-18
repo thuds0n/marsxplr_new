@@ -467,16 +467,46 @@ public class Settings : MonoBehaviour
         }
     }
 
-    // Settings.js showDialogGame(). Left out: the resolution arrows (the port
-    // keeps the point-size resolution the IMGUI HUD needs, see
-    // UsePointResolution) and the Audio section (music, sound effects and
-    // HyperSound are not ported).
+    // Settings.js showDialogGame(). Left out: the Audio section (music, sound
+    // effects and HyperSound are not ported).
     public void showDialogGame()
     {
         GUILayout.Label("Resolution:");
         // Game.cs handles the 0 key the same way: fullscreen at the current
         // resolution rather than Settings.js toggleFullscreen()'s largest one.
         if (GUILayout.Button((!Screen.fullScreen ? "Enter" : "Exit") + " Fullscreen (0)")) Screen.fullScreen = !Screen.fullScreen;
+        if (Screen.fullScreen || Application.platform == RuntimePlatform.OSXPlayer || Application.platform == RuntimePlatform.WindowsPlayer)
+        {
+            // Settings.js steps to the next smaller or larger of the display's
+            // resolutions by width (Screen.resolutions is smallest first). The
+            // Unity 6 macOS player already lists them at point size.
+            Resolution[] resolutions = Screen.resolutions;
+            if (resolutions.Length > 0)
+            {
+                GUILayout.BeginHorizontal();
+                if ((resolutions[0].width < Screen.width || resolutions[0].height < Screen.height) && GUILayout.Button("<<", GUILayout.Width(28)))
+                {
+                    for (int i = resolutions.Length - 1; i >= 0; i--)
+                    {
+                        if (resolutions[i].width >= Screen.width) continue;
+                        Screen.SetResolution(resolutions[i].width, resolutions[i].height, Screen.fullScreen);
+                        break;
+                    }
+                }
+                GUILayout.Label(Screen.width + "X" + Screen.height);
+                Resolution largest = resolutions[resolutions.Length - 1];
+                if ((largest.width > Screen.width || largest.height > Screen.height) && GUILayout.Button(">>", GUILayout.Width(28)))
+                {
+                    foreach (Resolution res in resolutions)
+                    {
+                        if (res.width <= Screen.width) continue;
+                        Screen.SetResolution(res.width, res.height, Screen.fullScreen);
+                        break;
+                    }
+                }
+                GUILayout.EndHorizontal();
+            }
+        }
 
         GUILayout.FlexibleSpace();
         GUILayout.Space(20);

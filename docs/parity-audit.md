@@ -201,7 +201,7 @@ Matches `VehicleBotModern.cs` branch for branch, including the `int` enemy timer
 | S6 | Low, fixed 2026-11-19 | `Settings.js:239-243` | `Settings.cs:121-130` | `showHints`, `useMusic`, `useSfx`, `useHypersound` and `useMinimap` are not loaded from preferences. |
 | S7 | Low | `Settings.js:1626-1687` | none | Terrain detail settings by render level. No terrain on Fort Boxy. |
 | S8 | Low, fixed 2026-11-19 | `Settings.js:76` | `Settings.cs:55` | `resetTime` starts at 0 in the original and −10 in the port; this only matters to the unported Switch Vehicle panel (`Game.js:456`). |
-| S9 | Low, fixed 2026-11-19 | `Settings.js:257-675` | `Settings.cs` `showDialogGame`, `showDialogPlayer`, `showDialogPlayers` | Game Settings, Player Settings and Active Players panels show "{Not ported yet}". Now ported without the online, audio, resolution and XORB controls ([ui.md](ui.md)). |
+| S9 | Low, fixed 2026-11-19 | `Settings.js:257-675` | `Settings.cs` `showDialogGame`, `showDialogPlayer`, `showDialogPlayers` | Game Settings, Player Settings and Active Players panels show "{Not ported yet}". Now ported without the online, audio and XORB controls ([ui.md](ui.md)). |
 | — | — | `Settings.js:1551-1583`, `:1617-1624`, `:1689-1690`, `:1836-1839` | `Settings.cs:132-200` | Lock flag, LOD distance, contrast and SSAO, quality level, fixed step, far clip and fog, gravity, sea height and vehicle lights match. |
 | — | — | `Settings.js:1701-1735` | `Settings.cs:63-95` | Colour randomising formula matches; who it is applied to does not (V2). |
 

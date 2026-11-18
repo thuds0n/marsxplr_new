@@ -20,6 +20,6 @@ Places where the port knowingly differs from the original, kept because the orig
 
 - **Buggy wheel rays ignore triggers.** In `Buggy.js` the wheel, gear-retract and body-friction rays hit trigger colliders, so another vehicle's lock or RORB sphere on a masked layer counted as ground. `BuggyControllerModern` casts them with triggers ignored, so a buggy does not ride on those spheres.
 - **The crosshair is centred.** `Game.js` drew the crosshair at the screen centre minus `cursorOffset` (16, 16) with the Unity 2.x label style. Unity 6's label padding shrank and shifted the texture, so the port draws it exactly at the centre, where the lasers fly.
-- **Fullscreen keeps the point-size resolution.** `Settings.js` `toggleFullscreen()` switched to the display's largest resolution. The port's `0` key only toggles fullscreen, keeping the halved resolution `Settings` picks on Retina displays so the IMGUI HUD stays at its original size.
+- **Fullscreen keeps the point-size resolution.** `Settings.js` `toggleFullscreen()` switched to the display's largest resolution. The port's `0` key and the Game Settings fullscreen button only toggle fullscreen, keeping the halved resolution `Settings` picks on Retina displays so the IMGUI HUD stays at its original size.
 - **World meshes are not combined.** `Game.js` added `CombineChildren` to worlds with more than 15 objects. The port gives each world renderer its own material when the world loads, so combining would merge almost nothing; it was only a draw-call optimisation and is left out.
 
