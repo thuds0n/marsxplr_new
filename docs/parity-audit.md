@@ -275,6 +275,8 @@ Claims checked and supported: one scene-flow coordinator (line 66; `InitModern.c
 
 `PLAN.md` defers detail to these files, so they are listed here.
 
+Resolved 2026-11-19: D1, D2, D3 and D6 were already corrected in their documents (D3 and the bot colours became true when V2 was fixed). D4 and D5 are now corrected where they were first stated, and D7 carries a note in `docs/combat.md`. Whether the player was returned to the base in that session is still unknown. The world settings note in `docs/world-and-rendering.md` no longer says they are not applied.
+
 | # | Document | Statement | Source |
 | --- | --- | --- | --- |
 | D1 | `docs/combat.md`, "RORBs and ramming" | "In the original, ramming exists only with RORBs" | `VehicleLocal.js:48-62` and `VehicleTrigger.js:7-10` call `OnRam` on body contact with no RORB check. |
