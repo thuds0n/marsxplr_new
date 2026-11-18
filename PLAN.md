@@ -16,7 +16,7 @@ Detail lives in `docs/`, one file per area. This file keeps status, decisions an
 - [docs/validation.md](docs/validation.md): validation strategy, Unity 6.3 import results, editor-free compile status.
 - [docs/release.md](docs/release.md): release path and arm64 player builds.
 - [docs/combat.md](docs/combat.md): lasers, quarry, score and bots.
-- [docs/ui.md](docs/ui.md): the in-game side-panel menu and Server Settings.
+- [docs/ui.md](docs/ui.md): the in-game side-panel menu and its panels.
 - [docs/wine-reference.md](docs/wine-reference.md): how to run and measure the original for comparisons.
 - `IMPROVEMENTS.md`: faithful-but-improvable behaviour deferred from parity work, and the deliberate departures already made.
 
@@ -30,7 +30,7 @@ The single-player buggy slice runs from `Init` in the Unity `6000.3.27f1` editor
 - `BuggyControllerModern` drives the buggy (`useModernBuggyController` is on by default); `SimplePlayerController` remains only as a selectable fallback;
 - `VehicleStateModern` is the shared vehicle-state seam;
 - the buggy uses the original body, wheel, axle and wing models, and wings and flight are ported (Milestone 2);
-- replacement C# components cover the camera, HUD, minimap, Fort Boxy's world loading and settings, and the Messaging Console with chat; of the menu panels only Server Settings is ported;
+- replacement C# components cover the camera, HUD, minimap, Fort Boxy's world loading and settings, and the Messaging Console with chat; the Server, Game, Player and Active Players menu panels are ported (Switch Vehicle and Settings Advisor are not);
 - laser fire, `Rocket.js` projectiles and impact sparks, hits, quarry scoring, weapons lock, bots, fatal hits and ramming (RORB sphere and body contact) are ported; bot name tags, the materialisation effect and XORBs are not;
 - editor tooling rebuilds and inspects the `Game` scene baseline and runs scripted Play-mode tests under `Tools -> MarsXPLR`.
 
@@ -145,7 +145,7 @@ Replace scaffolding with dedicated systems:
 
 Do not make placeholder cylinders, debug-line lasers, or impact stubs part of the permanent architecture.
 
-Status: in progress. First slice (2026-10-21): auto and snipe fire, `Rocket.js` projectiles, hits, the player defaulting to quarry and tag scoring, with the placeholders removed (the last leftovers went on 2026-11-19). Verified by a scripted Play-mode test and by firing by hand from `Init` (the buggy now has the original `RideCam`, and the impact sparks are rebuilt as a `ParticleSystem`). Not yet compared with the Wine version; sound not confirmed by ear. Weapons lock, lock-on shots and bots ported and tested 2026-10-23. Fatal hits and ramming (RORBs 2026-11-02; body contact, the world's own settings, the Messaging Console and the original start-of-game rules 2026-11-17, play-tested in the editor and by hand 2026-11-18) are ported. Open: name tags, the materialisation effect, XORBs. Menu: Server Settings ported 2026-10-23; Game, Player, Active Players, Switch Vehicle and Settings Advisor panels still to port. Detail: [docs/combat.md](docs/combat.md).
+Status: in progress. First slice (2026-10-21): auto and snipe fire, `Rocket.js` projectiles, hits, the player defaulting to quarry and tag scoring, with the placeholders removed (the last leftovers went on 2026-11-19). Verified by a scripted Play-mode test and by firing by hand from `Init` (the buggy now has the original `RideCam`, and the impact sparks are rebuilt as a `ParticleSystem`). Not yet compared with the Wine version; sound not confirmed by ear. Weapons lock, lock-on shots and bots ported and tested 2026-10-23. Fatal hits and ramming (RORBs 2026-11-02; body contact, the world's own settings, the Messaging Console and the original start-of-game rules 2026-11-17, play-tested in the editor and by hand 2026-11-18) are ported. Open: name tags, the materialisation effect, XORBs. Menu: Server Settings ported 2026-10-23, Game, Player and Active Players 2026-11-19 (clicked through in the editor); Switch Vehicle and Settings Advisor still to port. Detail: [docs/combat.md](docs/combat.md).
 
 ## Milestone 5: Rendering and asset compatibility
 
@@ -165,7 +165,7 @@ Status: an arm64 Mono development player of `combat-parity-rorbs` (2026-11-19, U
 
 The evidence-backed baseline is tagged `unity6-baseline-2026-10-21` (Milestone 0 complete; buggy ground handling, Fort Boxy, HUD, image effects and shadows checked against the Wine version).
 
-1. The 2026-11-17 parity fixes ([docs/parity-audit.md](docs/parity-audit.md)) passed the editor play-test, the scripted tests and a hand test on 2026-11-18 (chat Tab and focus fixed for Unity 6). The 2026-11-19 follow-up fixed the camera keys and snipe look, the "L Hit ORBs" toggle, the frame-rate count and leftovers (C1-C4, C6, C8, S3, G7, G8, G14), passing the scripted tests in the editor; the snipe look speed is not yet tried with a real mouse. A third pass the same day fixed most Low rows (RORB lifecycle and flashes, HUD readout, settings loading, tracks, trails, roam camera, language filter); the Low rows still open are listed in the audit. Next, continue Milestone 4: the remaining audit rows, comparing the sparks and sounds with the Wine version, and the remaining menu panels.
+1. The 2026-11-17 parity fixes ([docs/parity-audit.md](docs/parity-audit.md)) passed the editor play-test, the scripted tests and a hand test on 2026-11-18 (chat Tab and focus fixed for Unity 6). The 2026-11-19 follow-up fixed the camera keys and snipe look, the "L Hit ORBs" toggle, the frame-rate count and leftovers (C1-C4, C6, C8, S3, G7, G8, G14), passing the scripted tests in the editor; the snipe look speed is not yet tried with a real mouse. A third pass the same day fixed most Low rows (RORB lifecycle and flashes, HUD readout, settings loading, tracks, trails, roam camera, language filter); the Low rows still open are listed in the audit. Next, continue Milestone 4: the remaining audit rows, comparing the sparks and sounds with the Wine version, and the Switch Vehicle and Settings Advisor panels.
 2. Fort Boxy rendering (2026-10-21): the shadow strip east of the spawn slab no longer reproduces and the `Arrow.jas` mesh matches the original cone. The arrow now points at the base as the original did. The floor writes its original alpha again, so the contrast stretch saturates it as the original code did (see [docs/world-and-rendering.md](docs/world-and-rendering.md)).
 
 ## Definition of done for the single-player milestone

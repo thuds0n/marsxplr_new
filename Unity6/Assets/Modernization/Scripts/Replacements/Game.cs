@@ -214,6 +214,14 @@ public class Game : MonoBehaviour
         {
             Settings.resetTime += Time.deltaTime;
         }
+
+        // Game.js: save the colour 3 s after the last slider change.
+        if (Settings.colorUpdateTime != 0f && Settings.colorUpdateTime < Time.time)
+        {
+            Settings.colorUpdateTime = 0f;
+            var state = Player.GetComponent<VehicleStateModern>();
+            if (state != null) Settings.saveVehicleColor(state);
+        }
     }
 
     public void msg(string text, int origin)
@@ -391,7 +399,10 @@ public class Game : MonoBehaviour
         GUIPanels[i].scrollPos = GUILayout.BeginScrollView(GUIPanels[i].scrollPos);
 
         if (i == 0) Settings.showDialogServer();
-        // Temporary: the other panels are not ported yet.
+        else if (i == 1) Settings.showDialogGame();
+        else if (i == 2) Settings.showDialogPlayer();
+        else if (i == 3) Settings.showDialogPlayers();
+        // Switch Vehicle and Settings Advisor are never switched on yet.
         else GUILayout.Label("{Not ported yet}");
 
         GUILayout.Space(5);
