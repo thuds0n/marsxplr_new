@@ -362,7 +362,9 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
     // Vehicle.prefab VehicleLight, values from the shipped 2.22 sharedassets3:
     // a pixel spot light 1 m up and 1 m back, tilted 15° down, lighting the
     // Default layer only. Settings switches it off; VehicleMe.js turns the
-    // player's own light back on at Fantastic.
+    // player's own light back on at Fantastic. The original stores intensity 1,
+    // but Unity 2-4 legacy shaders doubled lighting, so 2 matches it here (as the
+    // spawn light's 0.5 became 1).
     private static void AttachVehicleLight(Transform vehicle)
     {
         var go = new GameObject("VehicleLight");
@@ -372,7 +374,7 @@ public class SinglePlayerPlayableBootstrap : MonoBehaviour
         var light = go.AddComponent<Light>();
         light.type = LightType.Spot;
         light.color = new Color(0.745098f, 0.853023f, 1f, 1f);
-        light.intensity = 1f;
+        light.intensity = 2f;
         light.range = 100f;
         light.spotAngle = 60f;
         light.shadows = LightShadows.None;
