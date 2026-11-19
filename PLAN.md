@@ -18,6 +18,7 @@ Detail lives in `docs/`, one file per area. This file keeps status, decisions an
 - [docs/combat.md](docs/combat.md): lasers, quarry, score and bots.
 - [docs/ui.md](docs/ui.md): the in-game side-panel menu and its panels.
 - [docs/wine-reference.md](docs/wine-reference.md): how to run and measure the original for comparisons.
+- [COMMUNITY-PROJECTS.md](COMMUNITY-PROJECTS.md): other Mars Explorer ports and builds (the Unity 5 fix, the decomp build, the Unity 6000.6 fork) and what they are useful for.
 - `IMPROVEMENTS.md`: faithful-but-improvable behaviour deferred from parity work, and the deliberate departures already made.
 
 Record new findings in the matching `docs/` file, dated and with exact Unity and macOS versions, and update the status lines here.

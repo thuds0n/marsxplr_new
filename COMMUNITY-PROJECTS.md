@@ -1,24 +1,18 @@
 # Other Mars Explorer community projects
 
-Notes from a review on 2026-10-30 to 2026-10-31 (Unity `6000.3.27f1`, macOS `27.2.0`). This project will not adopt their approach, but their work is useful as a second reference.
+Notes from a review on 2026-10-30 to 2026-10-31 (Unity `6000.3.27f1`, macOS `27.2.0`), updated 2026-11-19. This project will not adopt their approach, but their work is useful as a second reference.
 
-## Important: the Wine reference is a community build
+## The Wine reference was a community build
 
-The Wine copy of Mars Explorer 4.0.2 used for every Wine comparison so far (`/Applications/Mars Explorer.app`, see [docs/wine-reference.md](docs/wine-reference.md)) came from VIA256's community releases, not from an official download. It may have been modified (the decomp project rebuilds the game's scripts), so it can no longer be treated as authoritative. Until an official build is found:
+Until 2026-11-02 every Wine comparison used a copy of Mars Explorer "4.0.2" from VIA256's community releases, not an official download. The reference is now the official Mars Explorer 2.22 Windows build under Wine (`~/Applications/Sikarugir/Mars Explorer 2.22.app`), the same version as `unity/`; see [docs/wine-reference.md](docs/wine-reference.md).
 
-- treat every value or behaviour taken only from the Wine build as unconfirmed, and re-check it against `unity/` where the source covers it;
-- prefer evidence from `unity/` and from asset data that the decomp is unlikely to have touched (shaders, materials, textures), but confirm even those once an official build is available;
-- find the last official 4.0.x Windows release (for example through the Internet Archive copies of marsxplr.com), record its source and checksums, compare its files with the current Wine copy to see what the community build changed, and wrap it with Sikarugir as the new reference.
-
-Update 2026-11-02: the official installer has been found and compared (see [docs/wine-reference.md](docs/wine-reference.md)). The player and all content files are byte-identical to the community copy; only the script assemblies, `UnityEngine.dll` and `UnityDomainLoad.exe` differ. Data-file findings stand; behaviour measured in Wine stays unconfirmed until the official build is wrapped and played, or the assemblies are compared with a decompiler.
-
-Update 2026-11-02 (decompiler comparison, Unity 2.6.1f3 player, macOS `27.2`; details in [docs/wine-reference.md](docs/wine-reference.md)): the community build is the official 2.22 scripts, decompiled and recompiled as C#. Most changes are online-only: a new update URL on gitea, an invented version number `4.0.2`, archive.org links, the account check and profanity filter removed, and a JavaScript pop-up helper for links. The vehicle, camera and quality code is unchanged. Three changes touch single player:
+The community copy's player and content files are byte-identical to the official build's; only the script assemblies, `UnityEngine.dll` and `UnityDomainLoad.exe` differ. A decompiler comparison (Unity 2.6.1f3 player, macOS `27.2`, details in [docs/wine-reference.md](docs/wine-reference.md)) showed that its scripts are the official 2.22 scripts, decompiled and recompiled as C#. Most changes are online-only: a new update URL on gitea, an invented version number `4.0.2`, archive.org links, the account check and profanity filter removed, and a JavaScript pop-up helper for links. The vehicle, camera and quality code is unchanged. Three changes touch single player:
 
 - the laser's target-prediction sampling is 10 times shorter than in `Rocket.js`;
 - a new QuarryCam setting, off by default;
 - a rewritten gzip step for worlds, which is broken for `.gz` meshes and compressed terrain.
 
-Worlds work in the community build because its update file lists live world URLs, not because of any loader fix. Earlier Wine laser measurements against moving targets need re-measuring in the official wrapper; other Wine handling and visual findings stand.
+Worlds work in the community build because its update file lists live world URLs, not because of any loader fix. Laser measurements against moving targets taken in the community build must be re-measured in the official build; its other handling and visual findings stand.
 
 ## The projects
 
@@ -27,8 +21,9 @@ Worlds work in the community build because its update file lists live world URLs
   - "remastered" (the Unity port): work in progress, with more native platforms.
   
   Support is through the Terran Labs Discord, `#mars_xplr`.
-- [VIA256/marsxplr-decomp](https://gitea.moe/VIA256/marsxplr-decomp) and its [releases](https://gitea.moe/via256/marsxplr-decomp/releases): according to the guide, a patched build of the original game with multiplayer and worlds working. The site refused automated fetches, so its contents were not reviewed. It may be useful for checking compiled behaviour.
+- [VIA256/marsxplr-decomp](https://gitea.moe/VIA256/marsxplr-decomp) and its [releases](https://gitea.moe/via256/marsxplr-decomp/releases): the "original game with fixes", the official 2.22 scripts decompiled and recompiled as C# with online fixes, on the original Unity 2.6.1f3 player and content. The repository itself refuses automated fetches, so it was reviewed through the build it ships (see above). Not a parity reference: its laser target prediction differs from the original.
 - [VIA256/unity3d-marsxplr](https://github.com/VIA256/unity3d-marsxplr) and its [releases](https://github.com/via256/unity3d-marsxplr/releases): a fork of the original source, upgraded in place to Unity `6000.6.7f1`. MIT licence, as in the original. The newest pre-release, `4.1.1-rc+20261025`, adds native Apple silicon and WebGL builds. Multiplayer is temporarily disabled because the old networking was removed, and the author plans to replace it.
+- The Unity 5 compatibility fix: a Unity 5.0.0f4 port of the original project by Ethan (BluetoothBoy), merged into the original repository ([terran-labs/unity3d-marsxplr](https://github.com/terran-labs/unity3d-marsxplr), now archived) as pull request #1 on 2015-03-29. Its changes are Unity 5 API updates only, with the same game logic. This project keeps a local, ignored copy as `Unity5/`, used for asset extraction and as a secondary reference; where it disagrees with `unity/`, `unity/` wins.
 - [via256.github.io/play](https://via256.github.io/play/): the WebGL build of that fork, playable in a browser.
 
 ## How the Unity fork was made
