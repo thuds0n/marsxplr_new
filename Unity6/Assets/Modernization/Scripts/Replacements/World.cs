@@ -369,7 +369,9 @@ public class World : MonoBehaviour
     // only at the corners of Fort Boxy's large castle faces, draws no pool. The
     // original drew Diffuse Fast per pixel. Whirld/Diffuse Keep Alpha is that
     // per-pixel Lambert and writes the surface's alpha (1 on the castle) as the
-    // fallback did, so the contrast stretch is unchanged.
+    // fallback did, so the contrast stretch is unchanged. Its _VertexLightDir
+    // mode interpolates N.L from the vertices, as the original Diffuse Fast is
+    // thought to have done (see docs/world-and-rendering.md).
     private static void GiveRenderersOwnMaterials(Scene scene)
     {
         Shader diffuseFast = Shader.Find("Legacy Shaders/Diffuse Fast");
@@ -383,7 +385,11 @@ public class World : MonoBehaviour
                 {
                     if (shared[i] == null) continue;
                     shared[i] = new Material(shared[i]);
-                    if (perPixel != null && shared[i].shader == diffuseFast) shared[i].shader = perPixel;
+                    if (perPixel != null && shared[i].shader == diffuseFast)
+                    {
+                        shared[i].shader = perPixel;
+                        shared[i].SetFloat("_VertexLightDir", 1f);
+                    }
                 }
                 r.sharedMaterials = shared;
             }
