@@ -367,11 +367,11 @@ public class World : MonoBehaviour
     // Compatibility workaround: Unity 6's Legacy Shaders/Diffuse Fast falls back
     // to VertexLit, so a spot light such as the player's VehicleLight, evaluated
     // only at the corners of Fort Boxy's large castle faces, draws no pool. The
-    // original drew Diffuse Fast per pixel. Whirld/Diffuse Keep Alpha is that
-    // per-pixel Lambert and writes the surface's alpha (1 on the castle) as the
-    // fallback did, so the contrast stretch is unchanged. Its _VertexLightDir
-    // mode interpolates N.L from the vertices, as the original Diffuse Fast is
-    // thought to have done (see docs/world-and-rendering.md).
+    // original Diffuse Fast (2.22 build's unity default resources) lit per vertex
+    // but applied the spot cookie and attenuation per pixel. Whirld/Diffuse Keep
+    // Alpha in _VertexLightDir mode does the same, and writes the surface's alpha
+    // (1 on the castle) as the fallback did, so the contrast stretch is unchanged
+    // (see docs/world-and-rendering.md).
     private static void GiveRenderersOwnMaterials(Scene scene)
     {
         Shader diffuseFast = Shader.Find("Legacy Shaders/Diffuse Fast");

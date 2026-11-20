@@ -3,7 +3,7 @@
 // own alpha (texture alpha times the colour's alpha), which the contrast
 // stretch reads. Otherwise identical to the built-in shader.
 //
-// _VertexLightDir 1 stands in for the original Diffuse Fast on world objects:
+// _VertexLightDir 1 reproduces the original Diffuse Fast on world objects:
 // the light direction is worked out per vertex and its N.L interpolated across
 // the face rather than per pixel. That makes no difference for directional
 // light, but a spot or point light near a large face (the player's
